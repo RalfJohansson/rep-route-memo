@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Grip } from "lucide-react";
-import { format, startOfWeek, addDays } from "date-fns";
+import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
 
 interface WorkoutLibraryItem {
@@ -31,19 +31,16 @@ const Schedule = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedWorkoutId, setSelectedWorkoutId] = useState("");
-  const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [draggedWorkout, setDraggedWorkout] = useState<string | null>(null);
 
   useEffect(() => {
     fetchScheduledWorkouts();
     fetchLibraryWorkouts();
-  }, [currentWeekStart]);
+  }, []);
 
   const fetchScheduledWorkouts = async () => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
-
-    const weekEnd = addDays(currentWeekStart, 6);
 
     const { data, error } = await supabase
       .from("scheduled_workouts")
@@ -57,8 +54,6 @@ const Schedule = () => {
         )
       `)
       .eq("user_id", user.id)
-      .gte("scheduled_date", format(currentWeekStart, "yyyy-MM-dd"))
-      .lte("scheduled_date", format(weekEnd, "yyyy-MM-dd"))
       .order("scheduled_date");
 
     if (error) {
@@ -145,7 +140,20 @@ const Schedule = () => {
     }
   };
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+  // Group workouts by week
+  const workoutsByWeek = workouts.reduce((acc, workout) => {
+    const workoutDate = parseISO(workout.scheduled_date);
+    const weekStart = startOfWeek(workoutDate, { weekStartsOn: 1 });
+    const weekKey = format(weekStart, "yyyy-MM-dd");
+    
+    if (!acc[weekKey]) {
+      acc[weekKey] = [];
+    }
+    acc[weekKey].push(workout);
+    return acc;
+  }, {} as Record<string, ScheduledWorkout[]>);
+
+  const sortedWeeks = Object.keys(workoutsByWeek).sort();
 
   const getWorkoutsForDate = (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -153,14 +161,9 @@ const Schedule = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Schema</h1>
-          <p className="text-sm text-muted-foreground">
-            Vecka {format(currentWeekStart, "w", { locale: sv })}
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Schema</h1>
         <Button
           size="sm"
           onClick={() => setShowAddDialog(true)}
@@ -171,65 +174,89 @@ const Schedule = () => {
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {weekDays.map((day) => {
-          const dayWorkouts = getWorkoutsForDate(day);
-          const dateStr = format(day, "yyyy-MM-dd");
-          const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-
+      {sortedWeeks.length === 0 ? (
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">
+              Inga schemalagda pass. Lägg till ditt första pass!
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        sortedWeeks.map((weekKey) => {
+          const weekStart = parseISO(weekKey);
+          const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+          
           return (
-            <Card
-              key={dateStr}
-              className={isToday ? "border-primary" : ""}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => handleDrop(dateStr)}
-            >
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex justify-between items-center">
-                  <span>
-                    {format(day, "EEEE", { locale: sv })}
-                  </span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {format(day, "d MMM", { locale: sv })}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {dayWorkouts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Inga pass
-                  </p>
-                ) : (
-                  dayWorkouts.map((workout) => (
-                    <div
-                      key={workout.id}
-                      draggable
-                      onDragStart={() => handleDragStart(workout.id)}
-                      className="flex items-center gap-2 p-2 rounded bg-muted cursor-move hover:bg-muted/80 transition-colors"
+            <div key={weekKey} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold">
+                  Vecka {format(weekStart, "w", { locale: sv })}
+                </h2>
+                <span className="text-sm text-muted-foreground">
+                  {format(weekStart, "d MMM", { locale: sv })} - {format(addDays(weekStart, 6), "d MMM yyyy", { locale: sv })}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {weekDays.map((day) => {
+                  const dayWorkouts = getWorkoutsForDate(day);
+                  const dateStr = format(day, "yyyy-MM-dd");
+                  const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+
+                  if (dayWorkouts.length === 0) return null;
+
+                  return (
+                    <Card
+                      key={dateStr}
+                      className={isToday ? "border-primary" : ""}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(dateStr)}
                     >
-                      <Grip className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{workout.workout_library.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {workout.workout_library.category}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteWorkout(workout.id)}
-                        className="h-8 text-destructive hover:text-destructive"
-                      >
-                        Ta bort
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span>
+                            {format(day, "EEEE", { locale: sv })}
+                          </span>
+                          <span className="text-sm font-normal text-muted-foreground">
+                            {format(day, "d MMM", { locale: sv })}
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {dayWorkouts.map((workout) => (
+                          <div
+                            key={workout.id}
+                            draggable
+                            onDragStart={() => handleDragStart(workout.id)}
+                            className="flex items-center gap-2 p-2 rounded bg-muted cursor-move hover:bg-muted/80 transition-colors"
+                          >
+                            <Grip className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{workout.workout_library.name}</p>
+                              <p className="text-xs text-muted-foreground capitalize">
+                                {workout.workout_library.category}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteWorkout(workout.id)}
+                              className="h-8 text-destructive hover:text-destructive"
+                            >
+                              Ta bort
+                            </Button>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
           );
-        })}
-      </div>
+        })
+      )}
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
