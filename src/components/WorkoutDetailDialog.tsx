@@ -14,13 +14,22 @@ interface WorkoutDetailDialogProps {
 const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialogProps) => {
   if (!workout) return null;
 
+  const effortColors = [
+    "#00A000", // 1
+    "#33B300", // 2
+    "#66C600", // 3
+    "#99D900", // 4
+    "#CCCC00", // 5
+    "#FFBF00", // 6
+    "#FF9900", // 7
+    "#FF6600", // 8
+    "#FF3300", // 9
+    "#FF0000", // 10
+  ];
+
   const getEffortColor = (index: number, effort: number) => {
     if (index > effort) return "bg-muted";
-    
-    const ratio = effort / 10;
-    if (ratio <= 0.3) return "bg-green-500";
-    if (ratio <= 0.6) return "bg-yellow-500";
-    return "bg-orange-500";
+    return effortColors[index - 1];
   };
 
   return (
@@ -47,12 +56,16 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
           <div>
             <h3 className="font-semibold mb-3">Ansträngning</h3>
             <div className="flex gap-2 mb-2">
-              {[...Array(10)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 h-8 rounded-full ${getEffortColor(i + 1, workout.effort || 0)}`}
-                />
-              ))}
+              {[...Array(10)].map((_, i) => {
+                const color = getEffortColor(i + 1, workout.effort || 0);
+                return (
+                  <div
+                    key={i}
+                    className={`flex-1 h-8 rounded-full ${typeof color === 'string' && color.startsWith('#') ? '' : color}`}
+                    style={typeof color === 'string' && color.startsWith('#') ? { backgroundColor: color } : undefined}
+                  />
+                );
+              })}
             </div>
             <p className="text-right text-sm text-muted-foreground">
               {workout.effort || 0} - {workout.effort && workout.effort > 7 ? "hög" : workout.effort && workout.effort > 4 ? "medel" : "låg"}

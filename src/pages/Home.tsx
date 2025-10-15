@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { sv } from "date-fns/locale";
+import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
 interface ScheduledWorkout {
   id: string;
@@ -317,89 +318,16 @@ const Home = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewingWorkout} onOpenChange={(open) => !open && setViewingWorkout(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{viewingWorkout?.workout_library.name}</DialogTitle>
-          </DialogHeader>
-          {viewingWorkout && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Kategori</p>
-                  <p className="font-medium capitalize">{viewingWorkout.workout_library.category}</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Datum</p>
-                  <p className="font-medium">
-                    {format(new Date(viewingWorkout.scheduled_date), "d MMM yyyy", { locale: sv })}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Planerad tid</p>
-                  <p className="font-medium">{viewingWorkout.workout_library.duration || "-"} min</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Ansträngning</p>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getEffortColor(viewingWorkout.workout_library.effort) }}
-                    />
-                    <p className="font-medium">{viewingWorkout.workout_library.effort}/10</p>
-                  </div>
-                </div>
-              </div>
-
-              {viewingWorkout.workout_library.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Beskrivning</p>
-                  <p className="text-sm">{viewingWorkout.workout_library.description}</p>
-                </div>
-              )}
-
-              {viewingWorkout.completed && (
-                <div className="border-t pt-4 space-y-3">
-                  <h4 className="font-semibold">Genomfört pass</h4>
-                  {viewingWorkout.trained_time && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tränad tid</p>
-                      <p className="font-medium">{viewingWorkout.trained_time} min</p>
-                    </div>
-                  )}
-                  {viewingWorkout.distance && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Distans</p>
-                      <p className="font-medium">{viewingWorkout.distance} km</p>
-                    </div>
-                  )}
-                  {viewingWorkout.pace && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tempo</p>
-                      <p className="font-medium">{viewingWorkout.pace}</p>
-                    </div>
-                  )}
-                  {viewingWorkout.notes && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Anteckningar</p>
-                      <p className="text-sm">{viewingWorkout.notes}</p>
-                    </div>
-                  )}
-                  {viewingWorkout.joy_rating && (
-                    <div className="flex items-center gap-2">
-                      <Smile className="h-4 w-4 text-accent" />
-                      <p className="font-medium">Glädje: {viewingWorkout.joy_rating}/5</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <WorkoutDetailDialog
+        workout={viewingWorkout ? {
+          name: viewingWorkout.workout_library.name,
+          duration: viewingWorkout.workout_library.duration,
+          effort: viewingWorkout.workout_library.effort,
+          description: viewingWorkout.workout_library.description,
+        } : null}
+        open={!!viewingWorkout}
+        onOpenChange={(open) => !open && setViewingWorkout(null)}
+      />
     </div>
   );
 };
