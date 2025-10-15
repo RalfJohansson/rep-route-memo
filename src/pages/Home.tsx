@@ -24,12 +24,16 @@ interface ScheduledWorkout {
   workout_library: {
     name: string;
     category: string;
+    duration: number | null;
+    effort: number;
+    description: string | null;
   };
 }
 
 const Home = () => {
   const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null);
+  const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     completed: 0,
@@ -62,7 +66,10 @@ const Home = () => {
           *,
           workout_library (
             name,
-            category
+            category,
+            duration,
+            effort,
+            description
           )
         `)
         .eq("user_id", user.id)
@@ -142,6 +149,13 @@ const Home = () => {
     }
   };
 
+  const getEffortColor = (effort: number) => {
+    if (effort <= 3) return "hsl(var(--chart-2))"; // Green
+    if (effort <= 5) return "hsl(var(--chart-3))"; // Yellow-green
+    if (effort <= 7) return "hsl(var(--chart-4))"; // Orange
+    return "hsl(var(--chart-5))"; // Red
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -197,15 +211,26 @@ const Home = () => {
             workouts.map((workout) => (
               <div
                 key={workout.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  setViewingWorkout(workout);
+                }}
               >
                 <Checkbox
                   checked={workout.completed}
                   onCheckedChange={() => handleToggleComplete(workout)}
                   className="h-5 w-5"
+                  onClick={(e) => e.stopPropagation()}
                 />
                 <div className="flex-1">
-                  <p className="font-medium">{workout.workout_library.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{workout.workout_library.name}</p>
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: getEffortColor(workout.workout_library.effort) }}
+                    />
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(workout.scheduled_date), "EEEE d MMM", { locale: sv })}
                   </p>
@@ -289,6 +314,90 @@ const Home = () => {
               Spara
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewingWorkout} onOpenChange={(open) => !open && setViewingWorkout(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{viewingWorkout?.workout_library.name}</DialogTitle>
+          </DialogHeader>
+          {viewingWorkout && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Kategori</p>
+                  <p className="font-medium capitalize">{viewingWorkout.workout_library.category}</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Datum</p>
+                  <p className="font-medium">
+                    {format(new Date(viewingWorkout.scheduled_date), "d MMM yyyy", { locale: sv })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Planerad tid</p>
+                  <p className="font-medium">{viewingWorkout.workout_library.duration || "-"} min</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Ansträngning</p>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: getEffortColor(viewingWorkout.workout_library.effort) }}
+                    />
+                    <p className="font-medium">{viewingWorkout.workout_library.effort}/10</p>
+                  </div>
+                </div>
+              </div>
+
+              {viewingWorkout.workout_library.description && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Beskrivning</p>
+                  <p className="text-sm">{viewingWorkout.workout_library.description}</p>
+                </div>
+              )}
+
+              {viewingWorkout.completed && (
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="font-semibold">Genomfört pass</h4>
+                  {viewingWorkout.trained_time && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tränad tid</p>
+                      <p className="font-medium">{viewingWorkout.trained_time} min</p>
+                    </div>
+                  )}
+                  {viewingWorkout.distance && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Distans</p>
+                      <p className="font-medium">{viewingWorkout.distance} km</p>
+                    </div>
+                  )}
+                  {viewingWorkout.pace && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tempo</p>
+                      <p className="font-medium">{viewingWorkout.pace}</p>
+                    </div>
+                  )}
+                  {viewingWorkout.notes && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Anteckningar</p>
+                      <p className="text-sm">{viewingWorkout.notes}</p>
+                    </div>
+                  )}
+                  {viewingWorkout.joy_rating && (
+                    <div className="flex items-center gap-2">
+                      <Smile className="h-4 w-4 text-accent" />
+                      <p className="font-medium">Glädje: {viewingWorkout.joy_rating}/5</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
