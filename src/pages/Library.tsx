@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Clock, TrendingUp, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
+import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
 interface WorkoutLibraryItem {
   id: string;
@@ -32,6 +33,8 @@ const Library = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLibraryItem | null>(null);
   const [activeTab, setActiveTab] = useState("intervallpass");
+  const [viewingWorkout, setViewingWorkout] = useState<WorkoutLibraryItem | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -184,11 +187,18 @@ const Library = () => {
               </Card>
             ) : (
               getWorkoutsByCategory(cat.value).map((workout) => (
-                <Card key={workout.id}>
+                <Card 
+                  key={workout.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => {
+                    setViewingWorkout(workout);
+                    setShowDetailDialog(true);
+                  }}
+                >
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex justify-between items-start">
                       <span>{workout.name}</span>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -207,25 +217,6 @@ const Library = () => {
                       </div>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex gap-4 text-sm">
-                      {workout.duration && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          {workout.duration} min
-                        </div>
-                      )}
-                      {workout.effort && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <TrendingUp className="h-4 w-4" />
-                          Ansträngning {workout.effort}/10
-                        </div>
-                      )}
-                    </div>
-                    {workout.description && (
-                      <p className="text-sm text-muted-foreground">{workout.description}</p>
-                    )}
-                  </CardContent>
                 </Card>
               ))
             )}
@@ -308,6 +299,12 @@ const Library = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <WorkoutDetailDialog
+        workout={viewingWorkout}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

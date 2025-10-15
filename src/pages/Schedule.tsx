@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Grip } from "lucide-react";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
+import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
 interface WorkoutLibraryItem {
   id: string;
@@ -22,6 +23,9 @@ interface ScheduledWorkout {
     id: string;
     name: string;
     category: string;
+    duration: number | null;
+    effort: number | null;
+    description: string | null;
   };
 }
 
@@ -32,6 +36,8 @@ const Schedule = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedWorkoutId, setSelectedWorkoutId] = useState("");
   const [draggedWorkout, setDraggedWorkout] = useState<string | null>(null);
+  const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout["workout_library"] | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   useEffect(() => {
     fetchScheduledWorkouts();
@@ -50,7 +56,10 @@ const Schedule = () => {
         workout_library (
           id,
           name,
-          category
+          category,
+          duration,
+          effort,
+          description
         )
       `)
       .eq("user_id", user.id)
@@ -229,19 +238,26 @@ const Schedule = () => {
                             key={workout.id}
                             draggable
                             onDragStart={() => handleDragStart(workout.id)}
-                            className="flex items-center gap-2 p-2 rounded bg-muted cursor-move hover:bg-muted/80 transition-colors"
+                            onClick={() => {
+                              setViewingWorkout(workout.workout_library);
+                              setShowDetailDialog(true);
+                            }}
+                            className="flex items-center gap-2 p-2 rounded bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
                           >
-                            <Grip className="h-4 w-4 text-muted-foreground" />
+                            <Grip 
+                              className="h-4 w-4 text-muted-foreground cursor-move" 
+                              onMouseDown={(e) => e.stopPropagation()}
+                            />
                             <div className="flex-1">
                               <p className="text-sm font-medium">{workout.workout_library.name}</p>
-                              <p className="text-xs text-muted-foreground capitalize">
-                                {workout.workout_library.category}
-                              </p>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteWorkout(workout.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteWorkout(workout.id);
+                              }}
                               className="h-8 text-destructive hover:text-destructive"
                             >
                               Ta bort
@@ -294,6 +310,12 @@ const Schedule = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <WorkoutDetailDialog
+        workout={viewingWorkout}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };
