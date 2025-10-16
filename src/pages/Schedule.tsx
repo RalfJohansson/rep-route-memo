@@ -252,10 +252,10 @@ const Schedule = () => {
                               setViewingWorkout(workout.workout_library);
                               setShowDetailDialog(true);
                             }}
-                            className="flex items-center gap-0 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors overflow-hidden"
+                            className="flex items-stretch gap-0 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors overflow-hidden"
                           >
                             <div 
-                              className="w-16 h-full flex items-center justify-center text-white text-xs font-medium py-3"
+                              className="w-16 flex items-center justify-center text-white text-xs font-medium"
                               style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                             >
                               <span className="writing-mode-vertical-rl rotate-180">
@@ -267,7 +267,7 @@ const Schedule = () => {
                               </span>
                             </div>
                             <Grip 
-                              className="h-4 w-4 text-muted-foreground cursor-move mx-2" 
+                              className="h-4 w-4 text-muted-foreground cursor-move mx-2 my-auto" 
                               onMouseDown={(e) => e.stopPropagation()}
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -281,7 +281,7 @@ const Schedule = () => {
                                 e.stopPropagation();
                                 handleDeleteWorkout(workout.id);
                               }}
-                              className="h-8 text-destructive hover:text-destructive mr-2"
+                              className="h-8 text-destructive hover:text-destructive mr-2 my-auto"
                             >
                               Ta bort
                             </Button>

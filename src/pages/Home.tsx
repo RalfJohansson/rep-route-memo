@@ -215,14 +215,14 @@ const Home = () => {
             workouts.map((workout) => (
               <div
                 key={workout.id}
-                className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
+                className="flex items-stretch gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest('button')) return;
                   setViewingWorkout(workout);
                 }}
               >
                 <div 
-                  className="w-16 h-full flex items-center justify-center text-white text-xs font-medium py-3"
+                  className="w-16 flex items-center justify-center text-white text-xs font-medium"
                   style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                 >
                   <span className="writing-mode-vertical-rl rotate-180">
@@ -236,7 +236,7 @@ const Home = () => {
                 <Checkbox
                   checked={workout.completed}
                   onCheckedChange={() => handleToggleComplete(workout)}
-                  className="h-5 w-5"
+                  className="h-5 w-5 my-auto"
                   onClick={(e) => e.stopPropagation()}
                 />
                 <div className="flex-1 py-3">
