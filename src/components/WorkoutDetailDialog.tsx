@@ -6,10 +6,21 @@ interface WorkoutDetailDialogProps {
     duration: number | null;
     effort: number | null;
     description: string | null;
+    category: string;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const getCategoryColor = (category: string) => {
+  const colors: { [key: string]: string } = {
+    'intervallpass': '#BF5E42',
+    'distanspass': '#468771',
+    'långpass': '#7AA6DB',
+    'styrka': '#4E7C8C',
+  };
+  return colors[category.toLowerCase()] || '#BF5E42';
+};
 
 const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialogProps) => {
   if (!workout) return null;
@@ -34,12 +45,15 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 gap-0 rounded-2xl">
-        <div className="bg-[#BF5E42] text-white px-4 py-3 rounded-t-2xl">
+      <DialogContent className="max-w-[90vw] sm:max-w-md p-0 gap-0 rounded-2xl max-h-[90vh] flex flex-col">
+        <div 
+          className="text-white px-4 py-3 rounded-t-2xl flex-shrink-0"
+          style={{ backgroundColor: getCategoryColor(workout.category) }}
+        >
           <h2 className="text-lg font-semibold">{workout.name}</h2>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-1 text-sm">Tid</h3>
@@ -72,11 +86,13 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
             </p>
           </div>
 
-          <div>
+          <div className="flex flex-col max-h-[30vh]">
             <h3 className="font-semibold mb-1 text-sm">Beskrivning</h3>
-            <p className="text-muted-foreground text-sm whitespace-pre-wrap">
-              {workout.description || "Ingen beskrivning tillgänglig"}
-            </p>
+            <div className="overflow-y-auto flex-1">
+              <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+                {workout.description || "Ingen beskrivning tillgänglig"}
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>

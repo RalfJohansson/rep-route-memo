@@ -335,7 +335,10 @@ const Schedule = () => {
       </Dialog>
 
       <WorkoutDetailDialog
-        workout={viewingWorkout}
+        workout={viewingWorkout ? {
+          ...viewingWorkout,
+          category: viewingWorkout.category
+        } : null}
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
       />

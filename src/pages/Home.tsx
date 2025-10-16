@@ -333,6 +333,7 @@ const Home = () => {
           duration: viewingWorkout.workout_library.duration,
           effort: viewingWorkout.workout_library.effort,
           description: viewingWorkout.workout_library.description,
+          category: viewingWorkout.workout_library.category,
         } : null}
         open={!!viewingWorkout}
         onOpenChange={(open) => !open && setViewingWorkout(null)}
