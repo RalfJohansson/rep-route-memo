@@ -10,6 +10,16 @@ import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
+const getCategoryColor = (category: string) => {
+  const colors: { [key: string]: string } = {
+    'Intervallpass': '#BF5E42',
+    'Distanspass': '#468771',
+    'Långpass': '#7AA6DB',
+    'Styrka': '#4E7C8C',
+  };
+  return colors[category] || '#BF5E42';
+};
+
 interface WorkoutLibraryItem {
   id: string;
   name: string;
@@ -242,13 +252,22 @@ const Schedule = () => {
                               setViewingWorkout(workout.workout_library);
                               setShowDetailDialog(true);
                             }}
-                            className="flex items-center gap-2 p-2 rounded bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
+                            className="flex items-center gap-0 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors overflow-hidden"
                           >
+                            <div 
+                              className="w-16 h-full flex items-center justify-center text-white text-xs font-medium py-3"
+                              style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
+                            >
+                              <span className="writing-mode-vertical-rl rotate-180">
+                                {workout.workout_library.category}
+                              </span>
+                            </div>
                             <Grip 
-                              className="h-4 w-4 text-muted-foreground cursor-move" 
+                              className="h-4 w-4 text-muted-foreground cursor-move mx-2" 
                               onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                             />
-                            <div className="flex-1">
+                            <div className="flex-1 py-2">
                               <p className="text-sm font-medium">{workout.workout_library.name}</p>
                             </div>
                             <Button
@@ -258,7 +277,7 @@ const Schedule = () => {
                                 e.stopPropagation();
                                 handleDeleteWorkout(workout.id);
                               }}
-                              className="h-8 text-destructive hover:text-destructive"
+                              className="h-8 text-destructive hover:text-destructive mr-2"
                             >
                               Ta bort
                             </Button>

@@ -109,3 +109,9 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .writing-mode-vertical-rl {
+    writing-mode: vertical-rl;
+  }
+}

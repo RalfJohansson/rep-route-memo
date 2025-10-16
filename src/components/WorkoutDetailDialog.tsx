@@ -34,47 +34,47 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 gap-0">
-        <div className="bg-orange-500/90 text-white px-6 py-4 rounded-t-lg">
-          <h2 className="text-xl font-semibold">{workout.name}</h2>
+      <DialogContent className="max-w-md p-0 gap-0 rounded-2xl">
+        <div className="bg-[#BF5E42] text-white px-4 py-3 rounded-t-2xl">
+          <h2 className="text-lg font-semibold">{workout.name}</h2>
         </div>
         
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="font-semibold mb-2">Tid</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-1 text-sm">Tid</h3>
+              <p className="text-muted-foreground text-sm">
                 {workout.duration ? `${workout.duration} min` : "-"}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">Fart</h3>
-              <p className="text-muted-foreground">-</p>
+              <h3 className="font-semibold mb-1 text-sm">Fart</h3>
+              <p className="text-muted-foreground text-sm">-</p>
             </div>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-3">Ansträngning</h3>
-            <div className="flex gap-2 mb-2">
+            <h3 className="font-semibold mb-2 text-sm">Ansträngning</h3>
+            <div className="flex gap-1 mb-1">
               {[...Array(10)].map((_, i) => {
                 const color = getEffortColor(i + 1, workout.effort || 0);
                 return (
                   <div
                     key={i}
-                    className={`flex-1 h-8 rounded-full ${typeof color === 'string' && color.startsWith('#') ? '' : color}`}
+                    className={`flex-1 h-4 rounded-full ${typeof color === 'string' && color.startsWith('#') ? '' : color}`}
                     style={typeof color === 'string' && color.startsWith('#') ? { backgroundColor: color } : undefined}
                   />
                 );
               })}
             </div>
-            <p className="text-right text-sm text-muted-foreground">
+            <p className="text-right text-xs text-muted-foreground">
               {workout.effort || 0} - {workout.effort && workout.effort > 7 ? "hög" : workout.effort && workout.effort > 4 ? "medel" : "låg"}
             </p>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Beskrivning</h3>
-            <p className="text-muted-foreground">
+            <h3 className="font-semibold mb-1 text-sm">Beskrivning</h3>
+            <p className="text-muted-foreground text-sm whitespace-pre-wrap">
               {workout.description || "Ingen beskrivning tillgänglig"}
             </p>
           </div>

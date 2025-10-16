@@ -150,11 +150,14 @@ const Home = () => {
     }
   };
 
-  const getEffortColor = (effort: number) => {
-    if (effort <= 3) return "hsl(var(--chart-2))"; // Green
-    if (effort <= 5) return "hsl(var(--chart-3))"; // Yellow-green
-    if (effort <= 7) return "hsl(var(--chart-4))"; // Orange
-    return "hsl(var(--chart-5))"; // Red
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      'Intervallpass': '#BF5E42',
+      'Distanspass': '#468771',
+      'Långpass': '#7AA6DB',
+      'Styrka': '#4E7C8C',
+    };
+    return colors[category] || '#BF5E42';
   };
 
   if (loading) {
@@ -212,32 +215,34 @@ const Home = () => {
             workouts.map((workout) => (
               <div
                 key={workout.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer"
+                className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest('button')) return;
                   setViewingWorkout(workout);
                 }}
               >
+                <div 
+                  className="w-16 h-full flex items-center justify-center text-white text-xs font-medium py-3"
+                  style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
+                >
+                  <span className="writing-mode-vertical-rl rotate-180">
+                    {workout.workout_library.category}
+                  </span>
+                </div>
                 <Checkbox
                   checked={workout.completed}
                   onCheckedChange={() => handleToggleComplete(workout)}
                   className="h-5 w-5"
                   onClick={(e) => e.stopPropagation()}
                 />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{workout.workout_library.name}</p>
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: getEffortColor(workout.workout_library.effort) }}
-                    />
-                  </div>
+                <div className="flex-1 py-3">
+                  <p className="font-medium">{workout.workout_library.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(workout.scheduled_date), "EEEE d MMM", { locale: sv })}
                   </p>
                 </div>
                 {workout.completed && workout.joy_rating && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 pr-3">
                     <Smile className="h-4 w-4 text-accent" />
                     <span className="text-sm">{workout.joy_rating}</span>
                   </div>
