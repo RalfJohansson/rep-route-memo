@@ -12,12 +12,12 @@ import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
 const getCategoryColor = (category: string) => {
   const colors: { [key: string]: string } = {
-    'Intervallpass': '#BF5E42',
-    'Distanspass': '#468771',
-    'Långpass': '#7AA6DB',
-    'Styrka': '#4E7C8C',
+    'intervallpass': '#BF5E42',
+    'distanspass': '#468771',
+    'långpass': '#7AA6DB',
+    'styrka': '#4E7C8C',
   };
-  return colors[category] || '#BF5E42';
+  return colors[category.toLowerCase()] || '#BF5E42';
 };
 
 interface WorkoutLibraryItem {
@@ -259,7 +259,11 @@ const Schedule = () => {
                               style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                             >
                               <span className="writing-mode-vertical-rl rotate-180">
-                                {workout.workout_library.category}
+                                {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
+                                 workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
+                                 workout.workout_library.category === 'långpass' ? 'Långpass' : 
+                                 workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                                 workout.workout_library.category}
                               </span>
                             </div>
                             <Grip 
