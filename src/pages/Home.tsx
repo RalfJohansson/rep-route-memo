@@ -226,17 +226,17 @@ const Home = () => {
                   dayWorkouts.map((workout) => (
                     <div
                       key={workout.id}
-                      className="flex items-stretch gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
+                      className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
                       onClick={(e) => {
                         if ((e.target as HTMLElement).closest('button')) return;
                         setViewingWorkout(workout);
                       }}
                     >
                       <div 
-                        className="w-12 flex items-center justify-center text-white font-medium"
+                        className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch"
                         style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                       >
-                        <span className="writing-mode-vertical-rl rotate-180 text-[10px]">
+                        <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
                           {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
                            workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
                            workout.workout_library.category === 'långpass' ? 'Långpass' : 
@@ -247,7 +247,7 @@ const Home = () => {
                       <Checkbox
                         checked={workout.completed}
                         onCheckedChange={() => handleToggleComplete(workout)}
-                        className="h-5 w-5 my-auto"
+                        className="h-5 w-5"
                         onClick={(e) => e.stopPropagation()}
                       />
                       <div className="flex-1 py-3">
