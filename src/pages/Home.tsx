@@ -233,7 +233,7 @@ const Home = () => {
                       }}
                     >
                       <div 
-                        className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch"
+                        className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
                         style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                       >
                         <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
