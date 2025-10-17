@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile } from "lucide-react";
-import { format, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
@@ -206,54 +206,65 @@ const Home = () => {
         <CardHeader>
           <CardTitle>Veckans pass</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {workouts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              Inga pass schemalagda denna vecka
-            </p>
-          ) : (
-            workouts.map((workout) => (
-              <div
-                key={workout.id}
-                className="flex items-stretch gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest('button')) return;
-                  setViewingWorkout(workout);
-                }}
-              >
-                <div 
-                  className="w-16 flex items-center justify-center text-white text-xs font-medium"
-                  style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
-                >
-                  <span className="writing-mode-vertical-rl rotate-180">
-                    {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
-                     workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
-                     workout.workout_library.category === 'långpass' ? 'Långpass' : 
-                     workout.workout_library.category === 'styrka' ? 'Styrka' : 
-                     workout.workout_library.category}
-                  </span>
-                </div>
-                <Checkbox
-                  checked={workout.completed}
-                  onCheckedChange={() => handleToggleComplete(workout)}
-                  className="h-5 w-5 my-auto"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div className="flex-1 py-3">
-                  <p className="font-medium">{workout.workout_library.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(workout.scheduled_date), "EEEE d MMM", { locale: sv })}
-                  </p>
-                </div>
-                {workout.completed && workout.joy_rating && (
-                  <div className="flex items-center gap-1 pr-3">
-                    <Smile className="h-4 w-4 text-accent" />
-                    <span className="text-sm">{workout.joy_rating}</span>
+        <CardContent className="space-y-4">
+          {Array.from({ length: 7 }, (_, i) => {
+            const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+            const currentDay = addDays(weekStart, i);
+            const dateStr = format(currentDay, "yyyy-MM-dd");
+            const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
+            
+            return (
+              <div key={dateStr} className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {format(currentDay, "EEEE d MMM", { locale: sv })}
+                </h3>
+                {dayWorkouts.length === 0 ? (
+                  <div className="rounded-lg border bg-card p-3">
+                    <p className="text-sm text-muted-foreground text-center">Vila</p>
                   </div>
+                ) : (
+                  dayWorkouts.map((workout) => (
+                    <div
+                      key={workout.id}
+                      className="flex items-stretch gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden"
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('button')) return;
+                        setViewingWorkout(workout);
+                      }}
+                    >
+                      <div 
+                        className="w-12 flex items-center justify-center text-white font-medium"
+                        style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
+                      >
+                        <span className="writing-mode-vertical-rl rotate-180 text-[10px]">
+                          {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
+                           workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
+                           workout.workout_library.category === 'långpass' ? 'Långpass' : 
+                           workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                           workout.workout_library.category}
+                        </span>
+                      </div>
+                      <Checkbox
+                        checked={workout.completed}
+                        onCheckedChange={() => handleToggleComplete(workout)}
+                        className="h-5 w-5 my-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex-1 py-3">
+                        <p className="font-medium">{workout.workout_library.name}</p>
+                      </div>
+                      {workout.completed && workout.joy_rating && (
+                        <div className="flex items-center gap-1 pr-3">
+                          <Smile className="h-4 w-4 text-accent" />
+                          <span className="text-sm">{workout.joy_rating}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
-            ))
-          )}
+            );
+          })}
         </CardContent>
       </Card>
 

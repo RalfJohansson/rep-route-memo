@@ -267,6 +267,14 @@ const Library = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="pace">Fart</Label>
+              <Input
+                id="pace"
+                type="text"
+                placeholder="T.ex. 5:00/km"
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Ansträngning (1-10)</Label>
               <div className="flex gap-1">
                 {[...Array(10)].map((_, i) => (
