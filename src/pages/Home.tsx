@@ -28,6 +28,7 @@ interface ScheduledWorkout {
     duration: number | null;
     effort: number;
     description: string | null;
+    pace?: string | null;
   };
 }
 
@@ -70,7 +71,8 @@ const Home = () => {
             category,
             duration,
             effort,
-            description
+            description,
+            pace
           )
         `)
         .eq("user_id", user.id)
@@ -181,23 +183,23 @@ const Home = () => {
 
       <div className="grid grid-cols-3 gap-3">
         <Card>
-          <CardContent className="pt-4 text-center">
-            <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-accent" />
-            <p className="text-2xl font-bold">{stats.completed}</p>
+          <CardContent className="pt-2 pb-2 text-center">
+            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-accent" />
+            <p className="text-xl font-bold">{stats.completed}</p>
             <p className="text-xs text-muted-foreground">Genomförda</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 text-center">
-            <Clock className="h-6 w-6 mx-auto mb-2 text-primary" />
-            <p className="text-2xl font-bold">{stats.totalTime}</p>
+          <CardContent className="pt-2 pb-2 text-center">
+            <Clock className="h-5 w-5 mx-auto mb-1 text-primary" />
+            <p className="text-xl font-bold">{stats.totalTime}</p>
             <p className="text-xs text-muted-foreground">Minuter</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 text-center">
-            <MapPin className="h-6 w-6 mx-auto mb-2 text-secondary" />
-            <p className="text-2xl font-bold">{stats.totalDistance.toFixed(1)}</p>
+          <CardContent className="pt-2 pb-2 text-center">
+            <MapPin className="h-5 w-5 mx-auto mb-1 text-secondary" />
+            <p className="text-xl font-bold">{stats.totalDistance.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">Km</p>
           </CardContent>
         </Card>
@@ -347,6 +349,7 @@ const Home = () => {
           effort: viewingWorkout.workout_library.effort,
           description: viewingWorkout.workout_library.description,
           category: viewingWorkout.workout_library.category,
+          pace: viewingWorkout.workout_library.pace,
         } : null}
         open={!!viewingWorkout}
         onOpenChange={(open) => !open && setViewingWorkout(null)}

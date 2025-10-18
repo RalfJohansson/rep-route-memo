@@ -19,6 +19,7 @@ interface WorkoutLibraryItem {
   duration: number | null;
   effort: number | null;
   description: string | null;
+  pace?: string | null;
 }
 
 const categories = [
@@ -43,6 +44,7 @@ const Library = () => {
   const [duration, setDuration] = useState("");
   const [effort, setEffort] = useState(5);
   const [description, setDescription] = useState("");
+  const [pace, setPace] = useState("");
 
   useEffect(() => {
     fetchWorkouts();
@@ -71,6 +73,7 @@ const Library = () => {
     setDuration("");
     setEffort(5);
     setDescription("");
+    setPace("");
     setEditingWorkout(null);
   };
 
@@ -82,6 +85,7 @@ const Library = () => {
       setDuration(workout.duration?.toString() || "");
       setEffort(workout.effort || 5);
       setDescription(workout.description || "");
+      setPace(workout.pace || "");
     } else {
       resetForm();
     }
@@ -103,6 +107,7 @@ const Library = () => {
       duration: duration ? parseInt(duration) : null,
       effort,
       description: description || null,
+      pace: pace || null,
       user_id: user.id,
     };
 
@@ -272,6 +277,8 @@ const Library = () => {
               <Input
                 id="pace"
                 type="text"
+                value={pace}
+                onChange={(e) => setPace(e.target.value)}
                 placeholder="T.ex. 5:00/km"
               />
             </div>

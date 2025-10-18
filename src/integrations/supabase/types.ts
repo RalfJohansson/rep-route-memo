@@ -104,6 +104,7 @@ export type Database = {
           effort: number | null
           id: string
           name: string
+          pace: string | null
           user_id: string
         }
         Insert: {
@@ -114,6 +115,7 @@ export type Database = {
           effort?: number | null
           id?: string
           name: string
+          pace?: string | null
           user_id: string
         }
         Update: {
@@ -124,6 +126,7 @@ export type Database = {
           effort?: number | null
           id?: string
           name?: string
+          pace?: string | null
           user_id?: string
         }
         Relationships: [

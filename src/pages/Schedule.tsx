@@ -37,6 +37,7 @@ interface ScheduledWorkout {
     duration: number | null;
     effort: number | null;
     description: string | null;
+    pace?: string | null;
   };
 }
 
@@ -70,7 +71,8 @@ const Schedule = () => {
           category,
           duration,
           effort,
-          description
+          description,
+          pace
         )
       `)
       .eq("user_id", user.id)

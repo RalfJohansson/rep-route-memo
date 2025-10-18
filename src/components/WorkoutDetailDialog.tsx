@@ -7,6 +7,7 @@ interface WorkoutDetailDialogProps {
     effort: number | null;
     description: string | null;
     category: string;
+    pace?: string | null;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -64,7 +65,7 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
             </div>
             <div>
               <h3 className="font-semibold mb-1 text-sm">Fart</h3>
-              <p className="text-muted-foreground text-sm">-</p>
+              <p className="text-muted-foreground text-sm">{workout.pace || "-"}</p>
             </div>
           </div>
 
