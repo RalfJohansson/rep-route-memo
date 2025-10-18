@@ -26,6 +26,7 @@ const categories = [
   { value: "distanspass", label: "Distanspass" },
   { value: "långpass", label: "Långpass" },
   { value: "styrka", label: "Styrka" },
+  { value: "tävling", label: "Tävling" },
 ];
 
 const Library = () => {

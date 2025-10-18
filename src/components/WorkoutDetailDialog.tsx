@@ -18,6 +18,7 @@ const getCategoryColor = (category: string) => {
     'distanspass': '#468771',
     'långpass': '#7AA6DB',
     'styrka': '#4E7C8C',
+    'tävling': '#000000',
   };
   return colors[category.toLowerCase()] || '#BF5E42';
 };

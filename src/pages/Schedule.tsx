@@ -16,6 +16,7 @@ const getCategoryColor = (category: string) => {
     'distanspass': '#468771',
     'långpass': '#7AA6DB',
     'styrka': '#4E7C8C',
+    'tävling': '#000000',
   };
   return colors[category.toLowerCase()] || '#BF5E42';
 };
@@ -266,6 +267,7 @@ const Schedule = () => {
                                    workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
                                    workout.workout_library.category === 'långpass' ? 'Långpass' : 
                                    workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                                   workout.workout_library.category === 'tävling' ? 'Tävling' :
                                    workout.workout_library.category}
                                 </span>
                               </div>

@@ -156,6 +156,7 @@ const Home = () => {
       'distanspass': '#468771',
       'långpass': '#7AA6DB',
       'styrka': '#4E7C8C',
+      'tävling': '#000000',
     };
     return colors[category.toLowerCase()] || '#BF5E42';
   };
@@ -236,11 +237,12 @@ const Home = () => {
                         className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
                         style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                       >
-                        <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
+                        <span className="writing-mode-vertical-rl rotate-180 text-[7px]">
                           {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
                            workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
                            workout.workout_library.category === 'långpass' ? 'Långpass' : 
                            workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                           workout.workout_library.category === 'tävling' ? 'Tävling' :
                            workout.workout_library.category}
                         </span>
                       </div>

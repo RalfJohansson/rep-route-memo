@@ -144,7 +144,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      workout_category: "intervallpass" | "distanspass" | "långpass" | "styrka"
+      workout_category:
+        | "intervallpass"
+        | "distanspass"
+        | "långpass"
+        | "styrka"
+        | "tävling"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -272,7 +277,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      workout_category: ["intervallpass", "distanspass", "långpass", "styrka"],
+      workout_category: [
+        "intervallpass",
+        "distanspass",
+        "långpass",
+        "styrka",
+        "tävling",
+      ],
     },
   },
 } as const
