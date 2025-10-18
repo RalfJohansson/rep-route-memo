@@ -168,9 +168,9 @@ const Library = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           {categories.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value} className="text-xs">
+            <TabsTrigger key={cat.value} value={cat.value} className="text-[11px]">
               {cat.label}
             </TabsTrigger>
           ))}
