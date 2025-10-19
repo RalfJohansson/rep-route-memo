@@ -263,13 +263,13 @@ const Library = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">Tid (minuter)</Label>
+              <Label htmlFor="duration">Tid</Label>
               <Input
                 id="duration"
-                type="number"
+                type="text"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                placeholder="45"
+                placeholder="T.ex. 45 eller 1:30"
               />
             </div>
             <div className="space-y-2">

@@ -47,6 +47,7 @@ const Schedule = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedWorkoutId, setSelectedWorkoutId] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [draggedWorkout, setDraggedWorkout] = useState<string | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout["workout_library"] | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -122,6 +123,7 @@ const Schedule = () => {
       toast.success("Pass tillagt!");
       setShowAddDialog(false);
       setSelectedWorkoutId("");
+      setSelectedCategory("");
       setSelectedDate("");
       fetchScheduledWorkouts();
     }
@@ -312,20 +314,42 @@ const Schedule = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Välj pass</label>
-              <Select value={selectedWorkoutId} onValueChange={setSelectedWorkoutId}>
+              <label className="text-sm font-medium">Välj typ av pass</label>
+              <Select value={selectedCategory} onValueChange={(value) => {
+                setSelectedCategory(value);
+                setSelectedWorkoutId("");
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Välj ett pass" />
+                  <SelectValue placeholder="Välj typ" />
                 </SelectTrigger>
                 <SelectContent>
-                  {libraryWorkouts.map((workout) => (
-                    <SelectItem key={workout.id} value={workout.id}>
-                      {workout.name} - {workout.category}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="intervallpass">Intervallpass</SelectItem>
+                  <SelectItem value="distanspass">Distanspass</SelectItem>
+                  <SelectItem value="långpass">Långpass</SelectItem>
+                  <SelectItem value="styrka">Styrka</SelectItem>
+                  <SelectItem value="tävling">Tävling</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {selectedCategory && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Välj pass</label>
+                <Select value={selectedWorkoutId} onValueChange={setSelectedWorkoutId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Välj ett pass" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {libraryWorkouts
+                      .filter((workout) => workout.category === selectedCategory)
+                      .map((workout) => (
+                        <SelectItem key={workout.id} value={workout.id}>
+                          {workout.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium">Välj datum</label>
               <input
