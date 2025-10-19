@@ -260,10 +260,15 @@ const Schedule = () => {
                                 setViewingWorkout(workout.workout_library);
                                 setShowDetailDialog(true);
                               }}
-                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[72px]"
+                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[72px] overflow-hidden"
                             >
+                              <div 
+                                className="w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
+                                style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
+                              >
+                              </div>
                               <Grip 
-                                className="h-4 w-4 text-muted-foreground cursor-move ml-3" 
+                                className="h-4 w-4 text-muted-foreground cursor-move" 
                                 onMouseDown={(e) => e.stopPropagation()}
                                 onClick={(e) => e.stopPropagation()}
                               />
