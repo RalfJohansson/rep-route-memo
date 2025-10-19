@@ -260,27 +260,22 @@ const Schedule = () => {
                                 setViewingWorkout(workout.workout_library);
                                 setShowDetailDialog(true);
                               }}
-                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors overflow-hidden"
+                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[72px]"
                             >
-                              <div 
-                                className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
-                                style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
-                              >
-                                <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
+                              <Grip 
+                                className="h-4 w-4 text-muted-foreground cursor-move ml-3" 
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <div className="flex-1 py-3">
+                                <p className="text-xs text-muted-foreground mb-1">
                                   {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
                                    workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
                                    workout.workout_library.category === 'långpass' ? 'Långpass' : 
                                    workout.workout_library.category === 'styrka' ? 'Styrka' : 
                                    workout.workout_library.category === 'tävling' ? 'Tävling' :
                                    workout.workout_library.category}
-                                </span>
-                              </div>
-                              <Grip 
-                                className="h-4 w-4 text-muted-foreground cursor-move" 
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <div className="flex-1 py-3">
+                                </p>
                                 <p className="text-sm font-medium">{workout.workout_library.name}</p>
                               </div>
                               <Button
