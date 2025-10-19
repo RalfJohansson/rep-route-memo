@@ -263,9 +263,17 @@ const Schedule = () => {
                               className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[72px] overflow-hidden"
                             >
                               <div 
-                                className="w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
+                                className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
                                 style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                               >
+                                <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
+                                  {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
+                                   workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
+                                   workout.workout_library.category === 'långpass' ? 'Långpass' : 
+                                   workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                                   workout.workout_library.category === 'tävling' ? 'Tävling' :
+                                   workout.workout_library.category}
+                                </span>
                               </div>
                               <Grip 
                                 className="h-4 w-4 text-muted-foreground cursor-move" 
