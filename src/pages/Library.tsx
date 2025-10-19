@@ -16,7 +16,7 @@ interface WorkoutLibraryItem {
   id: string;
   name: string;
   category: string;
-  duration: number | null;
+  duration: string | null;
   effort: number | null;
   description: string | null;
   pace?: string | null;
@@ -82,7 +82,7 @@ const Library = () => {
       setEditingWorkout(workout);
       setName(workout.name);
       setCategory(workout.category);
-      setDuration(workout.duration?.toString() || "");
+      setDuration(workout.duration || "");
       setEffort(workout.effort || 5);
       setDescription(workout.description || "");
       setPace(workout.pace || "");
@@ -104,7 +104,7 @@ const Library = () => {
     const workoutData = {
       name,
       category: category as "intervallpass" | "distanspass" | "långpass" | "styrka",
-      duration: duration ? parseInt(duration) : null,
+      duration: duration || null,
       effort,
       description: description || null,
       pace: pace || null,

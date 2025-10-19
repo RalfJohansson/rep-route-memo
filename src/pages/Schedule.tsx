@@ -34,7 +34,7 @@ interface ScheduledWorkout {
     id: string;
     name: string;
     category: string;
-    duration: number | null;
+    duration: string | null;
     effort: number | null;
     description: string | null;
     pace?: string | null;

@@ -100,7 +100,7 @@ export type Database = {
           category: Database["public"]["Enums"]["workout_category"]
           created_at: string | null
           description: string | null
-          duration: number | null
+          duration: string | null
           effort: number | null
           id: string
           name: string
@@ -111,7 +111,7 @@ export type Database = {
           category: Database["public"]["Enums"]["workout_category"]
           created_at?: string | null
           description?: string | null
-          duration?: number | null
+          duration?: string | null
           effort?: number | null
           id?: string
           name: string
@@ -122,7 +122,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["workout_category"]
           created_at?: string | null
           description?: string | null
-          duration?: number | null
+          duration?: string | null
           effort?: number | null
           id?: string
           name?: string

@@ -25,7 +25,7 @@ interface ScheduledWorkout {
   workout_library: {
     name: string;
     category: string;
-    duration: number | null;
+    duration: string | null;
     effort: number;
     description: string | null;
     pace?: string | null;

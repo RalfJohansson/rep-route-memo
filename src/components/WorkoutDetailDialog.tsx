@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 interface WorkoutDetailDialogProps {
   workout: {
     name: string;
-    duration: number | null;
+    duration: string | null;
     effort: number | null;
     description: string | null;
     category: string;
@@ -60,7 +60,7 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
             <div>
               <h3 className="font-semibold mb-1 text-sm">Tid</h3>
               <p className="text-muted-foreground text-sm">
-                {workout.duration ? `${workout.duration} min` : "-"}
+                {workout.duration || "-"}
               </p>
             </div>
             <div>
