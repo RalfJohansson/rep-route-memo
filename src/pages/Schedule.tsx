@@ -260,15 +260,15 @@ const Schedule = () => {
                                 setViewingWorkout(workout.workout_library);
                                 setShowDetailDialog(true);
                               }}
-                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[72px] overflow-hidden"
+                              className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[52px] overflow-hidden"
                             >
                               <div 
                                 className="w-12 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
                                 style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                               >
                                 <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
-                                  {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
-                                   workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
+                                  {workout.workout_library.category === 'intervallpass' ? 'Intervall' : 
+                                   workout.workout_library.category === 'distanspass' ? 'Distans' : 
                                    workout.workout_library.category === 'långpass' ? 'Långpass' : 
                                    workout.workout_library.category === 'styrka' ? 'Styrka' : 
                                    workout.workout_library.category === 'tävling' ? 'Tävling' :
@@ -281,14 +281,6 @@ const Schedule = () => {
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <div className="flex-1 py-3">
-                                <p className="text-xs text-muted-foreground mb-1">
-                                  {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
-                                   workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
-                                   workout.workout_library.category === 'långpass' ? 'Långpass' : 
-                                   workout.workout_library.category === 'styrka' ? 'Styrka' : 
-                                   workout.workout_library.category === 'tävling' ? 'Tävling' :
-                                   workout.workout_library.category}
-                                </p>
                                 <p className="text-sm font-medium">{workout.workout_library.name}</p>
                               </div>
                               <Button

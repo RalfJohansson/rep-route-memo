@@ -229,7 +229,7 @@ const Home = () => {
                   dayWorkouts.map((workout) => (
                     <div
                       key={workout.id}
-                      className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden min-h-[72px]"
+                      className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden min-h-[52px]"
                       onClick={(e) => {
                         if ((e.target as HTMLElement).closest('button')) return;
                         setViewingWorkout(workout);
@@ -240,8 +240,8 @@ const Home = () => {
                         style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                       >
                         <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
-                          {workout.workout_library.category === 'intervallpass' ? 'Intervallpass' : 
-                           workout.workout_library.category === 'distanspass' ? 'Distanspass' : 
+                          {workout.workout_library.category === 'intervallpass' ? 'Intervall' : 
+                           workout.workout_library.category === 'distanspass' ? 'Distans' : 
                            workout.workout_library.category === 'långpass' ? 'Långpass' : 
                            workout.workout_library.category === 'styrka' ? 'Styrka' : 
                            workout.workout_library.category === 'tävling' ? 'Tävling' :
