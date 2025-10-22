@@ -8,6 +8,12 @@ interface WorkoutDetailDialogProps {
     description: string | null;
     category: string;
     pace?: string | null;
+    completed?: boolean;
+    trained_time?: number | null;
+    distance?: number | null;
+    actual_pace?: string | null;
+    notes?: string | null;
+    joy_rating?: number | null;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,15 +62,53 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
         </div>
         
         <div className="p-4 space-y-4 overflow-y-auto flex-1">
+          {workout.completed && (
+            <div className="bg-accent/10 rounded-lg p-3 space-y-3 mb-4">
+              <h3 className="font-semibold text-sm">Genomförd träning</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {workout.trained_time && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tränad tid</p>
+                    <p className="font-medium">{workout.trained_time} min</p>
+                  </div>
+                )}
+                {workout.distance && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Distans</p>
+                    <p className="font-medium">{workout.distance} km</p>
+                  </div>
+                )}
+                {workout.actual_pace && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tempo</p>
+                    <p className="font-medium">{workout.actual_pace}</p>
+                  </div>
+                )}
+                {workout.joy_rating && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Glädje</p>
+                    <p className="font-medium">{workout.joy_rating}/5</p>
+                  </div>
+                )}
+              </div>
+              {workout.notes && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Anteckningar</p>
+                  <p className="text-sm whitespace-pre-wrap">{workout.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Tid</h3>
+              <h3 className="font-semibold mb-1 text-sm">Planerad tid</h3>
               <p className="text-muted-foreground text-sm">
                 {workout.duration || "-"}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Fart</h3>
+              <h3 className="font-semibold mb-1 text-sm">Planerad fart</h3>
               <p className="text-muted-foreground text-sm">{workout.pace || "-"}</p>
             </div>
           </div>

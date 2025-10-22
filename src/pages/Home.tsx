@@ -358,6 +358,12 @@ const Home = () => {
           description: viewingWorkout.workout_library.description,
           category: viewingWorkout.workout_library.category,
           pace: viewingWorkout.workout_library.pace,
+          completed: viewingWorkout.completed,
+          trained_time: viewingWorkout.trained_time,
+          distance: viewingWorkout.distance,
+          actual_pace: viewingWorkout.pace,
+          notes: viewingWorkout.notes,
+          joy_rating: viewingWorkout.joy_rating,
         } : null}
         open={!!viewingWorkout}
         onOpenChange={(open) => !open && setViewingWorkout(null)}
