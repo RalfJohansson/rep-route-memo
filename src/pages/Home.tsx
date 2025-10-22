@@ -294,7 +294,6 @@ const Home = () => {
                           <Smile 
                             className="h-5 w-5" 
                             style={{ color: getJoyColor(workout.joy_rating) }}
-                            fill={getJoyColor(workout.joy_rating)}
                           />
                         </div>
                       )}
