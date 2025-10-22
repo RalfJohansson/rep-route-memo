@@ -182,6 +182,12 @@ const Home = () => {
     return colors[category.toLowerCase()] || '#BF5E42';
   };
 
+  const getJoyColor = (rating: number) => {
+    if (rating === 1) return '#FF0000';
+    if (rating === 2) return '#FF9900';
+    return '#00A000'; // 3-5
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -284,9 +290,12 @@ const Home = () => {
                         <p className="font-medium">{workout.workout_library.name}</p>
                       </div>
                       {workout.completed && workout.joy_rating && (
-                        <div className="flex items-center gap-1 pr-3">
-                          <Smile className="h-4 w-4 text-accent" />
-                          <span className="text-sm">{workout.joy_rating}</span>
+                        <div className="flex items-center pr-3">
+                          <Smile 
+                            className="h-5 w-5" 
+                            style={{ color: getJoyColor(workout.joy_rating) }}
+                            fill={getJoyColor(workout.joy_rating)}
+                          />
                         </div>
                       )}
                     </div>
