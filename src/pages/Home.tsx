@@ -12,6 +12,7 @@ import { CheckCircle2, Clock, MapPin, TrendingUp, Smile } from "lucide-react";
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
+import heroImage from "@/assets/hero-running.jpg";
 
 interface ScheduledWorkout {
   id: string;
@@ -173,12 +174,19 @@ const Home = () => {
 
   return (
     <div className="p-4 space-y-6">
-      <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-6 text-white shadow-md">
-        <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
-        <p className="text-white/90">
-          {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
-          {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
-        </p>
+      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-[#d4c4b0]/70" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
+          <p className="text-white/90">
+            {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
+            {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
