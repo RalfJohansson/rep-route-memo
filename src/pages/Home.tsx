@@ -47,9 +47,27 @@ const Home = () => {
   // Form state
   const [trainedTime, setTrainedTime] = useState("");
   const [distance, setDistance] = useState("");
-  const [pace, setPace] = useState("");
+  const [calculatedPace, setCalculatedPace] = useState("");
   const [notes, setNotes] = useState("");
   const [joyRating, setJoyRating] = useState(3);
+
+  // Calculate pace when time or distance changes
+  useEffect(() => {
+    if (trainedTime && distance) {
+      const time = parseFloat(trainedTime);
+      const dist = parseFloat(distance);
+      if (time > 0 && dist > 0) {
+        const paceMinutes = time / dist;
+        const minutes = Math.floor(paceMinutes);
+        const seconds = Math.round((paceMinutes - minutes) * 60);
+        setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        setCalculatedPace("");
+      }
+    } else {
+      setCalculatedPace("");
+    }
+  }, [trainedTime, distance]);
 
   useEffect(() => {
     fetchWeekWorkouts();
@@ -103,7 +121,7 @@ const Home = () => {
       setSelectedWorkout(workout);
       setTrainedTime("");
       setDistance("");
-      setPace("");
+      setCalculatedPace("");
       setNotes("");
       setJoyRating(3);
     } else {
@@ -138,7 +156,7 @@ const Home = () => {
         completed: true,
         trained_time: trainedTime ? parseInt(trainedTime) : null,
         distance: distance ? parseFloat(distance) : null,
-        pace: pace || null,
+        pace: calculatedPace ? `${calculatedPace}/km` : null,
         notes: notes || null,
         joy_rating: joyRating,
       })
@@ -307,15 +325,14 @@ const Home = () => {
                 placeholder="10.5"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pace">Tempo (t.ex. 5:30/km)</Label>
-              <Input
-                id="pace"
-                value={pace}
-                onChange={(e) => setPace(e.target.value)}
-                placeholder="5:30/km"
-              />
-            </div>
+            {calculatedPace && (
+              <div className="space-y-2">
+                <Label>Tempo</Label>
+                <div className="px-3 py-2 rounded-md bg-muted text-sm">
+                  {calculatedPace}/km
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="notes">Anteckningar</Label>
               <Textarea
