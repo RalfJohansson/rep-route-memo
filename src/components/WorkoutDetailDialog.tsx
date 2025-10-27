@@ -55,44 +55,44 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90vw] sm:max-w-md p-0 gap-0 rounded-2xl max-h-[90vh] flex flex-col">
         <div 
-          className="text-white px-4 py-3 rounded-t-2xl flex-shrink-0"
+          className="text-white px-6 py-4 rounded-t-2xl flex-shrink-0"
           style={{ backgroundColor: getCategoryColor(workout.category) }}
         >
-          <h2 className="text-lg font-semibold">{workout.name}</h2>
+          <h2 className="text-xl font-semibold">{workout.name}</h2>
         </div>
         
-        <div className="p-4 space-y-4 overflow-y-auto flex-1">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {workout.completed && (
-            <div className="bg-accent/10 rounded-lg p-3 space-y-3 mb-4">
-              <h3 className="font-semibold text-sm">Genomförd träning</h3>
+            <div className="bg-accent/10 rounded-xl p-4 space-y-3 border border-accent/20">
+              <h3 className="font-semibold text-base">Genomförd träning</h3>
               <div className="grid grid-cols-2 gap-4">
                 {workout.trained_time && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Tränad tid</p>
-                    <p className="font-medium">{workout.trained_time} min</p>
+                    <p className="text-xs text-muted-foreground mb-1">Tränad tid</p>
+                    <p className="font-semibold text-base">{workout.trained_time} min</p>
                   </div>
                 )}
                 {workout.distance && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Distans</p>
-                    <p className="font-medium">{workout.distance} km</p>
+                    <p className="text-xs text-muted-foreground mb-1">Distans</p>
+                    <p className="font-semibold text-base">{workout.distance} km</p>
                   </div>
                 )}
                 {workout.actual_pace && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Tempo</p>
-                    <p className="font-medium">{workout.actual_pace}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Tempo</p>
+                    <p className="font-semibold text-base">{workout.actual_pace}</p>
                   </div>
                 )}
                 {workout.joy_rating && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Glädje</p>
-                    <p className="font-medium">{workout.joy_rating}/5</p>
+                    <p className="text-xs text-muted-foreground mb-1">Glädje</p>
+                    <p className="font-semibold text-base">{workout.joy_rating}/5</p>
                   </div>
                 )}
               </div>
               {workout.notes && (
-                <div>
+                <div className="pt-2 border-t border-accent/20">
                   <p className="text-xs text-muted-foreground mb-1">Anteckningar</p>
                   <p className="text-sm whitespace-pre-wrap">{workout.notes}</p>
                 </div>
@@ -100,42 +100,46 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Planerad tid</h3>
-              <p className="text-muted-foreground text-sm">
+              <h3 className="font-semibold mb-2 text-base">Planerad tid</h3>
+              <p className="text-foreground/80 text-lg font-medium">
                 {workout.duration || "-"}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-sm">Planerad fart</h3>
-              <p className="text-muted-foreground text-sm">{workout.pace || "-"}</p>
+              <h3 className="font-semibold mb-2 text-base">Planerad fart</h3>
+              <p className="text-foreground/80 text-lg font-medium">{workout.pace || "-"}</p>
             </div>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2 text-sm">Ansträngning</h3>
-            <div className="flex gap-1 mb-1">
-              {[...Array(10)].map((_, i) => {
-                const color = getEffortColor(i + 1, workout.effort || 0);
-                return (
-                  <div
-                    key={i}
-                    className={`flex-1 h-4 rounded-full ${typeof color === 'string' && color.startsWith('#') ? '' : color}`}
-                    style={typeof color === 'string' && color.startsWith('#') ? { backgroundColor: color } : undefined}
-                  />
-                );
-              })}
+            <h3 className="font-semibold mb-3 text-base">Ansträngning</h3>
+            <div className="space-y-2">
+              <div className="flex gap-1.5">
+                {[...Array(10)].map((_, i) => {
+                  const color = getEffortColor(i + 1, workout.effort || 0);
+                  return (
+                    <div
+                      key={i}
+                      className={`flex-1 h-6 rounded-full ${typeof color === 'string' && color.startsWith('#') ? '' : color}`}
+                      style={typeof color === 'string' && color.startsWith('#') ? { backgroundColor: color } : undefined}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex justify-end">
+                <p className="text-sm text-muted-foreground font-medium">
+                  {workout.effort || 0} - {workout.effort && workout.effort > 7 ? "hög" : workout.effort && workout.effort > 4 ? "medel" : "låg"}
+                </p>
+              </div>
             </div>
-            <p className="text-right text-xs text-muted-foreground">
-              {workout.effort || 0} - {workout.effort && workout.effort > 7 ? "hög" : workout.effort && workout.effort > 4 ? "medel" : "låg"}
-            </p>
           </div>
 
-          <div className="flex flex-col max-h-[30vh]">
-            <h3 className="font-semibold mb-1 text-sm">Beskrivning</h3>
-            <div className="overflow-y-auto flex-1">
-              <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+          <div>
+            <h3 className="font-semibold mb-3 text-base">Beskrivning</h3>
+            <div className="bg-muted/30 rounded-lg p-4 max-h-[30vh] overflow-y-auto">
+              <p className="text-foreground/80 text-sm whitespace-pre-wrap leading-relaxed">
                 {workout.description || "Ingen beskrivning tillgänglig"}
               </p>
             </div>
