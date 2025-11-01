@@ -1,9 +1,20 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+interface PaceZones {
+  pace_1k: string;
+  pace_5k: string;
+  pace_10k: string;
+  pace_half_marathon: string;
+  pace_marathon: string;
+  pace_easy: string;
+  pace_interval: string;
+  pace_threshold: string;
+  pace_tempo: string;
+}
 
 interface WorkoutDetailDialogProps {
   workout: {
@@ -36,8 +47,8 @@ const getCategoryColor = (category: string) => {
 };
 
 const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialogProps) => {
-  const [paceZones, setPaceZones] = useState<any>(null);
   const [showPaceZones, setShowPaceZones] = useState(false);
+  const [paceZones, setPaceZones] = useState<PaceZones | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -59,8 +70,19 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
         .maybeSingle();
 
       if (error) throw error;
+
       if (data) {
-        setPaceZones(data);
+        setPaceZones({
+          pace_1k: data.pace_1k,
+          pace_5k: data.pace_5k,
+          pace_10k: data.pace_10k,
+          pace_half_marathon: data.pace_half_marathon,
+          pace_marathon: data.pace_marathon,
+          pace_easy: data.pace_easy,
+          pace_interval: data.pace_interval,
+          pace_threshold: data.pace_threshold,
+          pace_tempo: data.pace_tempo,
+        });
       }
     } catch (error: any) {
       console.error("Error fetching pace zones:", error);
@@ -178,54 +200,56 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
           </div>
 
           {paceZones && (
-            <Collapsible open={showPaceZones} onOpenChange={setShowPaceZones}>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <span>Visa tempozoner</span>
-                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showPaceZones ? 'rotate-180' : ''}`} />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-2 mt-2">
-                <div className="grid grid-cols-2 gap-3 p-3 bg-muted rounded-lg">
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setShowPaceZones(!showPaceZones)}
+              >
+                Visa tempozoner
+                {showPaceZones ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+              {showPaceZones && (
+                <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-muted">
                   <div>
-                    <p className="text-xs font-medium">1k</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_1k}/km</p>
+                    <p className="text-xs text-muted-foreground">1K</p>
+                    <p className="text-sm font-medium">{paceZones.pace_1k} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">5k</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_5k}/km</p>
+                    <p className="text-xs text-muted-foreground">5K</p>
+                    <p className="text-sm font-medium">{paceZones.pace_5k} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">10k</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_10k}/km</p>
+                    <p className="text-xs text-muted-foreground">10K</p>
+                    <p className="text-sm font-medium">{paceZones.pace_10k} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Halvmara</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_half_marathon}/km</p>
+                    <p className="text-xs text-muted-foreground">Halvmaraton</p>
+                    <p className="text-sm font-medium">{paceZones.pace_half_marathon} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Marathon</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_marathon}/km</p>
+                    <p className="text-xs text-muted-foreground">Maraton</p>
+                    <p className="text-sm font-medium">{paceZones.pace_marathon} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Distansfart</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_easy}/km</p>
+                    <p className="text-xs text-muted-foreground">Distansfart</p>
+                    <p className="text-sm font-medium">{paceZones.pace_easy} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Intervall</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_interval}/km</p>
+                    <p className="text-xs text-muted-foreground">Intervall</p>
+                    <p className="text-sm font-medium">{paceZones.pace_interval} min/km</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Tröskel</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_threshold}/km</p>
+                    <p className="text-xs text-muted-foreground">Tröskel</p>
+                    <p className="text-sm font-medium">{paceZones.pace_threshold} min/km</p>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium">Tempo</p>
-                    <p className="text-sm text-muted-foreground">{paceZones.pace_tempo}/km</p>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">Tempo</p>
+                    <p className="text-sm font-medium">{paceZones.pace_tempo} min/km</p>
                   </div>
                 </div>
-              </CollapsibleContent>
-            </Collapsible>
+              )}
+            </div>
           )}
         </div>
       </DialogContent>

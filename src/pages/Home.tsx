@@ -57,9 +57,10 @@ const Home = () => {
       const time = parseFloat(trainedTime);
       const dist = parseFloat(distance);
       if (time > 0 && dist > 0) {
-        const paceMinutes = time / dist;
-        const minutes = Math.floor(paceMinutes);
-        const seconds = Math.round((paceMinutes - minutes) * 60);
+        const totalSeconds = time * 60;
+        const secondsPerKm = totalSeconds / dist;
+        const minutes = Math.floor(secondsPerKm / 60);
+        const seconds = Math.round(secondsPerKm % 60);
         setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       } else {
         setCalculatedPace("");

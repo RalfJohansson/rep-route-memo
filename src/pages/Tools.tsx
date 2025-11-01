@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Calculator } from "lucide-react";
 
 interface PaceZones {
-  vdot_score: number;
   pace_1k: string;
   pace_5k: string;
   pace_10k: string;
@@ -21,8 +19,8 @@ interface PaceZones {
 }
 
 const Tools = () => {
-  const [minutes, setMinutes] = useState("");
-  const [seconds, setSeconds] = useState("");
+  const [time5kMinutes, setTime5kMinutes] = useState("");
+  const [time5kSeconds, setTime5kSeconds] = useState("");
   const [paceZones, setPaceZones] = useState<PaceZones | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -44,8 +42,19 @@ const Tools = () => {
         .maybeSingle();
 
       if (error) throw error;
+
       if (data) {
-        setPaceZones(data);
+        setPaceZones({
+          pace_1k: data.pace_1k,
+          pace_5k: data.pace_5k,
+          pace_10k: data.pace_10k,
+          pace_half_marathon: data.pace_half_marathon,
+          pace_marathon: data.pace_marathon,
+          pace_easy: data.pace_easy,
+          pace_interval: data.pace_interval,
+          pace_threshold: data.pace_threshold,
+          pace_tempo: data.pace_tempo,
+        });
       }
     } catch (error: any) {
       console.error("Error fetching pace zones:", error);
@@ -54,60 +63,59 @@ const Tools = () => {
     }
   };
 
-  // Calculate VDOT based on 5k time using Jack Daniels formula
-  const calculateVDOT = (time5kSeconds: number): number => {
-    const velocity = 5000 / time5kSeconds; // meters per second
+  const calculateVDOT = (totalSeconds: number): number => {
+    const velocity = 5000 / totalSeconds;
     const vo2 = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity;
-    const vdot = vo2 / (1 - Math.exp(-0.012778 * time5kSeconds) * 0.8);
-    return Math.round(vdot);
+    const percentMax = 0.8 + 0.1894393 * Math.exp(-0.012778 * totalSeconds) + 0.2989558 * Math.exp(-0.1932605 * totalSeconds);
+    return vo2 / percentMax;
   };
 
-  // Calculate pace for different distances based on VDOT
-  const calculatePace = (vdot: number, distance: number): string => {
-    // Simplified Jack Daniels pace calculation
-    const percentVO2Max = distance <= 1600 ? 0.98 : distance <= 5000 ? 0.95 : distance <= 10000 ? 0.90 : distance <= 21097 ? 0.85 : 0.80;
-    const velocity = (vdot * percentVO2Max) / 0.182258;
-    const paceSeconds = distance / velocity;
-    const minutes = Math.floor(paceSeconds / 60);
-    const seconds = Math.round(paceSeconds % 60);
+  const formatPace = (secondsPerKm: number): string => {
+    const minutes = Math.floor(secondsPerKm / 60);
+    const seconds = Math.round(secondsPerKm % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const calculateZones = async () => {
-    if (!minutes || !seconds) {
-      toast.error("Fyll i tid på 5k");
+  const calculatePaceForDistance = (vdot: number, distance: number, percentVO2Max: number): string => {
+    const velocity = (vdot * percentVO2Max - 3.5) / 0.2;
+    const timeInSeconds = (distance * 1000) / velocity;
+    const pacePerKm = timeInSeconds / distance;
+    return formatPace(pacePerKm);
+  };
+
+  const handleCalculate = async () => {
+    const minutes = parseInt(time5kMinutes);
+    const seconds = parseInt(time5kSeconds);
+
+    if (!minutes || minutes < 0 || !seconds || seconds < 0 || seconds >= 60) {
+      toast.error("Ange giltig tid (minuter och sekunder)");
       return;
     }
 
-    const totalSeconds = parseInt(minutes) * 60 + parseInt(seconds);
+    const totalSeconds = minutes * 60 + seconds;
     const vdot = calculateVDOT(totalSeconds);
 
-    // Calculate paces for different distances and training zones
     const zones: PaceZones = {
-      vdot_score: vdot,
-      pace_1k: calculatePace(vdot, 1000),
-      pace_5k: calculatePace(vdot, 5000),
-      pace_10k: calculatePace(vdot, 10000),
-      pace_half_marathon: calculatePace(vdot, 21097),
-      pace_marathon: calculatePace(vdot, 42195),
-      pace_easy: calculatePace(vdot * 0.65, 1000), // Easy pace (65% of VDOT)
-      pace_interval: calculatePace(vdot * 0.98, 1000), // Interval pace
-      pace_threshold: calculatePace(vdot * 0.88, 1000), // Threshold pace
-      pace_tempo: calculatePace(vdot * 0.88, 1000), // Tempo pace (same as threshold)
+      pace_1k: calculatePaceForDistance(vdot, 1, 0.98),
+      pace_5k: formatPace(totalSeconds / 5),
+      pace_10k: calculatePaceForDistance(vdot, 10, 0.94),
+      pace_half_marathon: calculatePaceForDistance(vdot, 21.1, 0.88),
+      pace_marathon: calculatePaceForDistance(vdot, 42.2, 0.84),
+      pace_easy: calculatePaceForDistance(vdot, 5, 0.70),
+      pace_interval: calculatePaceForDistance(vdot, 1.2, 0.95),
+      pace_threshold: calculatePaceForDistance(vdot, 5, 0.88),
+      pace_tempo: calculatePaceForDistance(vdot, 10, 0.86),
     };
 
     setPaceZones(zones);
 
-    // Save to database
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        toast.error("Du måste vara inloggad");
-        return;
-      }
+      if (!user) return;
 
       const { error } = await supabase.from("pace_zones").insert({
         user_id: user.id,
+        vdot_score: Math.round(vdot),
         time_5k: totalSeconds,
         ...zones,
       });
@@ -116,7 +124,6 @@ const Tools = () => {
       toast.success("Tempozoner sparade!");
     } catch (error: any) {
       toast.error("Kunde inte spara tempozoner");
-      console.error(error);
     }
   };
 
@@ -132,34 +139,34 @@ const Tools = () => {
     <div className="p-4 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            VDOT Kalkylator
-          </CardTitle>
+          <CardTitle>VDOT Tempokalkylator</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Din tid på 5k</Label>
+            <Label>Din 5K-tid</Label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
                   type="number"
                   placeholder="Minuter"
-                  value={minutes}
-                  onChange={(e) => setMinutes(e.target.value)}
+                  value={time5kMinutes}
+                  onChange={(e) => setTime5kMinutes(e.target.value)}
+                  min="0"
                 />
               </div>
               <div className="flex-1">
                 <Input
                   type="number"
                   placeholder="Sekunder"
-                  value={seconds}
-                  onChange={(e) => setSeconds(e.target.value)}
+                  value={time5kSeconds}
+                  onChange={(e) => setTime5kSeconds(e.target.value)}
+                  min="0"
+                  max="59"
                 />
               </div>
             </div>
           </div>
-          <Button onClick={calculateZones} className="w-full">
+          <Button onClick={handleCalculate} className="w-full">
             Beräkna tempozoner
           </Button>
         </CardContent>
@@ -169,45 +176,44 @@ const Tools = () => {
         <Card>
           <CardHeader>
             <CardTitle>Dina tempozoner</CardTitle>
-            <p className="text-sm text-muted-foreground">VDOT: {paceZones.vdot_score}</p>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">1k</p>
-                <p className="text-muted-foreground">{paceZones.pace_1k}/km</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">1K</p>
+                <p className="font-semibold">{paceZones.pace_1k} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">5k</p>
-                <p className="text-muted-foreground">{paceZones.pace_5k}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">5K</p>
+                <p className="font-semibold">{paceZones.pace_5k} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">10k</p>
-                <p className="text-muted-foreground">{paceZones.pace_10k}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">10K</p>
+                <p className="font-semibold">{paceZones.pace_10k} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Halvmara</p>
-                <p className="text-muted-foreground">{paceZones.pace_half_marathon}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Halvmaraton</p>
+                <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Marathon</p>
-                <p className="text-muted-foreground">{paceZones.pace_marathon}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Maraton</p>
+                <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Distansfart</p>
-                <p className="text-muted-foreground">{paceZones.pace_easy}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Distansfart</p>
+                <p className="font-semibold">{paceZones.pace_easy} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Intervall</p>
-                <p className="text-muted-foreground">{paceZones.pace_interval}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Intervall</p>
+                <p className="font-semibold">{paceZones.pace_interval} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Tröskel</p>
-                <p className="text-muted-foreground">{paceZones.pace_threshold}/km</p>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Tröskel</p>
+                <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
               </div>
-              <div>
-                <p className="text-sm font-medium">Tempo</p>
-                <p className="text-muted-foreground">{paceZones.pace_tempo}/km</p>
+              <div className="p-3 rounded-lg bg-muted col-span-2">
+                <p className="text-xs text-muted-foreground">Tempo</p>
+                <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
               </div>
             </div>
           </CardContent>
