@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Schedule from "./pages/Schedule";
+import Tools from "./pages/Tools";
 import Library from "./pages/Library";
 import Profile from "./pages/Profile";
 import Layout from "./components/Layout";
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Layout><Home /></Layout>} />
           <Route path="/schedule" element={<Layout><Schedule /></Layout>} />
+          <Route path="/tools" element={<Layout><Tools /></Layout>} />
           <Route path="/library" element={<Layout><Library /></Layout>} />
           <Route path="/profile" element={<Layout><Profile /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

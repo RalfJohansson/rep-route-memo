@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      pace_zones: {
+        Row: {
+          created_at: string | null
+          id: string
+          pace_10k: string
+          pace_1k: string
+          pace_5k: string
+          pace_easy: string
+          pace_half_marathon: string
+          pace_interval: string
+          pace_marathon: string
+          pace_tempo: string
+          pace_threshold: string
+          time_5k: number
+          updated_at: string | null
+          user_id: string
+          vdot_score: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pace_10k: string
+          pace_1k: string
+          pace_5k: string
+          pace_easy: string
+          pace_half_marathon: string
+          pace_interval: string
+          pace_marathon: string
+          pace_tempo: string
+          pace_threshold: string
+          time_5k: number
+          updated_at?: string | null
+          user_id: string
+          vdot_score: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pace_10k?: string
+          pace_1k?: string
+          pace_5k?: string
+          pace_easy?: string
+          pace_half_marathon?: string
+          pace_interval?: string
+          pace_marathon?: string
+          pace_tempo?: string
+          pace_threshold?: string
+          time_5k?: number
+          updated_at?: string | null
+          user_id?: string
+          vdot_score?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

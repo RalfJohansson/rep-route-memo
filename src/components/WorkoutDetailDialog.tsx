@@ -1,4 +1,9 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutDetailDialogProps {
   workout: {
@@ -31,6 +36,37 @@ const getCategoryColor = (category: string) => {
 };
 
 const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialogProps) => {
+  const [paceZones, setPaceZones] = useState<any>(null);
+  const [showPaceZones, setShowPaceZones] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      fetchPaceZones();
+    }
+  }, [open]);
+
+  const fetchPaceZones = async () => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("pace_zones")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setPaceZones(data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching pace zones:", error);
+    }
+  };
+
   if (!workout) return null;
 
   const effortColors = [
@@ -140,6 +176,57 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
               </p>
             </div>
           </div>
+
+          {paceZones && (
+            <Collapsible open={showPaceZones} onOpenChange={setShowPaceZones}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <span>Visa tempozoner</span>
+                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showPaceZones ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 mt-2">
+                <div className="grid grid-cols-2 gap-3 p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-xs font-medium">1k</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_1k}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">5k</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_5k}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">10k</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_10k}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Halvmara</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_half_marathon}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Marathon</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_marathon}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Distansfart</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_easy}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Intervall</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_interval}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Tröskel</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_threshold}/km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Tempo</p>
+                    <p className="text-sm text-muted-foreground">{paceZones.pace_tempo}/km</p>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       </DialogContent>
     </Dialog>
