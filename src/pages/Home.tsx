@@ -59,8 +59,15 @@ const Home = () => {
       if (time > 0 && dist > 0) {
         const totalSeconds = time * 60;
         const secondsPerKm = totalSeconds / dist;
-        const minutes = Math.floor(secondsPerKm / 60);
-        const seconds = Math.round(secondsPerKm % 60);
+        let minutes = Math.floor(secondsPerKm / 60);
+        let seconds = Math.floor(secondsPerKm % 60);
+        
+        // Handle edge case where seconds might be 60
+        if (seconds >= 60) {
+          minutes += 1;
+          seconds = 0;
+        }
+        
         setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       } else {
         setCalculatedPace("");
@@ -157,7 +164,7 @@ const Home = () => {
         completed: true,
         trained_time: trainedTime ? parseInt(trainedTime) : null,
         distance: distance ? parseFloat(distance) : null,
-        pace: calculatedPace ? `${calculatedPace}/km` : null,
+        pace: calculatedPace ? `${calculatedPace} min/km` : null,
         notes: notes || null,
         joy_rating: joyRating,
       })
@@ -338,7 +345,7 @@ const Home = () => {
               <div className="space-y-2">
                 <Label>Tempo</Label>
                 <div className="px-3 py-2 rounded-md bg-muted text-sm">
-                  {calculatedPace}/km
+                  {calculatedPace} min/km
                 </div>
               </div>
             )}
