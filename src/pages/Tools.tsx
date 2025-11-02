@@ -108,7 +108,7 @@ const Tools = () => {
 
     const zones: PaceZones = {
       pace_1k: calculatePaceForDistance(vdot, 1.00),    // Snabbast
-      pace_5k: calculatePaceForDistance(vdot, 0.95),    // 5K race pace
+      pace_5k: formatPace(totalSeconds / 5),            // Direkt från inmatad 5K-tid
       pace_10k: calculatePaceForDistance(vdot, 0.90),   // Långsammare än 5K
       pace_interval: calculatePaceForDistance(vdot, 0.98),
       pace_threshold: calculatePaceForDistance(vdot, 0.88),
