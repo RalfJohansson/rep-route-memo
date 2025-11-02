@@ -64,7 +64,7 @@ const Tools = () => {
   };
 
   const calculateVDOT = (totalSeconds: number): number => {
-    const velocity = 5000 / totalSeconds; // meters per second
+    const velocity = 5000 / (totalSeconds / 60); // meters per minute
     const vo2 = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity;
     const percentMax = 0.8 + 0.1894393 * Math.exp(-0.012778 * totalSeconds) + 0.2989558 * Math.exp(-0.1932605 * totalSeconds);
     return vo2 / percentMax;
@@ -77,12 +77,20 @@ const Tools = () => {
   };
 
   const calculatePaceForDistance = (vdot: number, percentVO2Max: number): string => {
-    // Calculate velocity in meters per second
-    const vo2 = vdot * percentVO2Max;
-    const velocity = (vo2 - 3.5) / 0.2;
+    // Calculate target VO2 for this intensity
+    const targetVO2 = vdot * percentVO2Max;
     
-    // Calculate seconds per kilometer
-    const secondsPerKm = 1000 / velocity;
+    // Calculate velocity in meters per minute using inverse of VO2 formula
+    // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
+    // Solve quadratic equation: 0.000104*v^2 + 0.182258*v + (-4.60 - targetVO2) = 0
+    const a = 0.000104;
+    const b = 0.182258;
+    const c = -4.60 - targetVO2;
+    const velocity = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a); // meters per minute
+    
+    // Convert to seconds per kilometer
+    const minutesPerKm = 1000 / velocity;
+    const secondsPerKm = minutesPerKm * 60;
     return formatPace(secondsPerKm);
   };
 
