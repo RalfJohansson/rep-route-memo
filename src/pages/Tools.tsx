@@ -107,15 +107,15 @@ const Tools = () => {
     const vdot = calculateVDOT(totalSeconds);
 
     const zones: PaceZones = {
-      pace_1k: calculatePaceForDistance(vdot, 0.98),
-      pace_5k: formatPace(totalSeconds / 5),
-      pace_10k: calculatePaceForDistance(vdot, 0.94),
-      pace_half_marathon: calculatePaceForDistance(vdot, 0.88),
-      pace_marathon: calculatePaceForDistance(vdot, 0.84),
-      pace_easy: calculatePaceForDistance(vdot, 0.70),
-      pace_interval: calculatePaceForDistance(vdot, 0.95),
+      pace_1k: calculatePaceForDistance(vdot, 1.00),    // Snabbast
+      pace_5k: calculatePaceForDistance(vdot, 0.95),    // 5K race pace
+      pace_10k: calculatePaceForDistance(vdot, 0.90),   // Långsammare än 5K
+      pace_interval: calculatePaceForDistance(vdot, 0.98),
       pace_threshold: calculatePaceForDistance(vdot, 0.88),
       pace_tempo: calculatePaceForDistance(vdot, 0.86),
+      pace_half_marathon: calculatePaceForDistance(vdot, 0.85), // Långsammare än 10K
+      pace_marathon: calculatePaceForDistance(vdot, 0.80),      // Långsammast race pace
+      pace_easy: calculatePaceForDistance(vdot, 0.65),          // Lugnt löptempo
     };
 
     setPaceZones(zones);
