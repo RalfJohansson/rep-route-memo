@@ -64,7 +64,7 @@ const Tools = () => {
   };
 
   const calculateVDOT = (totalSeconds: number): number => {
-    const velocity = 5000 / totalSeconds;
+    const velocity = 5000 / totalSeconds; // meters per second
     const vo2 = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity;
     const percentMax = 0.8 + 0.1894393 * Math.exp(-0.012778 * totalSeconds) + 0.2989558 * Math.exp(-0.1932605 * totalSeconds);
     return vo2 / percentMax;
@@ -76,11 +76,14 @@ const Tools = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const calculatePaceForDistance = (vdot: number, distance: number, percentVO2Max: number): string => {
-    const velocity = (vdot * percentVO2Max - 3.5) / 0.2;
-    const timeInSeconds = (distance * 1000) / velocity;
-    const pacePerKm = timeInSeconds / distance;
-    return formatPace(pacePerKm);
+  const calculatePaceForDistance = (vdot: number, percentVO2Max: number): string => {
+    // Calculate velocity in meters per second
+    const vo2 = vdot * percentVO2Max;
+    const velocity = (vo2 - 3.5) / 0.2;
+    
+    // Calculate seconds per kilometer
+    const secondsPerKm = 1000 / velocity;
+    return formatPace(secondsPerKm);
   };
 
   const handleCalculate = async () => {
@@ -96,15 +99,15 @@ const Tools = () => {
     const vdot = calculateVDOT(totalSeconds);
 
     const zones: PaceZones = {
-      pace_1k: calculatePaceForDistance(vdot, 1, 0.98),
+      pace_1k: calculatePaceForDistance(vdot, 0.98),
       pace_5k: formatPace(totalSeconds / 5),
-      pace_10k: calculatePaceForDistance(vdot, 10, 0.94),
-      pace_half_marathon: calculatePaceForDistance(vdot, 21.1, 0.88),
-      pace_marathon: calculatePaceForDistance(vdot, 42.2, 0.84),
-      pace_easy: calculatePaceForDistance(vdot, 5, 0.70),
-      pace_interval: calculatePaceForDistance(vdot, 1.2, 0.95),
-      pace_threshold: calculatePaceForDistance(vdot, 5, 0.88),
-      pace_tempo: calculatePaceForDistance(vdot, 10, 0.86),
+      pace_10k: calculatePaceForDistance(vdot, 0.94),
+      pace_half_marathon: calculatePaceForDistance(vdot, 0.88),
+      pace_marathon: calculatePaceForDistance(vdot, 0.84),
+      pace_easy: calculatePaceForDistance(vdot, 0.70),
+      pace_interval: calculatePaceForDistance(vdot, 0.95),
+      pace_threshold: calculatePaceForDistance(vdot, 0.88),
+      pace_tempo: calculatePaceForDistance(vdot, 0.86),
     };
 
     setPaceZones(zones);
