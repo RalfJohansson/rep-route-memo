@@ -133,16 +133,11 @@ const Home = () => {
       setNotes("");
       setJoyRating(3);
     } else {
-      // Uncheck - clear data
+      // Uncheck - behåll all data, ändra bara completed status
       const { error } = await supabase
         .from("scheduled_workouts")
         .update({
           completed: false,
-          trained_time: null,
-          distance: null,
-          pace: null,
-          notes: null,
-          joy_rating: null,
         })
         .eq("id", workout.id);
 
