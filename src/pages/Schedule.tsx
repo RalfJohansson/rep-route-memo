@@ -165,6 +165,9 @@ const Schedule = () => {
   };
 
   // Group workouts by week
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const currentWeekKey = format(currentWeekStart, "yyyy-MM-dd");
+  
   const workoutsByWeek = workouts.reduce((acc, workout) => {
     const workoutDate = parseISO(workout.scheduled_date);
     const weekStart = startOfWeek(workoutDate, { weekStartsOn: 1 });
@@ -176,6 +179,11 @@ const Schedule = () => {
     acc[weekKey].push(workout);
     return acc;
   }, {} as Record<string, ScheduledWorkout[]>);
+
+  // Add current week even if empty
+  if (!workoutsByWeek[currentWeekKey]) {
+    workoutsByWeek[currentWeekKey] = [];
+  }
 
   const sortedWeeks = Object.keys(workoutsByWeek).sort();
 

@@ -91,7 +91,7 @@ const Tools = () => {
     const minutes = parseInt(time5kMinutes);
     const seconds = parseInt(time5kSeconds);
 
-    if (!minutes || minutes < 0 || !seconds || seconds < 0 || seconds >= 60) {
+    if (!minutes || minutes < 0 || isNaN(seconds) || seconds < 0 || seconds >= 60) {
       toast.error("Ange giltig tid (minuter och sekunder)");
       return;
     }
@@ -183,43 +183,56 @@ const Tools = () => {
           <CardHeader>
             <CardTitle>Dina tempozoner</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">1K</p>
-                <p className="font-semibold">{paceZones.pace_1k} min/km</p>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground">Tävlingstempo</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">1K</p>
+                  <p className="font-semibold">{paceZones.pace_1k} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">5K</p>
+                  <p className="font-semibold">{paceZones.pace_5k} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">10K</p>
+                  <p className="font-semibold">{paceZones.pace_10k} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">Halvmaraton</p>
+                  <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted col-span-2">
+                  <p className="text-xs text-muted-foreground">Maraton</p>
+                  <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">5K</p>
-                <p className="font-semibold">{paceZones.pace_5k} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">10K</p>
-                <p className="font-semibold">{paceZones.pace_10k} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">Halvmaraton</p>
-                <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">Maraton</p>
-                <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">Distansfart</p>
-                <p className="font-semibold">{paceZones.pace_easy} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">Intervall</p>
-                <p className="font-semibold">{paceZones.pace_interval} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted">
-                <p className="text-xs text-muted-foreground">Tröskel</p>
-                <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted col-span-2">
-                <p className="text-xs text-muted-foreground">Tempo</p>
-                <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground">Träningszoner</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">Intervall</p>
+                  <p className="font-semibold">{paceZones.pace_interval} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">Tröskel</p>
+                  <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">Tempo</p>
+                  <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">Distansfart</p>
+                  <p className="font-semibold">{paceZones.pace_easy} min/km</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted col-span-2">
+                  <p className="text-xs text-muted-foreground">Lugn (Långpass)</p>
+                  <p className="font-semibold">{paceZones.pace_easy} min/km</p>
+                </div>
               </div>
             </div>
           </CardContent>
