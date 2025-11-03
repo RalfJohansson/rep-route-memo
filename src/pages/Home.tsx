@@ -89,6 +89,7 @@ const Home = () => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
       const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
+      // Hämta veckans pass för att visa
       const { data, error } = await supabase
         .from("scheduled_workouts")
         .select(`
@@ -111,10 +112,19 @@ const Home = () => {
 
       setWorkouts(data || []);
       
-      // Calculate stats
-      const completed = data?.filter(w => w.completed).length || 0;
-      const totalTime = data?.reduce((sum, w) => sum + (w.trained_time || 0), 0) || 0;
-      const totalDistance = data?.reduce((sum, w) => sum + (Number(w.distance) || 0), 0) || 0;
+      // Hämta alla genomförda pass för statistik (totalt från början)
+      const { data: allCompletedData, error: statsError } = await supabase
+        .from("scheduled_workouts")
+        .select("completed, trained_time, distance")
+        .eq("user_id", user.id)
+        .eq("completed", true);
+
+      if (statsError) throw statsError;
+
+      // Beräkna total statistik
+      const completed = allCompletedData?.length || 0;
+      const totalTime = allCompletedData?.reduce((sum, w) => sum + (w.trained_time || 0), 0) || 0;
+      const totalDistance = allCompletedData?.reduce((sum, w) => sum + (Number(w.distance) || 0), 0) || 0;
       
       setStats({ completed, totalTime, totalDistance });
     } catch (error: any) {
