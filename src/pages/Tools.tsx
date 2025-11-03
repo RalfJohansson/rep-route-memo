@@ -76,20 +76,13 @@ const Tools = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const calculatePaceForDistance = (vdot: number, percentVO2Max: number): string => {
-    // Calculate target VO2 for this intensity
-    const targetVO2 = vdot * percentVO2Max;
+  const calculatePaceForDistance = (vdot: number, distanceFactor: number): string => {
+    // Use VDOT to calculate velocity for 5K, then adjust for other distances
+    // Higher factor = slower pace (longer distance)
+    const velocity5k = 5000 / (calculateVDOT(parseInt(time5kMinutes) * 60 + parseInt(time5kSeconds)) * 10); // approximate base velocity
+    const adjustedVelocity = velocity5k / distanceFactor; // Lower velocity = slower pace
     
-    // Calculate velocity in meters per minute using inverse of VO2 formula
-    // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
-    // Solve quadratic equation: 0.000104*v^2 + 0.182258*v + (-4.60 - targetVO2) = 0
-    const a = 0.000104;
-    const b = 0.182258;
-    const c = -4.60 - targetVO2;
-    const velocity = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a); // meters per minute
-    
-    // Convert to seconds per kilometer
-    const minutesPerKm = 1000 / velocity;
+    const minutesPerKm = 1000 / adjustedVelocity;
     const secondsPerKm = minutesPerKm * 60;
     return formatPace(secondsPerKm);
   };
@@ -106,16 +99,18 @@ const Tools = () => {
     const totalSeconds = minutes * 60 + seconds;
     const vdot = calculateVDOT(totalSeconds);
 
+    const pace5kSecondsPerKm = totalSeconds / 5;
+    
     const zones: PaceZones = {
-      pace_1k: calculatePaceForDistance(vdot, 1.00),    // Snabbast
-      pace_5k: formatPace(totalSeconds / 5),            // Direkt från inmatad 5K-tid
-      pace_10k: calculatePaceForDistance(vdot, 0.90),   // Långsammare än 5K
-      pace_interval: calculatePaceForDistance(vdot, 0.98),
-      pace_threshold: calculatePaceForDistance(vdot, 0.88),
-      pace_tempo: calculatePaceForDistance(vdot, 0.86),
-      pace_half_marathon: calculatePaceForDistance(vdot, 0.85), // Långsammare än 10K
-      pace_marathon: calculatePaceForDistance(vdot, 0.80),      // Långsammast race pace
-      pace_easy: calculatePaceForDistance(vdot, 0.65),          // Lugnt löptempo
+      pace_1k: formatPace(pace5kSecondsPerKm * 0.94),           // 6% snabbare än 5K
+      pace_5k: formatPace(pace5kSecondsPerKm),                  // Direkt från inmatad 5K-tid
+      pace_10k: formatPace(pace5kSecondsPerKm * 1.04),          // 4% långsammare än 5K
+      pace_interval: formatPace(pace5kSecondsPerKm * 0.96),     // 4% snabbare än 5K
+      pace_threshold: formatPace(pace5kSecondsPerKm * 1.03),    // 3% långsammare än 5K
+      pace_tempo: formatPace(pace5kSecondsPerKm * 1.06),        // 6% långsammare än 5K
+      pace_half_marathon: formatPace(pace5kSecondsPerKm * 1.09), // 9% långsammare än 5K
+      pace_marathon: formatPace(pace5kSecondsPerKm * 1.15),     // 15% långsammare än 5K
+      pace_easy: formatPace(pace5kSecondsPerKm * 1.25),         // 25% långsammare än 5K
     };
 
     setPaceZones(zones);
