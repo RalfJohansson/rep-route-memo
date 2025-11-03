@@ -24,6 +24,7 @@ export type Database = {
           pace_easy: string
           pace_half_marathon: string
           pace_interval: string
+          pace_long_run: string
           pace_marathon: string
           pace_tempo: string
           pace_threshold: string
@@ -41,6 +42,7 @@ export type Database = {
           pace_easy: string
           pace_half_marathon: string
           pace_interval: string
+          pace_long_run?: string
           pace_marathon: string
           pace_tempo: string
           pace_threshold: string
@@ -58,6 +60,7 @@ export type Database = {
           pace_easy?: string
           pace_half_marathon?: string
           pace_interval?: string
+          pace_long_run?: string
           pace_marathon?: string
           pace_tempo?: string
           pace_threshold?: string

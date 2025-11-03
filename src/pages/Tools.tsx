@@ -16,6 +16,7 @@ interface PaceZones {
   pace_interval: string;
   pace_threshold: string;
   pace_tempo: string;
+  pace_long_run: string;
 }
 
 const Tools = () => {
@@ -54,6 +55,7 @@ const Tools = () => {
           pace_interval: data.pace_interval,
           pace_threshold: data.pace_threshold,
           pace_tempo: data.pace_tempo,
+          pace_long_run: data.pace_long_run,
         });
       }
     } catch (error: any) {
@@ -110,7 +112,8 @@ const Tools = () => {
       pace_tempo: formatPace(pace5kSecondsPerKm * 1.06),        // 6% långsammare än 5K
       pace_half_marathon: formatPace(pace5kSecondsPerKm * 1.09), // 9% långsammare än 5K
       pace_marathon: formatPace(pace5kSecondsPerKm * 1.15),     // 15% långsammare än 5K
-      pace_easy: formatPace(pace5kSecondsPerKm * 1.25),         // 25% långsammare än 5K
+      pace_easy: formatPace(pace5kSecondsPerKm * 1.22),         // 22% långsammare än 5K (Distansfart)
+      pace_long_run: formatPace(pace5kSecondsPerKm * 1.32),     // 32% långsammare än 5K (Lugn/Långpass)
     };
 
     setPaceZones(zones);
@@ -231,7 +234,7 @@ const Tools = () => {
                 </div>
                 <div className="p-3 rounded-lg bg-muted col-span-2">
                   <p className="text-xs text-muted-foreground">Lugn (Långpass)</p>
-                  <p className="font-semibold">{paceZones.pace_easy} min/km</p>
+                  <p className="font-semibold">{paceZones.pace_long_run} min/km</p>
                 </div>
               </div>
             </div>
