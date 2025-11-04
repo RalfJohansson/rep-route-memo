@@ -14,6 +14,7 @@ interface PaceZones {
   pace_interval: string;
   pace_threshold: string;
   pace_tempo: string;
+  pace_long_run: string;
 }
 
 interface WorkoutDetailDialogProps {
@@ -82,6 +83,7 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
           pace_interval: data.pace_interval,
           pace_threshold: data.pace_threshold,
           pace_tempo: data.pace_tempo,
+          pace_long_run: data.pace_long_run,
         });
       }
     } catch (error: any) {
@@ -243,9 +245,13 @@ const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialo
                     <p className="text-xs text-muted-foreground">Tröskel</p>
                     <p className="text-sm font-medium">{paceZones.pace_threshold} min/km</p>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <p className="text-xs text-muted-foreground">Tempo</p>
                     <p className="text-sm font-medium">{paceZones.pace_tempo} min/km</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">Lugn</p>
+                    <p className="text-sm font-medium">{paceZones.pace_long_run} min/km</p>
                   </div>
                 </div>
               )}
