@@ -165,7 +165,6 @@ const Library = () => {
         <h1 className="text-2xl font-bold">Bibliotek</h1>
         <Button
           onClick={() => handleOpenDialog()}
-          className="bg-gradient-to-r from-primary to-secondary"
         >
           <Plus className="h-4 w-4 mr-1" />
           Nytt pass

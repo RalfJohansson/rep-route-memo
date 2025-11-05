@@ -201,7 +201,6 @@ const Schedule = () => {
         <Button
           size="sm"
           onClick={() => setShowAddDialog(true)}
-          className="bg-gradient-to-r from-primary to-secondary"
         >
           <Plus className="h-4 w-4 mr-1" />
           Lägg till
