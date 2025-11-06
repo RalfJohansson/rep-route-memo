@@ -146,7 +146,7 @@ const Tools = () => {
   }
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4">
       <Card>
         <CardHeader>
           <CardTitle>VDOT Tempokalkylator</CardTitle>
@@ -179,79 +179,75 @@ const Tools = () => {
           <Button onClick={handleCalculate} className="w-full">
             Beräkna tempozoner
           </Button>
+
+          {paceZones && (
+            <div className="pt-4 border-t">
+              <h3 className="text-lg font-semibold mb-4">Dina tempozoner</h3>
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="race-pace">
+                  <AccordionTrigger className="text-sm font-semibold">
+                    Tävlingstempo
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">1K</p>
+                        <p className="font-semibold">{paceZones.pace_1k} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">5K</p>
+                        <p className="font-semibold">{paceZones.pace_5k} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">10K</p>
+                        <p className="font-semibold">{paceZones.pace_10k} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">Halvmaraton</p>
+                        <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted col-span-2">
+                        <p className="text-xs text-muted-foreground">Maraton</p>
+                        <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="training-zones">
+                  <AccordionTrigger className="text-sm font-semibold">
+                    Träningszoner
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">Intervall</p>
+                        <p className="font-semibold">{paceZones.pace_interval} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">Tröskel</p>
+                        <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">Tempo</p>
+                        <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-xs text-muted-foreground">Distansfart</p>
+                        <p className="font-semibold">{paceZones.pace_easy} min/km</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted col-span-2">
+                        <p className="text-xs text-muted-foreground">Lugn (Långpass)</p>
+                        <p className="font-semibold">{paceZones.pace_long_run} min/km</p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {paceZones && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Dina tempozoner</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="multiple" className="w-full">
-              <AccordionItem value="race-pace">
-                <AccordionTrigger className="text-sm font-semibold">
-                  Tävlingstempo
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">1K</p>
-                      <p className="font-semibold">{paceZones.pace_1k} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">5K</p>
-                      <p className="font-semibold">{paceZones.pace_5k} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">10K</p>
-                      <p className="font-semibold">{paceZones.pace_10k} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">Halvmaraton</p>
-                      <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted col-span-2">
-                      <p className="text-xs text-muted-foreground">Maraton</p>
-                      <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="training-zones">
-                <AccordionTrigger className="text-sm font-semibold">
-                  Träningszoner
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">Intervall</p>
-                      <p className="font-semibold">{paceZones.pace_interval} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">Tröskel</p>
-                      <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">Tempo</p>
-                      <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted">
-                      <p className="text-xs text-muted-foreground">Distansfart</p>
-                      <p className="font-semibold">{paceZones.pace_easy} min/km</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted col-span-2">
-                      <p className="text-xs text-muted-foreground">Lugn (Långpass)</p>
-                      <p className="font-semibold">{paceZones.pace_long_run} min/km</p>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
