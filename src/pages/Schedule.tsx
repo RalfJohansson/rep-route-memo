@@ -254,9 +254,9 @@ const Schedule = () => {
                           </span>
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-2 min-h-[80px] flex flex-col justify-center">
                         {dayWorkouts.length === 0 ? (
-                          <div className="py-4">
+                          <div>
                             <p className="text-sm text-muted-foreground text-center">Dra och släpp pass här</p>
                           </div>
                         ) : (
