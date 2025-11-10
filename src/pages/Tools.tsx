@@ -27,10 +27,30 @@ const Tools = () => {
   const [paceZones, setPaceZones] = useState<PaceZones | null>(null);
   const [loading, setLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
+  const [connectingStrava, setConnectingStrava] = useState(false);
 
   useEffect(() => {
     fetchPaceZones();
+    checkStravaConnection();
   }, []);
+
+  const checkStravaConnection = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('strava_connections')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setStravaConnected(!!data);
+    } catch (error) {
+      console.error('Error checking Strava connection:', error);
+    }
+  };
 
   const fetchPaceZones = async () => {
     try {
@@ -91,6 +111,93 @@ const Tools = () => {
     const secondsPerKm = minutesPerKm * 60;
     return formatPace(secondsPerKm);
   };
+
+  const handleStravaConnect = () => {
+    const clientId = "184846";
+    const redirectUri = `${window.location.origin}/tools`;
+    const scope = "read,activity:read_all";
+    
+    const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
+    
+    window.location.href = stravaAuthUrl;
+  };
+
+  const handleStravaDisconnect = async () => {
+    try {
+      setConnectingStrava(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Du måste vara inloggad");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('strava-disconnect', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      setStravaConnected(false);
+      toast.success("Frånkopplad från Strava");
+    } catch (error) {
+      console.error('Error disconnecting Strava:', error);
+      toast.error("Kunde inte koppla från Strava");
+    } finally {
+      setConnectingStrava(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleStravaCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const error = urlParams.get('error');
+
+      if (error) {
+        toast.error('Strava-anslutning avbröts');
+        window.history.replaceState({}, '', '/tools');
+        return;
+      }
+
+      if (code && !stravaConnected) {
+        setConnectingStrava(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session) {
+            toast.error("Du måste vara inloggad");
+            return;
+          }
+
+          const { data, error: authError } = await supabase.functions.invoke('strava-auth', {
+            body: { code },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (authError) throw authError;
+
+          setStravaConnected(true);
+          toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
+          
+          // Clean up URL
+          window.history.replaceState({}, '', '/tools');
+        } catch (error) {
+          console.error('Error connecting to Strava:', error);
+          toast.error("Kunde inte ansluta till Strava");
+          window.history.replaceState({}, '', '/tools');
+        } finally {
+          setConnectingStrava(false);
+        }
+      }
+    };
+
+    handleStravaCallback();
+  }, [stravaConnected]);
 
   const handleCalculate = async () => {
     const minutes = parseInt(time5kMinutes);
@@ -169,13 +276,11 @@ const Tools = () => {
               </div>
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setStravaConnected(false);
-                  toast.success("Frånkopplad från Strava");
-                }}
+                onClick={handleStravaDisconnect}
+                disabled={connectingStrava}
                 className="w-full"
               >
-                Koppla från Strava
+                {connectingStrava ? "Kopplar från..." : "Koppla från Strava"}
               </Button>
             </div>
           ) : (
@@ -184,12 +289,11 @@ const Tools = () => {
                 Genom att ansluta Strava kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
               </p>
               <Button 
-                onClick={() => {
-                  toast.info("Strava-integration kräver API-nycklar. Kontakta support för att aktivera.");
-                }}
+                onClick={handleStravaConnect}
+                disabled={connectingStrava}
                 className="w-full"
               >
-                Anslut till Strava
+                {connectingStrava ? "Ansluter..." : "Anslut till Strava"}
               </Button>
             </div>
           )}
