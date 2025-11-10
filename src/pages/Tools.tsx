@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
+import { Activity } from "lucide-react";
 
 interface PaceZones {
   pace_1k: string;
@@ -25,6 +26,7 @@ const Tools = () => {
   const [time5kSeconds, setTime5kSeconds] = useState("");
   const [paceZones, setPaceZones] = useState<PaceZones | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stravaConnected, setStravaConnected] = useState(false);
 
   useEffect(() => {
     fetchPaceZones();
@@ -146,7 +148,54 @@ const Tools = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Strava Integration
+          </CardTitle>
+          <CardDescription>
+            Anslut ditt Strava-konto för att automatiskt hämta träningsdata
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {stravaConnected ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  ✓ Ansluten till Strava
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setStravaConnected(false);
+                  toast.success("Frånkopplad från Strava");
+                }}
+                className="w-full"
+              >
+                Koppla från Strava
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Genom att ansluta Strava kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
+              </p>
+              <Button 
+                onClick={() => {
+                  toast.info("Strava-integration kräver API-nycklar. Kontakta support för att aktivera.");
+                }}
+                className="w-full"
+              >
+                Anslut till Strava
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>VDOT Tempokalkylator</CardTitle>
