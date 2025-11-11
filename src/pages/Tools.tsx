@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
+import stravaLogo from "@/assets/strava-logo.png";
 
 interface PaceZones {
   pace_1k: string;
@@ -259,11 +260,11 @@ const Tools = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+            <img src={stravaLogo} alt="Strava" className="h-4 w-auto" />
             Strava Integration
           </CardTitle>
           <CardDescription>
-            Anslut ditt Strava-konto för att automatiskt hämta träningsdata
+            Anslut ditt Strava-konto för att automatiskt hämta träningsdata från Strava
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
