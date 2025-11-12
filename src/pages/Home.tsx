@@ -366,11 +366,17 @@ const Home = () => {
             <Button 
               onClick={handleFetchFromStrava} 
               variant="outline" 
-              className="w-full"
+              className="w-full flex items-center justify-center gap-1"
               disabled={loadingStrava}
             >
-              <img src={stravaLogo} alt="" className="h-4 w-auto mr-2" />
-              {loadingStrava ? "Hämtar..." : "Hämta pass från Strava"}
+              {loadingStrava ? (
+                "Hämtar..."
+              ) : (
+                <>
+                  <span style={{ color: '#FC4C02' }}>Hämta pass från</span>
+                  <img src={stravaLogo} alt="Strava" className="h-4 w-auto" />
+                </>
+              )}
             </Button>
 
             {showStravaActivities && stravaActivities.length > 0 && (
