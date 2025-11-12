@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo.png";
+import stravaLogoGreen from "@/assets/strava-logo-green.png";
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -373,12 +374,9 @@ const Home = () => {
                 <>
                   <span className="text-white">Hämtar...</span>
                   <img 
-                    src={stravaLogo} 
+                    src={stravaLogoGreen} 
                     alt="Strava" 
                     className="h-4 w-auto"
-                    style={{ 
-                      filter: 'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(75deg) brightness(105%) contrast(105%)'
-                    }}
                   />
                 </>
               ) : (
