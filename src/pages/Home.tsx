@@ -365,12 +365,11 @@ const Home = () => {
           <div className="space-y-4">
             <Button 
               onClick={handleFetchFromStrava} 
-              variant="outline" 
-              className="w-full flex items-center justify-center gap-1"
+              className="w-full flex items-center justify-center gap-1 bg-[#3FD879] hover:bg-[#35C269] border-0"
               disabled={loadingStrava}
             >
               {loadingStrava ? (
-                "Hämtar..."
+                <span className="text-white">Hämtar...</span>
               ) : (
                 <>
                   <span style={{ color: '#FC4C02' }}>Hämta pass från</span>
