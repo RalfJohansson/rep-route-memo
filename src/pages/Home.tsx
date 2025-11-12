@@ -370,7 +370,17 @@ const Home = () => {
               disabled={loadingStrava}
             >
               {loadingStrava ? (
-                <span className="text-white">Hämtar...</span>
+                <>
+                  <span className="text-white">Hämtar...</span>
+                  <img 
+                    src={stravaLogo} 
+                    alt="Strava" 
+                    className="h-4 w-auto"
+                    style={{ 
+                      filter: 'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(75deg) brightness(105%) contrast(105%)'
+                    }}
+                  />
+                </>
               ) : (
                 <>
                   <span style={{ color: '#FC4C02' }}>Hämta genomfört pass från</span>
@@ -378,7 +388,6 @@ const Home = () => {
                     src={stravaLogo} 
                     alt="Strava" 
                     className="h-4 w-auto"
-                    style={{ filter: loadingStrava ? 'brightness(0) saturate(100%) invert(88%) sepia(12%) saturate(2847%) hue-rotate(81deg) brightness(94%) contrast(91%)' : 'none' }}
                   />
                 </>
               )}
