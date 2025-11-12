@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, MapPin, TrendingUp, Smile } from "lucide-react";
+import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
+import stravaLogo from "@/assets/strava-logo.png";
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -50,6 +51,9 @@ const Home = () => {
   const [calculatedPace, setCalculatedPace] = useState("");
   const [notes, setNotes] = useState("");
   const [joyRating, setJoyRating] = useState(3);
+  const [stravaActivities, setStravaActivities] = useState<any[]>([]);
+  const [showStravaActivities, setShowStravaActivities] = useState(false);
+  const [loadingStrava, setLoadingStrava] = useState(false);
 
   // Calculate pace when time or distance changes
   useEffect(() => {
@@ -142,6 +146,8 @@ const Home = () => {
       setCalculatedPace("");
       setNotes("");
       setJoyRating(3);
+      setStravaActivities([]);
+      setShowStravaActivities(false);
     } else {
       // Uncheck - behåll all data, ändra bara completed status
       const { error } = await supabase
@@ -158,6 +164,38 @@ const Home = () => {
         fetchWeekWorkouts();
       }
     }
+  };
+
+  const handleFetchFromStrava = async () => {
+    if (!selectedWorkout) return;
+
+    setLoadingStrava(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
+        body: { date: selectedWorkout.scheduled_date }
+      });
+
+      if (error) throw error;
+
+      if (data.activities && data.activities.length > 0) {
+        setStravaActivities(data.activities);
+        setShowStravaActivities(true);
+      } else {
+        toast.info("Inga löppass hittades på Strava för detta datum");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Kunde inte hämta från Strava");
+    } finally {
+      setLoadingStrava(false);
+    }
+  };
+
+  const handleSelectStravaActivity = (activity: any) => {
+    setTrainedTime(Math.round(activity.moving_time / 60).toString());
+    setDistance(activity.distance);
+    setShowStravaActivities(false);
+    setStravaActivities([]);
+    toast.success("Data från Strava inläst!");
   };
 
   const handleSubmitWorkout = async () => {
@@ -325,6 +363,37 @@ const Home = () => {
             <DialogTitle>Markera pass som genomfört</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <Button 
+              onClick={handleFetchFromStrava} 
+              variant="outline" 
+              className="w-full"
+              disabled={loadingStrava}
+            >
+              <img src={stravaLogo} alt="" className="h-4 w-auto mr-2" />
+              {loadingStrava ? "Hämtar..." : "Hämta pass från Strava"}
+            </Button>
+
+            {showStravaActivities && stravaActivities.length > 0 && (
+              <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
+                <Label>Välj aktivitet från Strava:</Label>
+                {stravaActivities.map((activity) => (
+                  <Button
+                    key={activity.id}
+                    onClick={() => handleSelectStravaActivity(activity)}
+                    variant="outline"
+                    className="w-full justify-start text-left h-auto py-2"
+                  >
+                    <div className="flex flex-col items-start w-full">
+                      <span className="font-medium">{activity.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {activity.distance} km • {Math.round(activity.moving_time / 60)} min
+                      </span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="trainedTime">Tränad tid (minuter)</Label>
               <Input
