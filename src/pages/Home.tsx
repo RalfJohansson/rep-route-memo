@@ -9,8 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
-import stravaLogoOrange from "@/assets/strava-logo-orange.png";
-import stravaLogoWhite from "@/assets/strava-logo-white.png";
+import stravaLogo from "@/assets/strava-logo-orange.png";
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -374,16 +373,16 @@ const Home = () => {
                 <>
                   <span className="text-white">Hämtar...</span>
                   <img 
-                    src={stravaLogoWhite} 
+                    src={stravaLogo} 
                     alt="Strava" 
-                    className="h-4 w-auto"
+                    className="h-4 w-auto brightness-0 invert"
                   />
                 </>
               ) : (
                 <>
                   <span style={{ color: '#FC4C02' }}>Hämta genomfört pass från</span>
                   <img 
-                    src={stravaLogoOrange} 
+                    src={stravaLogo} 
                     alt="Strava" 
                     className="h-4 w-auto"
                   />
