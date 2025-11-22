@@ -41,6 +41,14 @@ interface ScheduledWorkout {
   };
 }
 
+const categories = [
+  { value: "intervallpass", label: "Intervallpass" },
+  { value: "distanspass", label: "Distanspass" },
+  { value: "långpass", label: "Långpass" },
+  { value: "styrka", label: "Styrka" },
+  { value: "tävling", label: "Tävling" },
+];
+
 const Schedule = () => {
   const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
   const [libraryWorkouts, setLibraryWorkouts] = useState<WorkoutLibraryItem[]>([]);
