@@ -61,6 +61,7 @@ const Library = () => {
       .order("name");
 
     if (error) {
+      console.error("Error fetching workouts:", error); // Logga felet
       toast.error("Kunde inte hämta pass");
     } else {
       setWorkouts(data || []);
@@ -118,6 +119,7 @@ const Library = () => {
         .eq("id", editingWorkout.id);
 
       if (error) {
+        console.error("Error updating workout:", error); // Logga felet
         toast.error("Kunde inte uppdatera pass");
       } else {
         toast.success("Pass uppdaterat!");
@@ -131,6 +133,7 @@ const Library = () => {
         .insert(workoutData);
 
       if (error) {
+        console.error("Error creating workout:", error); // Logga felet
         toast.error("Kunde inte skapa pass");
       } else {
         toast.success("Pass skapat!");
@@ -148,6 +151,7 @@ const Library = () => {
       .eq("id", id);
 
     if (error) {
+      console.error("Error deleting workout:", error); // Logga felet
       toast.error("Kunde inte ta bort pass");
     } else {
       toast.success("Pass borttaget");
