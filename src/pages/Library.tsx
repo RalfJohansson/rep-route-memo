@@ -61,7 +61,7 @@ const Library = () => {
       .order("name");
 
     if (error) {
-      console.error("Error fetching workouts:", error); // Logga felet
+      console.error("Error fetching workouts:", error.message, error.details);
       toast.error("Kunde inte hämta pass");
     } else {
       setWorkouts(data || []);
@@ -104,7 +104,7 @@ const Library = () => {
 
     const workoutData = {
       name,
-      category: category as "intervallpass" | "distanspass" | "långpass" | "styrka",
+      category: category as "intervallpass" | "distanspass" | "långpass" | "styrka" | "tävling",
       duration: duration || null,
       effort,
       description: description || null,
@@ -119,7 +119,7 @@ const Library = () => {
         .eq("id", editingWorkout.id);
 
       if (error) {
-        console.error("Error updating workout:", error); // Logga felet
+        console.error("Error updating workout:", error.message, error.details);
         toast.error("Kunde inte uppdatera pass");
       } else {
         toast.success("Pass uppdaterat!");
@@ -133,7 +133,7 @@ const Library = () => {
         .insert(workoutData);
 
       if (error) {
-        console.error("Error creating workout:", error); // Logga felet
+        console.error("Error creating workout:", error.message, error.details);
         toast.error("Kunde inte skapa pass");
       } else {
         toast.success("Pass skapat!");
@@ -151,7 +151,7 @@ const Library = () => {
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting workout:", error); // Logga felet
+      console.error("Error deleting workout:", error.message, error.details);
       toast.error("Kunde inte ta bort pass");
     } else {
       toast.success("Pass borttaget");

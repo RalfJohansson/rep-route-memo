@@ -80,6 +80,7 @@ const Schedule = () => {
       .order("scheduled_date");
 
     if (error) {
+      console.error("Error fetching scheduled workouts:", error.message, error.details);
       toast.error("Kunde inte hämta schema");
     } else {
       setWorkouts(data || []);
@@ -96,6 +97,7 @@ const Schedule = () => {
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("Error fetching library workouts:", error.message, error.details);
       toast.error("Kunde inte hämta bibliotek");
     } else {
       setLibraryWorkouts(data || []);
@@ -118,6 +120,7 @@ const Schedule = () => {
     });
 
     if (error) {
+      console.error("Error adding workout to schedule:", error.message, error.details);
       toast.error("Kunde inte lägga till pass");
     } else {
       toast.success("Pass tillagt!");
@@ -142,6 +145,7 @@ const Schedule = () => {
       .eq("id", draggedWorkout);
 
     if (error) {
+      console.error("Error moving workout:", error.message, error.details);
       toast.error("Kunde inte flytta pass");
     } else {
       toast.success("Pass flyttat!");
@@ -157,6 +161,7 @@ const Schedule = () => {
       .eq("id", id);
 
     if (error) {
+      console.error("Error deleting scheduled workout:", error.message, error.details);
       toast.error("Kunde inte ta bort pass");
     } else {
       toast.success("Pass borttaget");
@@ -332,11 +337,11 @@ const Schedule = () => {
                   <SelectValue placeholder="Välj typ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="intervallpass">Intervallpass</SelectItem>
-                  <SelectItem value="distanspass">Distanspass</SelectItem>
-                  <SelectItem value="långpass">Långpass</SelectItem>
-                  <SelectItem value="styrka">Styrka</SelectItem>
-                  <SelectItem value="tävling">Tävling</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
