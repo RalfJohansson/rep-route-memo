@@ -28,10 +28,16 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (!user) {
+      console.error('Error: User not authenticated');
       throw new Error('Not authenticated');
     }
 
     const { date } = await req.json();
+
+    if (!date) {
+      console.error('Error: Missing date in request body');
+      throw new Error('Missing date parameter');
+    }
 
     console.log('Fetching Strava activities for user:', user.id, 'date:', date);
 
@@ -43,6 +49,7 @@ serve(async (req) => {
       .single();
 
     if (connectionError || !connection) {
+      console.error('Error: Strava not connected or connection error:', connectionError);
       throw new Error('Strava not connected');
     }
 
@@ -68,14 +75,16 @@ serve(async (req) => {
       });
 
       if (!refreshResponse.ok) {
-        throw new Error('Failed to refresh Strava token');
+        const errorText = await refreshResponse.text();
+        console.error('Failed to refresh Strava token:', refreshResponse.status, errorText);
+        throw new Error(`Failed to refresh Strava token: ${errorText}`);
       }
 
       const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
 
       // Update connection with new tokens
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from('strava_connections')
         .update({
           access_token: refreshData.access_token,
@@ -84,20 +93,24 @@ serve(async (req) => {
         })
         .eq('user_id', user.id);
 
+      if (updateError) {
+        console.error('Error updating Strava connection after refresh:', updateError);
+        throw new Error('Failed to update Strava connection after token refresh');
+      }
+
       console.log('Token refreshed successfully');
     }
 
     // Parse date to get start and end of day in UTC
-    const targetDate = new Date(date);
-    const startOfDay = new Date(targetDate);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+    // Construct date directly in UTC to avoid local timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const startOfDayUTC = new Date(Date.UTC(year, month - 1, day)); // month is 0-indexed
+    const endOfDayUTC = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
-    const after = Math.floor(startOfDay.getTime() / 1000);
-    const before = Math.floor(endOfDay.getTime() / 1000);
+    const after = Math.floor(startOfDayUTC.getTime() / 1000);
+    const before = Math.floor(endOfDayUTC.getTime() / 1000);
 
-    console.log('Fetching activities between:', new Date(after * 1000), 'and', new Date(before * 1000));
+    console.log('Fetching activities between UTC timestamps:', new Date(after * 1000).toISOString(), 'and', new Date(before * 1000).toISOString());
 
     // Fetch activities from Strava
     const activitiesResponse = await fetch(
@@ -110,7 +123,9 @@ serve(async (req) => {
     );
 
     if (!activitiesResponse.ok) {
-      throw new Error('Failed to fetch Strava activities');
+      const errorText = await activitiesResponse.text();
+      console.error('Failed to fetch Strava activities:', activitiesResponse.status, errorText);
+      throw new Error(`Failed to fetch Strava activities: ${errorText}`);
     }
 
     const activities = await activitiesResponse.json();
@@ -136,7 +151,7 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error('Error in strava-fetch-activities:', error);
+    console.error('Error in strava-fetch-activities catch block:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
