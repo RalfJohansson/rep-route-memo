@@ -370,23 +370,9 @@ const Home = () => {
               disabled={loadingStrava}
             >
               {loadingStrava ? (
-                <>
-                  <span className="text-white">Hämtar...</span>
-                  <img 
-                    src={stravaLogo} 
-                    alt="Strava" 
-                    className="h-4 w-auto brightness-0 invert"
-                  />
-                </>
+                <span className="text-white">Hämtar från Strava...</span>
               ) : (
-                <>
-                  <span style={{ color: '#FC4C02' }}>Hämta genomfört pass från</span>
-                  <img 
-                    src={stravaLogo} 
-                    alt="Strava" 
-                    className="h-4 w-auto"
-                  />
-                </>
+                <span style={{ color: '#FC4C02' }}>Hämta genomfört pass från Strava</span>
               )}
             </Button>
 
