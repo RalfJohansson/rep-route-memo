@@ -120,6 +120,9 @@ const Tools = () => {
     
     const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
     
+    console.log("Generated Strava Auth URL:", stravaAuthUrl); // Log the URL
+    console.log("Redirect URI sent to Strava:", redirectUri); // Log the redirect URI
+    
     window.location.href = stravaAuthUrl;
   };
 
