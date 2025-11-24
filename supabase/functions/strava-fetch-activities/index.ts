@@ -34,12 +34,12 @@ serve(async (req) => {
 
     const { date, activityType } = await req.json(); // Destructure activityType
 
+    console.log('Fetching Strava activities for user:', user.id, 'date:', date, 'requested activityType:', activityType);
+
     if (!date) {
       console.error('Error: Missing date in request body');
       throw new Error('Missing date parameter');
     }
-
-    console.log('Fetching Strava activities for user:', user.id, 'date:', date, 'activityType:', activityType);
 
     // Get Strava connection
     const { data: connection, error: connectionError } = await supabaseClient
@@ -131,6 +131,8 @@ serve(async (req) => {
     const activities = await activitiesResponse.json();
 
     console.log('Found activities:', activities.length);
+    // Log the raw activity types from Strava
+    console.log('Raw activity types from Strava:', activities.map((a: any) => a.type));
 
     // Filter activities based on activityType and format data
     const filteredActivities = activities
