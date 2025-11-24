@@ -171,8 +171,24 @@ const Home = () => {
 
     setLoadingStrava(true);
     try {
+      let stravaActivityType: string | null = null;
+      const workoutCategory = selectedWorkout.workout_library.category;
+
+      if (workoutCategory === 'styrka') {
+        stravaActivityType = 'WeightTraining';
+      } else if (['intervallpass', 'distanspass', 'långpass', 'tävling'].includes(workoutCategory)) {
+        stravaActivityType = 'Run';
+      } else {
+        toast.info("Denna passkategori stöds inte för automatisk hämtning från Strava.");
+        setLoadingStrava(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
-        body: { date: selectedWorkout.scheduled_date }
+        body: { 
+          date: selectedWorkout.scheduled_date,
+          activityType: stravaActivityType // Pass the new parameter
+        }
       });
 
       if (error) throw error;
@@ -181,7 +197,7 @@ const Home = () => {
         setStravaActivities(data.activities);
         setShowStravaActivities(true);
       } else {
-        toast.info("Inga löppass hittades på Strava för detta datum");
+        toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
       }
     } catch (error: any) {
       toast.error(error.message || "Kunde inte hämta från Strava");

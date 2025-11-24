@@ -32,14 +32,14 @@ serve(async (req) => {
       throw new Error('Not authenticated');
     }
 
-    const { date } = await req.json();
+    const { date, activityType } = await req.json(); // Destructure activityType
 
     if (!date) {
       console.error('Error: Missing date in request body');
       throw new Error('Missing date parameter');
     }
 
-    console.log('Fetching Strava activities for user:', user.id, 'date:', date);
+    console.log('Fetching Strava activities for user:', user.id, 'date:', date, 'activityType:', activityType);
 
     // Get Strava connection
     const { data: connection, error: connectionError } = await supabaseClient
@@ -132,9 +132,14 @@ serve(async (req) => {
 
     console.log('Found activities:', activities.length);
 
-    // Filter running activities and format data
-    const runningActivities = activities
-      .filter((activity: any) => activity.type === 'Run')
+    // Filter activities based on activityType and format data
+    const filteredActivities = activities
+      .filter((activity: any) => {
+        if (activityType) {
+          return activity.type === activityType;
+        }
+        return true; // If no specific type is requested, return all
+      })
       .map((activity: any) => ({
         id: activity.id,
         name: activity.name,
@@ -145,7 +150,7 @@ serve(async (req) => {
       }));
 
     return new Response(
-      JSON.stringify({ activities: runningActivities }),
+      JSON.stringify({ activities: filteredActivities }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
