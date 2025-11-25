@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
-import stravaLogo from "@/assets/strava-logo-orange.png";
+import stravaLogo from "@/assets/strava-logo-orange.png"; // Denna logotyp används nu
 import stravaLogoIcon from "@/assets/strava-logo-icon.png"; 
-import stravaFullLogo from "@/assets/strava-full-logo.png"; // Ny import för den nya fullständiga logotypen
+import stravaFullLogo from "@/assets/strava-full-logo.png"; 
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -390,9 +390,7 @@ const Home = () => {
               {loadingStrava ? (
                 <span>Hämtar från Strava...</span>
               ) : (
-                <span className="text-orange-500">
-                  Hämta genomfört pass från <img src={stravaFullLogo} alt="Strava" className="h-4 inline-block ml-1 -mt-0.5" />
-                </span>
+                <img src={stravaLogo} alt="Strava" className="h-4" />
               )}
             </Button>
 
