@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo-orange.png";
-import stravaLogoIcon from "@/assets/strava-logo-icon.png"; // Ny import för den nya logotypen
+import stravaLogoIcon from "@/assets/strava-logo-icon.png"; 
+import stravaFullLogo from "@/assets/strava-full-logo.png"; // Ny import för den nya fullständiga logotypen
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -390,7 +391,7 @@ const Home = () => {
                 <span>Hämtar från Strava...</span>
               ) : (
                 <span className="text-orange-500">
-                  Hämta genomfört pass från <img src={stravaLogoIcon} alt="Strava" className="h-4 inline-block ml-1 -mt-0.5" />
+                  Hämta genomfört pass från <img src={stravaFullLogo} alt="Strava" className="h-4 inline-block ml-1 -mt-0.5" />
                 </span>
               )}
             </Button>
