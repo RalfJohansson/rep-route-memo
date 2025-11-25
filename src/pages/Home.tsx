@@ -156,6 +156,7 @@ const Home = () => {
         .from("scheduled_workouts")
         .update({
           completed: false,
+          updated_at: new Date().toISOString(), // Uppdatera updated_at
         })
         .eq("id", workout.id);
 
@@ -228,6 +229,7 @@ const Home = () => {
         pace: calculatedPace ? `${calculatedPace} min/km` : null,
         notes: notes || null,
         joy_rating: joyRating,
+        updated_at: new Date().toISOString(), // Uppdatera updated_at
       })
       .eq("id", selectedWorkout.id);
 
