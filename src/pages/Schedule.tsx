@@ -177,6 +177,18 @@ const Schedule = () => {
     }
   };
 
+  const handleOpenDetailDialog = (workout: ScheduledWorkout["workout_library"]) => {
+    setViewingWorkout(workout);
+    setShowDetailDialog(true);
+  };
+
+  const handleCloseDetailDialog = (open: boolean) => {
+    setShowDetailDialog(open);
+    if (!open) {
+      setViewingWorkout(null); // Nollställ viewingWorkout när dialogen stängs
+    }
+  };
+
   // Group workouts by week
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const currentWeekKey = format(currentWeekStart, "yyyy-MM-dd");
@@ -279,8 +291,7 @@ const Schedule = () => {
                               draggable
                               onDragStart={() => handleDragStart(workout.id)}
                               onClick={() => {
-                                setViewingWorkout(workout.workout_library);
-                                setShowDetailDialog(true);
+                                handleOpenDetailDialog(workout.workout_library);
                               }}
                               className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[52px] overflow-hidden"
                             >
@@ -394,7 +405,7 @@ const Schedule = () => {
           category: viewingWorkout.category
         } : null}
         open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
+        onOpenChange={handleCloseDetailDialog}
       />
     </div>
   );
