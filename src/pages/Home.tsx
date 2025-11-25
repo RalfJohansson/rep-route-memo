@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
-import stravaLogo from "@/assets/strava-logo-orange.png"; 
+import stravaLogo from "@/assets/strava-logo-orange.png"; // Denna logotyp används nu igen
 import stravaLogoIcon from "@/assets/strava-logo-icon.png"; 
-import stravaFullLogo from "@/assets/strava-full-logo.png"; // Använder den nya fullständiga logotypen
+// import stravaFullLogo from "@/assets/strava-full-logo.png"; // Denna importeras inte längre
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
@@ -37,7 +37,7 @@ interface ScheduledWorkout {
 }
 
 const Home = () => {
-  const [workouts, setWorkouts] = useState<ScheduledWorkout[]>(([]);
+  const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -390,7 +390,10 @@ const Home = () => {
               {loadingStrava ? (
                 <span>Hämtar från Strava...</span>
               ) : (
-                <img src={stravaFullLogo} alt="Strava" className="h-4" />
+                <>
+                  <img src={stravaLogo} alt="Strava" className="h-4" />
+                  <span>Hämta från Strava</span>
+                </>
               )}
             </Button>
 
