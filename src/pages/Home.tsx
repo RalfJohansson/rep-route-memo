@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
-import stravaLogo from "@/assets/strava-logo-orange.png"; // Denna logotyp används nu igen
+import stravaLogo from "@/assets/strava-logo-orange.png"; 
 import stravaLogoIcon from "@/assets/strava-logo-icon.png"; 
 // import stravaFullLogo from "@/assets/strava-full-logo.png"; // Denna importeras inte längre
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
@@ -384,16 +384,13 @@ const Home = () => {
             <Button 
               onClick={handleFetchFromStrava} 
               variant="outline"
-              className="w-full flex items-center justify-center gap-1"
+              className="w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700"
               disabled={loadingStrava}
             >
               {loadingStrava ? (
                 <span>Hämtar från Strava...</span>
               ) : (
-                <>
-                  <img src={stravaLogo} alt="Strava" className="h-4" />
-                  <span>Hämta från Strava</span>
-                </>
+                <span>Hämta genomfört pass från Strava</span>
               )}
             </Button>
 
