@@ -120,7 +120,7 @@ const Home = () => {
       const { data: allCompletedData, error: statsError } = await supabase
         .from("scheduled_workouts")
         .select("completed, trained_time, distance")
-        .eq("user_id", user.id)
+        .eq("user.id", user.id)
         .eq("completed", true);
 
       if (statsError) throw statsError;
@@ -388,7 +388,7 @@ const Home = () => {
               {loadingStrava ? (
                 <span>Hämtar från Strava...</span>
               ) : (
-                <span>Hämta genomfört pass från Strava</span>
+                <span className="text-orange-500">Hämta genomfört pass från Strava</span>
               )}
             </Button>
 
