@@ -388,10 +388,7 @@ const Home = () => {
               {loadingStrava ? (
                 <span className="text-white">Hämtar från Strava...</span>
               ) : (
-                <>
-                  <img src={stravaLogo} alt="Strava" className="h-4 w-auto mr-2" />
-                  <span style={{ color: '#FC4C02' }}>Hämta genomfört pass från Strava</span>
-                </>
+                <span>Hämta genomfört pass från Strava</span>
               )}
             </Button>
 
