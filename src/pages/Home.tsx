@@ -382,11 +382,11 @@ const Home = () => {
             <Button 
               onClick={handleFetchFromStrava} 
               variant="outline"
-              className={`w-full flex items-center justify-center gap-1 ${loadingStrava ? 'bg-[#3FD879] hover:bg-[#35C269] border-0' : ''}`}
+              className="w-full flex items-center justify-center gap-1"
               disabled={loadingStrava}
             >
               {loadingStrava ? (
-                <span className="text-white">Hämtar från Strava...</span>
+                <span>Hämtar från Strava...</span>
               ) : (
                 <span>Hämta genomfört pass från Strava</span>
               )}
