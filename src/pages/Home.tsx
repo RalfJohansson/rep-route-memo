@@ -223,7 +223,7 @@ const Home = () => {
         completed: true,
         trained_time: trainedTime ? parseInt(trainedTime) : null,
         distance: distance ? parseFloat(distance) : null,
-        pace: calculatedPace ? `${calculatedPace} min/km` : null,
+        pace: calculatedPace ? `${calculatedPultedPace} min/km` : null,
         notes: notes || null,
         joy_rating: joyRating,
       })
@@ -381,8 +381,12 @@ const Home = () => {
           <div className="space-y-4">
             <Button 
               onClick={handleFetchFromStrava} 
-              variant="outline"
-              className={`w-full flex items-center justify-center gap-1 ${loadingStrava ? 'bg-[#3FD879] hover:bg-[#35C269] border-0' : ''}`}
+              variant="ghost" // Ändrad till ghost för att kunna anpassa bakgrunden
+              className={`w-full flex items-center justify-center gap-1 ${
+                loadingStrava 
+                  ? 'bg-[#3FD879] hover:bg-[#35C269] border-0 text-white' 
+                  : 'bg-white border-0 hover:bg-gray-50' // Explicit vit bakgrund, ingen kantlinje, lätt hover-effekt
+              }`}
               disabled={loadingStrava}
             >
               {loadingStrava ? (
