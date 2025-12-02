@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
 
 interface PaceZones {
   pace_1k: string;
@@ -35,17 +36,6 @@ interface WorkoutDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const getCategoryColor = (category: string) => {
-  const colors: { [key: string]: string } = {
-    'intervallpass': '#BF5E42',
-    'distanspass': '#468771',
-    'långpass': '#7AA6DB',
-    'styrka': '#4E7C8C',
-    'tävling': '#000000',
-  };
-  return colors[category.toLowerCase()] || '#BF5E42';
-};
 
 const WorkoutDetailDialog = ({ workout, open, onOpenChange }: WorkoutDetailDialogProps) => {
   const [showPaceZones, setShowPaceZones] = useState(false);

@@ -9,13 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, MapPin, TrendingUp, Smile, Download } from "lucide-react";
-import stravaLogo from "@/assets/strava-logo-orange.png"; 
-import stravaLogoIcon from "@/assets/strava-logo-icon.png"; 
-// import stravaFullLogo from "@/assets/strava-full-logo.png"; // Denna importeras inte längre
-import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays, startOfYear, endOfYear } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
+import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
+import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Importera den nya komponenten
 
 interface ScheduledWorkout {
   id: string;
@@ -36,8 +35,16 @@ interface ScheduledWorkout {
   };
 }
 
+interface CompletedWorkoutForTimeline {
+  scheduled_date: string;
+  workout_library: {
+    category: string;
+  };
+}
+
 const Home = () => {
   const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
+  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +92,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchWeekWorkouts();
+    fetchAllCompletedWorkoutsForTimeline();
   }, []);
 
   const fetchWeekWorkouts = async () => {
@@ -140,6 +148,34 @@ const Home = () => {
     }
   };
 
+  const fetchAllCompletedWorkoutsForTimeline = async () => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return;
+
+      const yearStart = startOfYear(new Date());
+      const yearEnd = endOfYear(new Date());
+
+      const { data, error } = await supabase
+        .from("scheduled_workouts")
+        .select(`
+          scheduled_date,
+          workout_library (
+            category
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
+        .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
+
+      if (error) throw error;
+      setAllCompletedWorkouts(data || []);
+    } catch (error: any) {
+      console.error("Error fetching all completed workouts for timeline:", error);
+    }
+  };
+
   const handleToggleComplete = async (workout: ScheduledWorkout) => {
     if (!workout.completed) {
       setSelectedWorkout(workout);
@@ -165,6 +201,7 @@ const Home = () => {
       } else {
         toast.success("Pass omarkerat");
         fetchWeekWorkouts();
+        fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data
       }
     }
   };
@@ -239,18 +276,8 @@ const Home = () => {
       toast.success("Pass markerat som genomfört!");
       setSelectedWorkout(null);
       fetchWeekWorkouts();
+      fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data
     }
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      'intervallpass': '#BF5E42',
-      'distanspass': '#468771',
-      'långpass': '#7AA6DB',
-      'styrka': '#4E7C8C',
-      'tävling': '#000000',
-    };
-    return colors[category.toLowerCase()] || '#BF5E42';
   };
 
   const getJoyColor = (rating: number) => {
@@ -376,6 +403,8 @@ const Home = () => {
           })}
         </CardContent>
       </Card>
+
+      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
