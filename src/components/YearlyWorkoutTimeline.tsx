@@ -5,11 +5,9 @@ import {
   endOfYear,
   format,
   isSameDay,
-  getDay,
   addDays,
   startOfWeek,
-  endOfWeek, // Denna import är nu bekräftad
-  isFirstDayOfMonth,
+  endOfWeek,
 } from "date-fns";
 import { sv } from "date-fns/locale";
 import { cn, getCategoryColor } from "@/lib/utils";
@@ -27,6 +25,9 @@ interface YearlyWorkoutTimelineProps {
 }
 
 const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps) => {
+  console.log("YearlyWorkoutTimeline component is rendering."); // Felsökningslogg
+  console.log("Completed workouts received:", completedWorkouts.length);
+
   const currentYear = new Date().getFullYear();
   const yearStart = startOfYear(new Date(currentYear, 0, 1));
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
@@ -88,11 +89,11 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
   const totalTimelineWidth = weeks.length * weekColumnWidth;
 
   return (
-    <Card>
+    <Card className="border-2 border-dashed border-red-500"> {/* Tillfällig röd kant för synlighet */}
       <CardHeader>
         <CardTitle>Årsöversikt {currentYear}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 min-h-[150px]"> {/* Tillfällig min-höjd för synlighet */}
         <div className="flex">
           {/* Weekday labels on the left */}
           <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2 pt-6"> {/* pt-6 to align with first day row */}
