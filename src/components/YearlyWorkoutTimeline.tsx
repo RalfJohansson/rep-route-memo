@@ -8,7 +8,7 @@ import {
   getDay,
   addDays,
   startOfWeek,
-  endOfWeek, // Lade till denna import
+  endOfWeek, // Denna import är nu bekräftad
   isFirstDayOfMonth,
 } from "date-fns";
 import { sv } from "date-fns/locale";
