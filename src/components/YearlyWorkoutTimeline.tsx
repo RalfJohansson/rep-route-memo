@@ -1,5 +1,15 @@
 import React from "react";
-import { eachDayOfInterval, startOfYear, endOfYear, format, isSameDay, getDay, addDays } from "date-fns";
+import {
+  eachDayOfInterval,
+  startOfYear,
+  endOfYear,
+  format,
+  isSameDay,
+  getDay,
+  addDays,
+  startOfWeek,
+  isFirstDayOfMonth,
+} from "date-fns";
 import { sv } from "date-fns/locale";
 import { cn, getCategoryColor } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +29,6 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
   const currentYear = new Date().getFullYear();
   const yearStart = startOfYear(new Date(currentYear, 0, 1));
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
-  const allDaysInYear = eachDayOfInterval({ start: yearStart, end: yearEnd });
 
   // Map workouts to a more accessible structure for quick lookup
   const workoutsByDate: { [key: string]: CompletedWorkout[] } = completedWorkouts.reduce((acc, workout) => {
@@ -31,18 +40,51 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
     return acc;
   }, {});
 
-  const months = Array.from({ length: 12 }, (_, i) => format(new Date(currentYear, i, 1), "MMM", { locale: sv }));
-  const weekDays = Array.from({ length: 7 }, (_, i) => format(addDays(new Date(2023, 0, 2), i), "EEEEEE", { locale: sv })); // Mon-Sun
+  // Weekday labels (Mon, Tue, ..., Sun)
+  const weekDaysLabels = Array.from({ length: 7 }, (_, i) => format(addDays(new Date(2023, 0, 2), i), "EEEEEE", { locale: sv }));
 
-  // Determine the first day of the year's week (0 for Sunday, 1 for Monday, etc.)
-  const firstDayOfWeekOfYear = getDay(yearStart); // 0 = Sunday, 1 = Monday
+  // Generate all days from the first Monday of the year (or previous year) to the last Sunday of the year
+  const firstDayOfCalendar = startOfWeek(yearStart, { weekStartsOn: 1 });
+  const lastDayOfCalendar = endOfWeek(yearEnd, { weekStartsOn: 1 });
+  const allDaysInCalendar = eachDayOfInterval({ start: firstDayOfCalendar, end: lastDayOfCalendar });
 
-  // Create a grid for the year, padding the start to align with the first day of the week
-  const dayGrid: (Date | null)[] = [];
-  for (let i = 0; i < firstDayOfWeekOfYear; i++) {
-    dayGrid.push(null); // Pad with nulls for days before Jan 1st
+  // Group days into weeks
+  const weeks: (Date | null)[][] = [];
+  let currentWeek: (Date | null)[] = [];
+
+  allDaysInCalendar.forEach((day) => {
+    currentWeek.push(day);
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+  // Add any remaining days in the last week, padding with nulls
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push(null);
+    }
+    weeks.push(currentWeek);
   }
-  dayGrid.push(...allDaysInYear);
+
+  // Calculate month headers positions
+  const monthHeaders: { month: string; weekIndex: number }[] = [];
+  let lastMonth = -1; // To track when a new month starts
+
+  weeks.forEach((week, weekIndex) => {
+    const firstDayOfWeek = week.find(day => day !== null); // Find the first actual day in the week
+    if (firstDayOfWeek) {
+      const currentMonth = firstDayOfWeek.getMonth();
+      if (currentMonth !== lastMonth && firstDayOfWeek.getFullYear() === currentYear) {
+        monthHeaders.push({ month: format(firstDayOfWeek, "MMM", { locale: sv }), weekIndex });
+        lastMonth = currentMonth;
+      }
+    }
+  });
+
+  // Calculate the total width of the timeline for the month headers to position correctly
+  const weekColumnWidth = 20; // Each day cell is w-4 (16px) + gap-1 (4px) = 20px for a week column
+  const totalTimelineWidth = weeks.length * weekColumnWidth;
 
   return (
     <Card>
@@ -50,59 +92,66 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
         <CardTitle>Årsöversikt {currentYear}</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="flex flex-col items-start">
-          {/* Month labels */}
-          <div className="grid grid-cols-13 gap-1 w-full text-xs text-muted-foreground mb-2">
-            <div className="col-span-1"></div> {/* Empty space for weekday labels */}
-            {months.map((month, index) => (
-              <div key={month} className="text-center col-span-1">
-                {month}
+        <div className="flex">
+          {/* Weekday labels on the left */}
+          <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2 pt-6"> {/* pt-6 to align with first day row */}
+            {weekDaysLabels.map((day, index) => (
+              <div key={index} className="h-4 flex items-center justify-end">
+                {day}
               </div>
             ))}
           </div>
 
-          <div className="flex w-full">
-            {/* Weekday labels */}
-            <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2">
-              {weekDays.map((day, index) => (
-                <div key={index} className="h-4 flex items-center justify-end">
-                  {day}
+          {/* Scrollable timeline content */}
+          <div className="flex-1 overflow-x-auto pb-2"> {/* pb-2 for scrollbar */}
+            <div className="relative flex h-full" style={{ width: `${totalTimelineWidth}px` }}>
+              {/* Month headers - positioned absolutely */}
+              {monthHeaders.map(({ month, weekIndex }) => (
+                <div
+                  key={month}
+                  className="absolute text-xs text-muted-foreground"
+                  style={{ left: `${weekIndex * weekColumnWidth}px`, top: 0 }}
+                >
+                  {month}
                 </div>
               ))}
-            </div>
 
-            {/* Days grid */}
-            <div className="grid grid-cols-53 gap-1 flex-1"> {/* Roughly 53 weeks in a year */}
-              {dayGrid.map((day, index) => {
-                if (!day) {
-                  return <div key={`pad-${index}`} className="w-4 h-4" />; // Empty cell for padding
-                }
-                const dateKey = format(day, "yyyy-MM-dd");
-                const workoutsOnDay = workoutsByDate[dateKey] || [];
-                const hasWorkout = workoutsOnDay.length > 0;
-                const isToday = isSameDay(day, new Date());
+              {/* Weeks container */}
+              <div className="flex mt-6"> {/* mt-6 to make space for month headers */}
+                {weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col gap-1 flex-shrink-0 w-5"> {/* w-5 for 4px cell + 1px gap */}
+                    {week.map((day, dayIndex) => {
+                      if (!day || day.getFullYear() !== currentYear) { // Only show days within the current year
+                        return <div key={`empty-${weekIndex}-${dayIndex}`} className="w-4 h-4" />; // Empty cell for padding
+                      }
+                      const dateKey = format(day, "yyyy-MM-dd");
+                      const workoutsOnDay = workoutsByDate[dateKey] || [];
+                      const hasWorkout = workoutsOnDay.length > 0;
+                      const isToday = isSameDay(day, new Date());
 
-                // Use the color of the first workout if multiple exist
-                const dotColor = hasWorkout ? getCategoryColor(workoutsOnDay[0].workout_library.category) : "transparent";
+                      const dotColor = hasWorkout ? getCategoryColor(workoutsOnDay[0].workout_library.category) : "transparent";
 
-                return (
-                  <div
-                    key={dateKey}
-                    className={cn(
-                      "w-4 h-4 rounded-full flex items-center justify-center relative",
-                      isToday && "border border-primary" // Highlight today
-                    )}
-                    title={hasWorkout ? `${format(day, "d MMM", { locale: sv })}: ${workoutsOnDay.map(w => w.workout_library.category).join(', ')}` : format(day, "d MMM", { locale: sv })}
-                  >
-                    {hasWorkout && (
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: dotColor }}
-                      />
-                    )}
+                      return (
+                        <div
+                          key={dateKey}
+                          className={cn(
+                            "w-4 h-4 rounded-full flex items-center justify-center relative",
+                            isToday && "border border-primary" // Highlight today
+                          )}
+                          title={hasWorkout ? `${format(day, "d MMM", { locale: sv })}: ${workoutsOnDay.map(w => w.workout_library.category).join(', ')}` : format(day, "d MMM", { locale: sv })}
+                        >
+                          {hasWorkout && (
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: dotColor }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
