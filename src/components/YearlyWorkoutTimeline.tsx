@@ -25,6 +25,9 @@ interface YearlyWorkoutTimelineProps {
 }
 
 const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps) => {
+  console.log("YearlyWorkoutTimeline component is rendering. (Aggressive Debugging)"); // Felsökningslogg
+  console.log("Completed workouts received by timeline:", completedWorkouts.length);
+
   const currentYear = new Date().getFullYear();
   const yearStart = startOfYear(new Date(currentYear, 0, 1));
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
@@ -86,14 +89,14 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
   const totalTimelineWidth = weeks.length * weekColumnWidth;
 
   return (
-    <Card>
+    <Card className="border-4 border-solid border-purple-700 bg-yellow-200 p-6 min-h-[200px]"> {/* Aggressiv visuell markering */}
       <CardHeader>
-        <CardTitle>Årsöversikt {currentYear}</CardTitle>
+        <CardTitle className="text-purple-900">Årsöversikt {currentYear} (Felsökning)</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="flex">
           {/* Weekday labels on the left */}
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2 pt-6"> {/* pt-6 to align with first day row */}
+          <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2 pt-6">
             {weekDaysLabels.map((day, index) => (
               <div key={index} className="h-4 flex items-center justify-end">
                 {day}
@@ -102,7 +105,7 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
           </div>
 
           {/* Scrollable timeline content */}
-          <div className="flex-1 overflow-x-auto pb-2"> {/* pb-2 for scrollbar */}
+          <div className="flex-1 overflow-x-auto pb-2">
             <div className="relative flex h-full" style={{ width: `${totalTimelineWidth}px` }}>
               {/* Month headers - positioned absolutely */}
               {monthHeaders.map(({ month, weekIndex }) => (
@@ -116,12 +119,12 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
               ))}
 
               {/* Weeks container */}
-              <div className="flex mt-6"> {/* mt-6 to make space for month headers */}
+              <div className="flex mt-6">
                 {weeks.map((week, weekIndex) => (
-                  <div key={weekIndex} className="flex flex-col gap-1 flex-shrink-0 w-5"> {/* w-5 for 4px cell + 1px gap */}
+                  <div key={weekIndex} className="flex flex-col gap-1 flex-shrink-0 w-5">
                     {week.map((day, dayIndex) => {
-                      if (!day || day.getFullYear() !== currentYear) { // Only show days within the current year
-                        return <div key={`empty-${weekIndex}-${dayIndex}`} className="w-4 h-4" />; // Empty cell for padding
+                      if (!day || day.getFullYear() !== currentYear) {
+                        return <div key={`empty-${weekIndex}-${dayIndex}`} className="w-4 h-4" />;
                       }
                       const dateKey = format(day, "yyyy-MM-dd");
                       const workoutsOnDay = workoutsByDate[dateKey] || [];
@@ -135,7 +138,7 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
                           key={dateKey}
                           className={cn(
                             "w-4 h-4 rounded-full flex items-center justify-center relative",
-                            isToday && "border border-primary" // Highlight today
+                            isToday && "border border-primary"
                           )}
                           title={hasWorkout ? `${format(day, "d MMM", { locale: sv })}: ${workoutsOnDay.map(w => w.workout_library.category).join(', ')}` : format(day, "d MMM", { locale: sv })}
                         >

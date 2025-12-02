@@ -171,6 +171,7 @@ const Home = () => {
 
       if (error) throw error;
       setAllCompletedWorkouts(data || []);
+      console.log("Fetched all completed workouts for timeline:", data?.length); // Logga datahämtning
     } catch (error: any) {
       console.error("Error fetching all completed workouts for timeline:", error);
     }
@@ -404,7 +405,9 @@ const Home = () => {
         </CardContent>
       </Card>
 
+      {console.log("Attempting to render YearlyWorkoutTimeline in Home.tsx")}
       <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
+      {console.log("Finished attempting to render YearlyWorkoutTimeline in Home.tsx")}
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
