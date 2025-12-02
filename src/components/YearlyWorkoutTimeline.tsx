@@ -1,5 +1,5 @@
 import React from "react";
-import { eachDayOfInterval, startOfYear, endOfYear, format, isSameDay, getDay } from "date-fns";
+import { eachDayOfInterval, startOfYear, endOfYear, format, isSameDay, getDay, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import { cn, getCategoryColor } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
