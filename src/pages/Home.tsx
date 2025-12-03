@@ -14,7 +14,7 @@ import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
 import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
-// import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Temporärt borttagen
+import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Återinför importen
 
 interface ScheduledWorkout {
   id: string;
@@ -296,12 +296,6 @@ const Home = () => {
 
   return (
     <div className="p-4 space-y-6">
-      {/* EXTREMT AGGRESSIVT STYLAD DIV FÖR FELSÖKNING */}
-      <div className="fixed top-0 left-0 w-full bg-fuchsia-500 text-white text-center p-2 text-lg font-bold z-[9999]">
-        FELSÖKNING: DENNA DIV SKA SYNAS ÖVERALLT!
-      </div>
-      {/* SLUT PÅ FELSÖKNINGS-DIV */}
-
       <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -409,6 +403,8 @@ const Home = () => {
           })}
         </CardContent>
       </Card>
+
+      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
