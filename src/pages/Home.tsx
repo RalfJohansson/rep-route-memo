@@ -171,7 +171,6 @@ const Home = () => {
 
       if (error) throw error;
       setAllCompletedWorkouts(data || []);
-      console.log("Fetched all completed workouts for timeline:", data?.length); // Logga datahämtning
     } catch (error: any) {
       console.error("Error fetching all completed workouts for timeline:", error);
     }
@@ -297,6 +296,12 @@ const Home = () => {
 
   return (
     <div className="p-4 space-y-6">
+      {/* EXTREMT AGGRESSIVT STYLAD DIV FÖR FELSÖKNING */}
+      <div className="fixed top-0 left-0 w-full bg-fuchsia-500 text-white text-center p-2 text-lg font-bold z-[9999]">
+        FELSÖKNING: DENNA DIV SKA SYNAS ÖVERALLT!
+      </div>
+      {/* SLUT PÅ FELSÖKNINGS-DIV */}
+
       <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -404,12 +409,6 @@ const Home = () => {
           })}
         </CardContent>
       </Card>
-
-      {console.log("Attempting to render placeholder DIV in Home.tsx")}
-      <div className="bg-red-500 text-white p-8 text-center text-2xl font-bold border-8 border-yellow-300">
-        DENNA DIV SKA SYNAS!
-      </div>
-      {console.log("Finished attempting to render placeholder DIV in Home.tsx")}
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
