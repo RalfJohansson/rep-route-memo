@@ -103,7 +103,6 @@ const Tools = () => {
     } catch (error: any) {
       console.error("Error fetching pace zones:", error);
     }
-    // Removed setLoading(false) from here, now handled by loadInitialData
   };
 
   const fetchAllCompletedWorkoutsForTimeline = async () => {
@@ -114,6 +113,7 @@ const Tools = () => {
 
       if (!user) {
         console.log("No user found, returning early from fetchAllCompletedWorkoutsForTimeline.");
+        setAllCompletedWorkouts([]); // Ensure it's an empty array if no user
         return;
       }
 
@@ -143,6 +143,7 @@ const Tools = () => {
       setAllCompletedWorkouts(data || []);
     } catch (error: any) {
       console.error("Error fetching all completed workouts for timeline:", error);
+      setAllCompletedWorkouts([]); // Ensure it's an empty array on error
     }
   };
 
@@ -463,6 +464,9 @@ const Tools = () => {
         </CardContent>
       </Card>
 
+      <div className="border p-2">
+        Debug: Timeline component should be below this. Workouts count: {allCompletedWorkouts.length}
+      </div>
       <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
     </div>
   );
