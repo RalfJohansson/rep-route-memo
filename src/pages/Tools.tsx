@@ -8,6 +8,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo.png";
+import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Ny import
+import { format, startOfYear, endOfYear } from "date-fns"; // Ny import för datumhantering
 
 interface PaceZones {
   pace_1k: string;
@@ -22,6 +24,13 @@ interface PaceZones {
   pace_long_run: string;
 }
 
+interface CompletedWorkoutForTimeline {
+  scheduled_date: string;
+  workout_library: {
+    category: string;
+  };
+}
+
 const Tools = () => {
   const [time5kMinutes, setTime5kMinutes] = useState("");
   const [time5kSeconds, setTime5kSeconds] = useState("");
@@ -29,10 +38,12 @@ const Tools = () => {
   const [loading, setLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
+  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]); // Ny state
 
   useEffect(() => {
     fetchPaceZones();
     checkStravaConnection();
+    fetchAllCompletedWorkoutsForTimeline(); // Nytt anrop
   }, []);
 
   const checkStravaConnection = async () => {
@@ -86,6 +97,34 @@ const Tools = () => {
       console.error("Error fetching pace zones:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllCompletedWorkoutsForTimeline = async () => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return;
+
+      const yearStart = startOfYear(new Date());
+      const yearEnd = endOfYear(new Date());
+
+      const { data, error } = await supabase
+        .from("scheduled_workouts")
+        .select(`
+          scheduled_date,
+          workout_library (
+            category
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
+        .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
+
+      if (error) throw error;
+      setAllCompletedWorkouts(data || []);
+    } catch (error: any) {
+      console.error("Error fetching all completed workouts for timeline:", error);
     }
   };
 
@@ -405,6 +444,8 @@ const Tools = () => {
           )}
         </CardContent>
       </Card>
+
+      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} /> {/* Ny komponent */}
     </div>
   );
 };

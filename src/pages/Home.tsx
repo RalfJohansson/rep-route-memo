@@ -14,7 +14,7 @@ import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
 import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
-import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Återinför importen
+// import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Borttagen import
 
 interface ScheduledWorkout {
   id: string;
@@ -35,16 +35,16 @@ interface ScheduledWorkout {
   };
 }
 
-interface CompletedWorkoutForTimeline {
-  scheduled_date: string;
-  workout_library: {
-    category: string;
-  };
-}
+// interface CompletedWorkoutForTimeline { // Borttagen interface
+//   scheduled_date: string;
+//   workout_library: {
+//     category: string;
+//   };
+// }
 
 const Home = () => {
   const [workouts, setWorkouts] = useState<ScheduledWorkout[]>([]);
-  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
+  // const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]); // Borttagen state
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<ScheduledWorkout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchWeekWorkouts();
-    fetchAllCompletedWorkoutsForTimeline();
+    // fetchAllCompletedWorkoutsForTimeline(); // Borttagen anrop
   }, []);
 
   const fetchWeekWorkouts = async () => {
@@ -148,33 +148,33 @@ const Home = () => {
     }
   };
 
-  const fetchAllCompletedWorkoutsForTimeline = async () => {
-    try {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) return;
+  // const fetchAllCompletedWorkoutsForTimeline = async () => { // Borttagen funktion
+  //   try {
+  //     const user = (await supabase.auth.getUser()).data.user;
+  //     if (!user) return;
 
-      const yearStart = startOfYear(new Date());
-      const yearEnd = endOfYear(new Date());
+  //     const yearStart = startOfYear(new Date());
+  //     const yearEnd = endOfYear(new Date());
 
-      const { data, error } = await supabase
-        .from("scheduled_workouts")
-        .select(`
-          scheduled_date,
-          workout_library (
-            category
-          )
-        `)
-        .eq("user_id", user.id)
-        .eq("completed", true)
-        .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
-        .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
+  //     const { data, error } = await supabase
+  //       .from("scheduled_workouts")
+  //       .select(`
+  //         scheduled_date,
+  //         workout_library (
+  //           category
+  //         )
+  //       `)
+  //       .eq("user_id", user.id)
+  //       .eq("completed", true)
+  //       .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
+  //       .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
 
-      if (error) throw error;
-      setAllCompletedWorkouts(data || []);
-    } catch (error: any) {
-      console.error("Error fetching all completed workouts for timeline:", error);
-    }
-  };
+  //     if (error) throw error;
+  //     setAllCompletedWorkouts(data || []);
+  //   } catch (error: any) {
+  //     console.error("Error fetching all completed workouts for timeline:", error);
+  //   }
+  // };
 
   const handleToggleComplete = async (workout: ScheduledWorkout) => {
     if (!workout.completed) {
@@ -201,7 +201,7 @@ const Home = () => {
       } else {
         toast.success("Pass omarkerat");
         fetchWeekWorkouts();
-        fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data
+        // fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data - borttagen
       }
     }
   };
@@ -276,7 +276,7 @@ const Home = () => {
       toast.success("Pass markerat som genomfört!");
       setSelectedWorkout(null);
       fetchWeekWorkouts();
-      fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data
+      // fetchAllCompletedWorkoutsForTimeline(); // Refresh timeline data - borttagen
     }
   };
 
@@ -404,7 +404,7 @@ const Home = () => {
         </CardContent>
       </Card>
 
-      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
+      {/* <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} /> */} {/* Borttagen komponent */}
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
