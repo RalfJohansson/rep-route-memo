@@ -8,4 +8,6 @@ import { supabase } from "./integrations/supabase/client.ts"; // Importera supab
 //   window.supabase = supabase;
 // }
 
+console.log("Applikationen startar..."); // Ny logg här
+
 createRoot(document.getElementById("root")!).render(<App />);
