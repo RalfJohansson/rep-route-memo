@@ -8,8 +8,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo.png";
-import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Ny import
-import { format, startOfYear, endOfYear } from "date-fns"; // Ny import för datumhantering
+import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline";
+import { format, startOfYear, endOfYear } from "date-fns";
 
 interface PaceZones {
   pace_1k: string;
@@ -38,12 +38,12 @@ const Tools = () => {
   const [loading, setLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
-  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]); // Ny state
+  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
 
   useEffect(() => {
     fetchPaceZones();
     checkStravaConnection();
-    fetchAllCompletedWorkoutsForTimeline(); // Nytt anrop
+    fetchAllCompletedWorkoutsForTimeline();
   }, []);
 
   const checkStravaConnection = async () => {
@@ -101,12 +101,20 @@ const Tools = () => {
   };
 
   const fetchAllCompletedWorkoutsForTimeline = async () => {
+    console.log("Attempting to fetch all completed workouts for timeline...");
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      if (!user) return;
+      console.log("User from supabase.auth.getUser():", user);
+
+      if (!user) {
+        console.log("No user found, returning early from fetchAllCompletedWorkoutsForTimeline.");
+        return;
+      }
 
       const yearStart = startOfYear(new Date());
       const yearEnd = endOfYear(new Date());
+
+      console.log("Fetching workouts for user:", user.id, "between", format(yearStart, "yyyy-MM-dd"), "and", format(yearEnd, "yyyy-MM-dd"));
 
       const { data, error } = await supabase
         .from("scheduled_workouts")
@@ -121,7 +129,11 @@ const Tools = () => {
         .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
         .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error fetching all completed workouts for timeline:", error);
+        throw error;
+      }
+      console.log("Fetched completed workouts data:", data);
       setAllCompletedWorkouts(data || []);
     } catch (error: any) {
       console.error("Error fetching all completed workouts for timeline:", error);
@@ -159,8 +171,8 @@ const Tools = () => {
     
     const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
     
-    console.log("Generated Strava Auth URL:", stravaAuthUrl); // Log the URL
-    console.log("Redirect URI sent to Strava:", redirectUri); // Log the redirect URI
+    console.log("Generated Strava Auth URL:", stravaAuthUrl);
+    console.log("Redirect URI sent to Strava:", redirectUri);
     
     window.location.href = stravaAuthUrl;
   };
@@ -257,16 +269,16 @@ const Tools = () => {
     const pace5kSecondsPerKm = totalSeconds / 5;
     
     const zones: PaceZones = {
-      pace_1k: formatPace(pace5kSecondsPerKm * 0.94),           // 6% snabbare än 5K
-      pace_5k: formatPace(pace5kSecondsPerKm),                  // Direkt från inmatad 5K-tid
-      pace_10k: formatPace(pace5kSecondsPerKm * 1.04),          // 4% långsammare än 5K
-      pace_interval: formatPace(pace5kSecondsPerKm * 0.96),     // 4% snabbare än 5K
-      pace_threshold: formatPace(pace5kSecondsPerKm * 1.03),    // 3% långsammare än 5K
-      pace_tempo: formatPace(pace5kSecondsPerKm * 1.06),        // 6% långsammare än 5K
-      pace_half_marathon: formatPace(pace5kSecondsPerKm * 1.09), // 9% långsammare än 5K
-      pace_marathon: formatPace(pace5kSecondsPerKm * 1.15),     // 15% långsammare än 5K
-      pace_easy: formatPace(pace5kSecondsPerKm * 1.22),         // 22% långsammare än 5K (Distansfart)
-      pace_long_run: formatPace(pace5kSecondsPerKm * 1.32),     // 32% långsammare än 5K (Lugn/Långpass)
+      pace_1k: formatPace(pace5kSecondsPerKm * 0.94),
+      pace_5k: formatPace(pace5kSecondsPerKm),
+      pace_10k: formatPace(pace5kSecondsPerKm * 1.04),
+      pace_interval: formatPace(pace5kSecondsPerKm * 0.96),
+      pace_threshold: formatPace(pace5kSecondsPerKm * 1.03),
+      pace_tempo: formatPace(pace5kSecondsPerKm * 1.06),
+      pace_half_marathon: formatPace(pace5kSecondsPerKm * 1.09),
+      pace_marathon: formatPace(pace5kSecondsPerKm * 1.15),
+      pace_easy: formatPace(pace5kSecondsPerKm * 1.22),
+      pace_long_run: formatPace(pace5kSecondsPerKm * 1.32),
     };
 
     setPaceZones(zones);
@@ -445,7 +457,7 @@ const Tools = () => {
         </CardContent>
       </Card>
 
-      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} /> {/* Ny komponent */}
+      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
     </div>
   );
 };
