@@ -43,12 +43,14 @@ const Tools = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
+      console.log("Tools: Starting initial data load.");
       await Promise.all([
         fetchPaceZones(),
         checkStravaConnection(),
         fetchAllCompletedWorkoutsForTimeline(),
       ]);
       setLoading(false);
+      console.log("Tools: Initial data load complete.");
     };
     loadInitialData();
   }, []);
@@ -106,21 +108,21 @@ const Tools = () => {
   };
 
   const fetchAllCompletedWorkoutsForTimeline = async () => {
-    console.log("Attempting to fetch all completed workouts for timeline...");
+    console.log("Tools: Attempting to fetch all completed workouts for timeline...");
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      console.log("User from supabase.auth.getUser():", user);
+      console.log("Tools: User from supabase.auth.getUser():", user ? user.id : "No user");
 
       if (!user) {
-        console.log("No user found, returning early from fetchAllCompletedWorkoutsForTimeline.");
-        setAllCompletedWorkouts([]); // Ensure it's an empty array if no user
+        console.log("Tools: No user found, setting allCompletedWorkouts to empty array.");
+        setAllCompletedWorkouts([]);
         return;
       }
 
       const yearStart = startOfYear(new Date());
       const yearEnd = endOfYear(new Date());
 
-      console.log("Fetching workouts for user:", user.id, "between", format(yearStart, "yyyy-MM-dd"), "and", format(yearEnd, "yyyy-MM-dd"));
+      console.log("Tools: Fetching workouts for user:", user.id, "between", format(yearStart, "yyyy-MM-dd"), "and", format(yearEnd, "yyyy-MM-dd"));
 
       const { data, error } = await supabase
         .from("scheduled_workouts")
@@ -136,14 +138,15 @@ const Tools = () => {
         .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
 
       if (error) {
-        console.error("Supabase error fetching all completed workouts for timeline:", error);
+        console.error("Tools: Supabase error fetching all completed workouts for timeline:", error);
+        setAllCompletedWorkouts([]);
         throw error;
       }
-      console.log("Fetched completed workouts data:", data);
+      console.log("Tools: Fetched completed workouts data:", data);
       setAllCompletedWorkouts(data || []);
     } catch (error: any) {
-      console.error("Error fetching all completed workouts for timeline:", error);
-      setAllCompletedWorkouts([]); // Ensure it's an empty array on error
+      console.error("Tools: Error fetching all completed workouts for timeline in catch block:", error);
+      setAllCompletedWorkouts([]);
     }
   };
 
@@ -309,12 +312,15 @@ const Tools = () => {
   };
 
   if (loading) {
+    console.log("Tools: Rendering loading spinner.");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
+
+  console.log("Tools: Rendering main content. allCompletedWorkouts.length:", allCompletedWorkouts.length);
 
   return (
     <div className="p-4 space-y-4">
@@ -463,6 +469,11 @@ const Tools = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* NEW DEBUG ELEMENT */}
+      <div className="bg-red-100 p-4 text-red-800 border border-red-400 rounded-md">
+        TEST: Denna ruta ska alltid synas om komponenten renderas.
+      </div>
 
       <div className="border p-2">
         Debug: Timeline component should be below this. Workouts count: {allCompletedWorkouts.length}

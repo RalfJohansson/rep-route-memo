@@ -25,6 +25,8 @@ interface YearlyWorkoutTimelineProps {
 }
 
 const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps) => {
+  console.log("YearlyWorkoutTimeline: Component rendering with", completedWorkouts.length, "completed workouts.");
+
   const currentYear = new Date().getFullYear();
   const yearStart = startOfYear(new Date(currentYear, 0, 1));
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
