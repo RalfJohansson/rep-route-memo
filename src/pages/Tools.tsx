@@ -470,14 +470,6 @@ const Tools = () => {
         </CardContent>
       </Card>
 
-      {/* NEW DEBUG ELEMENT */}
-      <div className="bg-red-100 p-4 text-red-800 border border-red-400 rounded-md">
-        TEST: Denna ruta ska alltid synas om komponenten renderas.
-      </div>
-
-      <div className="border p-2">
-        Debug: Timeline component should be below this. Workouts count: {allCompletedWorkouts.length}
-      </div>
       <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
     </div>
   );
