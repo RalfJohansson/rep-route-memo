@@ -25,9 +25,6 @@ interface YearlyWorkoutTimelineProps {
 }
 
 const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps) => {
-  console.log("YearlyWorkoutTimeline component is rendering. (Aggressive Debugging)"); // Felsökningslogg
-  console.log("Completed workouts received by timeline:", completedWorkouts.length);
-
   const currentYear = new Date().getFullYear();
   const yearStart = startOfYear(new Date(currentYear, 0, 1));
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
@@ -89,9 +86,9 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
   const totalTimelineWidth = weeks.length * weekColumnWidth;
 
   return (
-    <Card className="border-4 border-solid border-purple-700 bg-yellow-200 p-6 min-h-[200px]"> {/* Aggressiv visuell markering */}
+    <Card>
       <CardHeader>
-        <CardTitle className="text-purple-900">Årsöversikt {currentYear} (Felsökning)</CardTitle>
+        <CardTitle>Årsöversikt {currentYear}</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="flex">

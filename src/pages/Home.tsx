@@ -14,7 +14,7 @@ import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
 import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
-import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Importera den nya komponenten
+// import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline"; // Temporärt borttagen
 
 interface ScheduledWorkout {
   id: string;
@@ -405,9 +405,11 @@ const Home = () => {
         </CardContent>
       </Card>
 
-      {console.log("Attempting to render YearlyWorkoutTimeline in Home.tsx")}
-      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
-      {console.log("Finished attempting to render YearlyWorkoutTimeline in Home.tsx")}
+      {console.log("Attempting to render placeholder DIV in Home.tsx")}
+      <div className="bg-red-500 text-white p-8 text-center text-2xl font-bold border-8 border-yellow-300">
+        DENNA DIV SKA SYNAS!
+      </div>
+      {console.log("Finished attempting to render placeholder DIV in Home.tsx")}
 
       <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
         <DialogContent className="max-w-md">
