@@ -41,9 +41,16 @@ const Tools = () => {
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
 
   useEffect(() => {
-    fetchPaceZones();
-    checkStravaConnection();
-    fetchAllCompletedWorkoutsForTimeline();
+    const loadInitialData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchPaceZones(),
+        checkStravaConnection(),
+        fetchAllCompletedWorkoutsForTimeline(),
+      ]);
+      setLoading(false);
+    };
+    loadInitialData();
   }, []);
 
   const checkStravaConnection = async () => {
@@ -95,9 +102,8 @@ const Tools = () => {
       }
     } catch (error: any) {
       console.error("Error fetching pace zones:", error);
-    } finally {
-      setLoading(false);
     }
+    // Removed setLoading(false) from here, now handled by loadInitialData
   };
 
   const fetchAllCompletedWorkoutsForTimeline = async () => {
