@@ -24,8 +24,8 @@ interface WorkoutLibraryItem {
 
 const topCategories = [
   { value: "lopning", label: "Löpning" },
-  { value: "cykling", label: "Cykling" },
   { value: "simning", label: "Simning" },
+  { value: "cykling", label: "Cykling" },
   { value: "styrka", label: "Stryka" },
   { value: "tävling", label: "Tävling" },
 ];
@@ -128,7 +128,7 @@ const Library = () => {
         .update(workoutData)
         .eq("id", editingWorkout.id);
 
-    if (error) {
+      if (error) {
         console.error("Error updating workout:", error.message, error.details);
         toast.error("Kunde inte uppdatera pass");
       } else {
@@ -173,20 +173,9 @@ const Library = () => {
     return workouts.filter((w) => w.category === cat);
   };
 
-  // Determine which workouts to display based on selected categories
-  const getDisplayedWorkouts = () => {
-    if (activeSubCategory) {
-      return getWorkoutsByCategory(activeSubCategory);
-    }
-
-    const subcategories = subCategoryMap[activeTopCategory] || [];
-    if (subcategories.length > 0) {
-      // Om toppkategorin har underkategorier men ingen är vald, visa inga pass
-      return [];
-    }
-
-    // Ingen underkategori, filtrera på toppkategorin direkt
-    return getWorkoutsByCategory(activeTopCategory);
+  const handleTopCategoryChange = (val: string) => {
+    setActiveTopCategory(val);
+    setActiveSubCategory(null);
   };
 
   return (
@@ -200,7 +189,7 @@ const Library = () => {
       </div>
 
       {/* Topp-kategorier */}
-      <Tabs value={activeTopCategory} onValueChange={setActiveTopCategory}>
+      <Tabs value={activeTopCategory} onValueChange={handleTopCategoryChange}>
         <TabsList className="grid w-full grid-cols-5">
           {topCategories.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value} className="text-[11px]">
@@ -211,68 +200,58 @@ const Library = () => {
 
         {topCategories.map((cat) => (
           <TabsContent key={cat.value} value={cat.value} className="space-y-4">
-            {/* Om kategorin har underkategorier, visa dessa som flikar */}
             {subCategoryMap[cat.value] && subCategoryMap[cat.value].length > 0 ? (
-              <>
-                <h2 className="text-lg font-medium mb-2">Välj underkategori:</h2>
-                <Tabs value={activeSubCategory || ""} onValueChange={(val) => setActiveSubCategory(val === "" ? null : val)}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    {subCategoryMap[cat.value].map((sub) => (
-                      <TabsTrigger key={sub.value} value={sub.value} className="text-[11px]">
-                        {sub.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-
+              <Tabs
+                value={activeSubCategory || "default"}
+                onValueChange={(val) => setActiveSubCategory(val === "default" ? null : val)}
+              >
+                <TabsList className="grid w-full grid-cols-3">
                   {subCategoryMap[cat.value].map((sub) => (
-                    <TabsContent key={sub.value} value={sub.value} className="space-y-3">
-                      {getWorkoutsByCategory(sub.value).length === 0 ? (
-                        <Card>
-                          <CardContent className="py-8">
-                            <p className="text-center text-muted-foreground">
-                              Inga pass i denna underkategori
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        getWorkoutsByCategory(sub.value).map((workout) => (
-                          <Card
-                            key={workout.id}
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => {
-                              setViewingWorkout(workout);
-                              setShowDetailDialog(true);
-                            }}
-                          >
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-lg flex justify-between items-start">
-                                <span>{workout.name}</span>
-                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleOpenDialog(workout)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteWorkout(workout.id)}
-                                    className="text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </CardTitle>
-                            </CardHeader>
-                          </Card>
-                        ))
-                      )}
-                    </TabsContent>
+                    <TabsTrigger key={sub.value} value={sub.value} className="text-[11px]">
+                      {sub.label}
+                    </TabsTrigger>
                   ))}
-                </Tabs>
-              </>
+                </TabsList>
+
+                {activeSubCategory && (
+                  <TabsContent value={activeSubCategory} className="space-y-3">
+                    {getWorkoutsByCategory(activeSubCategory).length === 0 ? (
+                      <Card>
+                        <CardContent className="py-8">
+                          <p className="text-center text-muted-foreground">
+                            Inga pass i denna underkategori
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      getWorkoutsByCategory(activeSubCategory).map((workout) => (
+                        <WorkoutCard
+                          key={workout.id}
+                          workout={workout}
+                          onView={() => {
+                            setViewingWorkout(workout);
+                            setShowDetailDialog(true);
+                          }}
+                          onEdit={() => handleOpenDialog(workout)}
+                          onDelete={() => handleDeleteWorkout(workout.id)}
+                        />
+                      ))
+                    )}
+                  </TabsContent>
+                )}
+
+                {!activeSubCategory && (
+                  <TabsContent value="default" className="space-y-3">
+                    <Card>
+                      <CardContent className="py-8">
+                        <p className="text-center text-muted-foreground">
+                          Välj en underkategori för att visa pass
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
+              </Tabs>
             ) : (
               // Ingen underkategori, visa pass direkt
               getWorkoutsByCategory(cat.value).length === 0 ? (
@@ -285,37 +264,16 @@ const Library = () => {
                 </Card>
               ) : (
                 getWorkoutsByCategory(cat.value).map((workout) => (
-                  <Card
+                  <WorkoutCard
                     key={workout.id}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => {
+                    workout={workout}
+                    onView={() => {
                       setViewingWorkout(workout);
                       setShowDetailDialog(true);
                     }}
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex justify-between items-start">
-                        <span>{workout.name}</span>
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenDialog(workout)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteWorkout(workout.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
+                    onEdit={() => handleOpenDialog(workout)}
+                    onDelete={() => handleDeleteWorkout(workout.id)}
+                  />
                 ))
               )
             )}
@@ -421,6 +379,45 @@ const Library = () => {
         onOpenChange={setShowDetailDialog}
       />
     </div>
+  );
+};
+
+interface WorkoutCardProps {
+  workout: WorkoutLibraryItem;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const WorkoutCard = ({ workout, onView, onEdit, onDelete }: WorkoutCardProps) => {
+  return (
+    <Card
+      className="cursor-pointer hover:bg-muted/50 transition-colors"
+      onClick={onView}
+    >
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex justify-between items-start">
+          <span>{workout.name}</span>
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+    </Card>
   );
 };
 
