@@ -50,11 +50,30 @@ const Library = () => {
 
   // Form state
   const [name, setName] = useState("");
+  const [formTopCategory, setFormTopCategory] = useState("lopning");
+  const [formSubCategory, setFormSubCategory] = useState<string | null>(null);
   const [category, setCategory] = useState("intervallpass");
   const [duration, setDuration] = useState("");
   const [effort, setEffort] = useState(5);
   const [description, setDescription] = useState("");
   const [pace, setPace] = useState("");
+
+  // När toppkategorin ändras, uppdatera kategori
+  useEffect(() => {
+    if (formTopCategory === "lopning") {
+      // Om underkategori är vald, använd den, annars sätt till första underkategorin
+      if (formSubCategory && subCategoryMap.lopning.some(s => s.value === formSubCategory)) {
+        setCategory(formSubCategory);
+      } else {
+        const firstSub = subCategoryMap.lopning[0].value;
+        setCategory(firstSub);
+        setFormSubCategory(firstSub);
+      }
+    } else {
+      setCategory(formTopCategory);
+      setFormSubCategory(null);
+    }
+  }, [formTopCategory, formSubCategory]);
 
   useEffect(() => {
     fetchWorkouts();
@@ -80,6 +99,8 @@ const Library = () => {
 
   const resetForm = () => {
     setName("");
+    setFormTopCategory("lopning");
+    setFormSubCategory("intervallpass");
     setCategory("intervallpass");
     setDuration("");
     setEffort(5);
@@ -93,6 +114,14 @@ const Library = () => {
       setEditingWorkout(workout);
       setName(workout.name);
       setCategory(workout.category);
+      // Avgör om kategorin är en underkategori till löpning
+      if (subCategoryMap.lopning.some(s => s.value === workout.category)) {
+        setFormTopCategory("lopning");
+        setFormSubCategory(workout.category);
+      } else {
+        setFormTopCategory(workout.category);
+        setFormSubCategory(null);
+      }
       setDuration(workout.duration || "");
       setEffort(workout.effort || 5);
       setDescription(workout.description || "");
@@ -338,19 +367,13 @@ const Library = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Typ av pass</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Label htmlFor="topCategory">Typ av pass</Label>
+              <Select value={formTopCategory} onValueChange={setFormTopCategory}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    { value: "intervallpass", label: "Intervallpass" },
-                    { value: "distanspass", label: "Distanspass" },
-                    { value: "långpass", label: "Långpass" },
-                    { value: "styrka", label: "Styrka" },
-                    { value: "tävling", label: "Tävling" },
-                  ].map((cat) => (
+                  {topCategories.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
                     </SelectItem>
@@ -358,6 +381,23 @@ const Library = () => {
                 </SelectContent>
               </Select>
             </div>
+            {formTopCategory === "lopning" && (
+              <div className="space-y-2">
+                <Label htmlFor="subCategory">Löptyp</Label>
+                <Select value={formSubCategory || ""} onValueChange={setFormSubCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Välj löptyp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subCategoryMap.lopning.map((sub) => (
+                      <SelectItem key={sub.value} value={sub.value}>
+                        {sub.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="duration">Tid</Label>
               <Input
