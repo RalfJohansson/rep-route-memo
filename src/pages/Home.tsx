@@ -152,10 +152,10 @@ const Home = () => {
   //   try {
   //     const user = (await supabase.auth.getUser()).data.user;
   //     if (!user) return;
-
+  
   //     const yearStart = startOfYear(new Date());
   //     const yearEnd = endOfYear(new Date());
-
+  
   //     const { data, error } = await supabase
   //       .from("scheduled_workouts")
   //       .select(`
@@ -168,7 +168,7 @@ const Home = () => {
   //       .eq("completed", true)
   //       .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
   //       .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
-
+  
   //     if (error) throw error;
   //     setAllCompletedWorkouts(data || []);
   //   } catch (error: any) {
@@ -286,6 +286,11 @@ const Home = () => {
     return '#00A000'; // 3-5
   };
 
+  const resetStats = () => {
+    setStats({ completed: 0, totalTime: 0, totalDistance: 0 });
+    toast.info("Statistik nollställd");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -303,7 +308,12 @@ const Home = () => {
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
+            <Button variant="outline" onClick={resetStats} size="sm">
+              Nollställ statistik
+            </Button>
+          </div>
           <p className="text-white/90">
             {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
             {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
@@ -374,8 +384,7 @@ const Home = () => {
                            workout.workout_library.category === 'distanspass' ? 'Distans' : 
                            workout.workout_library.category === 'långpass' ? 'Långpass' : 
                            workout.workout_library.category === 'styrka' ? 'Styrka' : 
-                           workout.workout_library.category === 'tävling' ? 'Tävling' :
-                           workout.workout_library.category}
+                           workout.workout_library.category === 'tävling' ? 'Tävling' :\n                           workout.workout_library.category}
                         </span>
                       </div>
                       <Checkbox

@@ -22,19 +22,29 @@ interface WorkoutLibraryItem {
   pace?: string | null;
 }
 
-const categories = [
-  { value: "intervallpass", label: "Intervallpass" },
-  { value: "distanspass", label: "Distanspass" },
-  { value: "långpass", label: "Långpass" },
-  { value: "styrka", label: "Styrka" },
+const topCategories = [
+  { value: "lopning", label: "Löpning" },
+  { value: "cykling", label: "Cykling" },
+  { value: "simning", label: "Simning" },
+  { value: "styrka", label: "Stryka" },
   { value: "tävling", label: "Tävling" },
 ];
+
+const subCategoryMap: Record<string, Array<{ value: string; label: string }>> = {
+  lopning: [
+    { value: "intervallpass", label: "Intervallpass" },
+    { value: "distanspass", label: "Distanspass" },
+    { value: "långpass", label: "Långpass" },
+  ],
+  // andra toppkategorier har inga underkategorier
+};
 
 const Library = () => {
   const [workouts, setWorkouts] = useState<WorkoutLibraryItem[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLibraryItem | null>(null);
-  const [activeTab, setActiveTab] = useState("intervallpass");
+  const [activeTopCategory, setActiveTopCategory] = useState<string>("lopning");
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<WorkoutLibraryItem | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
 
@@ -118,7 +128,7 @@ const Library = () => {
         .update(workoutData)
         .eq("id", editingWorkout.id);
 
-      if (error) {
+    if (error) {
         console.error("Error updating workout:", error.message, error.details);
         toast.error("Kunde inte uppdatera pass");
       } else {
@@ -163,71 +173,151 @@ const Library = () => {
     return workouts.filter((w) => w.category === cat);
   };
 
+  // Determine which workouts to display based on selected categories
+  const getDisplayedWorkouts = () => {
+    if (activeSubCategory) {
+      return getWorkoutsByCategory(activeSubCategory);
+    }
+
+    const subcategories = subCategoryMap[activeTopCategory] || [];
+    if (subcategories.length > 0) {
+      // Om toppkategorin har underkategorier men ingen är vald, visa inga pass
+      return [];
+    }
+
+    // Ingen underkategori, filtrera på toppkategorin direkt
+    return getWorkoutsByCategory(activeTopCategory);
+  };
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bibliotek</h1>
-        <Button
-          onClick={() => handleOpenDialog()}
-        >
+        <Button onClick={() => handleOpenDialog()}>
           <Plus className="h-4 w-4 mr-1" />
           Nytt pass
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      {/* Topp-kategorier */}
+      <Tabs value={activeTopCategory} onValueChange={setActiveTopCategory}>
         <TabsList className="grid w-full grid-cols-5">
-          {categories.map((cat) => (
+          {topCategories.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value} className="text-[11px]">
               {cat.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {categories.map((cat) => (
-          <TabsContent key={cat.value} value={cat.value} className="space-y-3">
-            {getWorkoutsByCategory(cat.value).length === 0 ? (
-              <Card>
-                <CardContent className="py-8">
-                  <p className="text-center text-muted-foreground">
-                    Inga pass i denna kategori
-                  </p>
-                </CardContent>
-              </Card>
+        {topCategories.map((cat) => (
+          <TabsContent key={cat.value} value={cat.value} className="space-y-4">
+            {/* Om kategorin har underkategorier, visa dessa som flikar */}
+            {subCategoryMap[cat.value] && subCategoryMap[cat.value].length > 0 ? (
+              <>
+                <h2 className="text-lg font-medium mb-2">Välj underkategori:</h2>
+                <Tabs value={activeSubCategory || ""} onValueChange={(val) => setActiveSubCategory(val === "" ? null : val)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    {subCategoryMap[cat.value].map((sub) => (
+                      <TabsTrigger key={sub.value} value={sub.value} className="text-[11px]">
+                        {sub.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  {subCategoryMap[cat.value].map((sub) => (
+                    <TabsContent key={sub.value} value={sub.value} className="space-y-3">
+                      {getWorkoutsByCategory(sub.value).length === 0 ? (
+                        <Card>
+                          <CardContent className="py-8">
+                            <p className="text-center text-muted-foreground">
+                              Inga pass i denna underkategori
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        getWorkoutsByCategory(sub.value).map((workout) => (
+                          <Card
+                            key={workout.id}
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => {
+                              setViewingWorkout(workout);
+                              setShowDetailDialog(true);
+                            }}
+                          >
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex justify-between items-start">
+                                <span>{workout.name}</span>
+                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenDialog(workout)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteWorkout(workout.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </CardTitle>
+                            </CardHeader>
+                          </Card>
+                        ))
+                      )}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </>
             ) : (
-              getWorkoutsByCategory(cat.value).map((workout) => (
-                <Card 
-                  key={workout.id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    setViewingWorkout(workout);
-                    setShowDetailDialog(true);
-                  }}
-                >
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex justify-between items-start">
-                      <span>{workout.name}</span>
-                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenDialog(workout)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteWorkout(workout.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
+              // Ingen underkategori, visa pass direkt
+              getWorkoutsByCategory(cat.value).length === 0 ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">
+                      Inga pass i denna kategori
+                    </p>
+                  </CardContent>
                 </Card>
-              ))
+              ) : (
+                getWorkoutsByCategory(cat.value).map((workout) => (
+                  <Card
+                    key={workout.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      setViewingWorkout(workout);
+                      setShowDetailDialog(true);
+                    }}
+                  >
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex justify-between items-start">
+                        <span>{workout.name}</span>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenDialog(workout)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteWorkout(workout.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))
+              )
             )}
           </TabsContent>
         ))}
@@ -257,7 +347,13 @@ const Library = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {[
+                    { value: "intervallpass", label: "Intervallpass" },
+                    { value: "distanspass", label: "Distanspass" },
+                    { value: "långpass", label: "Långpass" },
+                    { value: "styrka", label: "Styrka" },
+                    { value: "tävling", label: "Tävling" },
+                  ].map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
                     </SelectItem>
