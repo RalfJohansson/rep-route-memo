@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -367,7 +368,7 @@ const Library = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="topCategory">Typ av pass</Label>
+              <Label htmlFor="topCategory">Aktivitet</Label>
               <Select value={formTopCategory} onValueChange={setFormTopCategory}>
                 <SelectTrigger>
                   <SelectValue />
@@ -383,19 +384,21 @@ const Library = () => {
             </div>
             {formTopCategory === "lopning" && (
               <div className="space-y-2">
-                <Label htmlFor="subCategory">Löptyp</Label>
-                <Select value={formSubCategory || ""} onValueChange={setFormSubCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Välj löptyp" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subCategoryMap.lopning.map((sub) => (
-                      <SelectItem key={sub.value} value={sub.value}>
+                <Label>Passkategori</Label>
+                <RadioGroup
+                  value={formSubCategory || ""}
+                  onValueChange={setFormSubCategory}
+                  className="flex flex-col space-y-1"
+                >
+                  {subCategoryMap.lopning.map((sub) => (
+                    <div key={sub.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={sub.value} id={sub.value} />
+                      <Label htmlFor={sub.value} className="font-normal cursor-pointer">
                         {sub.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
               </div>
             )}
             <div className="space-y-2">
