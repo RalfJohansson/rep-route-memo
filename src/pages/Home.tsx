@@ -380,11 +380,12 @@ const Home = () => {
                         style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
                       >
                         <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
-                          {workout.workout_library.category === 'intervallpass' ? 'Intervall' : 
-                           workout.workout_library.category === 'distanspass' ? 'Distans' : 
-                           workout.workout_library.category === 'långpass' ? 'Långpass' : 
-                           workout.workout_library.category === 'styrka' ? 'Styrka' : 
-                           workout.workout_library.category === 'tävling' ? 'Tävling' :\n                           workout.workout_library.category}
+                          {workout.workout_library.category === 'intervallpass' ? 'Intervall' :
+                           workout.workout_library.category === 'distanspass' ? 'Distans' :
+                           workout.workout_library.category === 'långpass' ? 'Långpass' :
+                           workout.workout_library.category === 'styrka' ? 'Styrka' :
+                           workout.workout_library.category === 'tävling' ? 'Tävling' :
+                           workout.workout_library.category}
                         </span>
                       </div>
                       <Checkbox
