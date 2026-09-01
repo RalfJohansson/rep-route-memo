@@ -213,16 +213,14 @@ const Library = () => {
           <TabsContent key={cat.value} value={cat.value} className="space-y-4">
             {/* Om kategorin har underkategorier, visa dessa som flikar */}
             {subCategoryMap[cat.value] && subCategoryMap[cat.value].length > 0 ? (
-              <>
-                <h2 className="text-lg font-medium mb-2">Välj underkategori:</h2>
-                <Tabs value={activeSubCategory || ""} onValueChange={(val) => setActiveSubCategory(val === "" ? null : val)}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    {subCategoryMap[cat.value].map((sub) => (
-                      <TabsTrigger key={sub.value} value={sub.value} className="text-[11px]">
-                        {sub.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
+              <Tabs value={activeSubCategory || ""} onValueChange={(val) => setActiveSubCategory(val === "" ? null : val)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  {subCategoryMap[cat.value].map((sub) => (
+                    <TabsTrigger key={sub.value} value={sub.value} className="text-[11px]">
+                      {sub.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
                   {subCategoryMap[cat.value].map((sub) => (
                     <TabsContent key={sub.value} value={sub.value} className="space-y-3">
@@ -272,7 +270,6 @@ const Library = () => {
                     </TabsContent>
                   ))}
                 </Tabs>
-              </>
             ) : (
               // Ingen underkategori, visa pass direkt
               getWorkoutsByCategory(cat.value).length === 0 ? (
