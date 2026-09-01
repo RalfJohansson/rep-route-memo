@@ -286,11 +286,6 @@ const Home = () => {
     return '#00A000'; // 3-5
   };
 
-  const resetStats = () => {
-    setStats({ completed: 0, totalTime: 0, totalDistance: 0 });
-    toast.info("Statistik nollställd");
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -308,12 +303,7 @@ const Home = () => {
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="relative z-10">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
-            <Button variant="outline" onClick={resetStats} size="sm">
-              Nollställ statistik
-            </Button>
-          </div>
+          <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
           <p className="text-white/90">
             {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
             {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
