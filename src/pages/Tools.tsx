@@ -398,8 +398,8 @@ const Tools = () => {
             </div>
           </div>
           <Button onClick={handleCalculate} className="w-full">
-            Beräkna tempozoner
-          </Button>
+                      Beräkna tempozoner
+                    </Button>
 
           {paceZones && (
             <div className="pt-4 border-t">
