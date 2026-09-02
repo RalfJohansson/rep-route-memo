@@ -375,6 +375,8 @@ const Home = () => {
                            workout.workout_library.category === 'långpass' ? 'Långpass' :
                            workout.workout_library.category === 'styrka' ? 'Styrka' :
                            workout.workout_library.category === 'tävling' ? 'Tävling' :
+                           workout.workout_library.category === 'simning' ? 'Simning' :
+                           workout.workout_library.category === 'cykling' ? 'Cykling' :
                            workout.workout_library.category}
                         </span>
                       </div>
