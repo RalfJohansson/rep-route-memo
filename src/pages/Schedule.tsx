@@ -50,6 +50,8 @@ const categories = [
   { value: "långpass", label: "Långpass" },
   { value: "styrka", label: "Styrka" },
   { value: "tävling", label: "Tävling" },
+  { value: "cykling", label: "Cykling" },
+  { value: "simning", label: "Simning" },
 ];
 
 const Schedule = () => {
