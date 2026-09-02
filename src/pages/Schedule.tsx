@@ -9,17 +9,7 @@ import { Plus, Grip } from "lucide-react";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
-
-const getCategoryColor = (category: string) => {
-  const colors: { [key: string]: string } = {
-    'intervallpass': '#BF5E42',
-    'distanspass': '#468771',
-    'långpass': '#7AA6DB',
-    'styrka': '#4E7C8C',
-    'tävling': '#000000',
-  };
-  return colors[category.toLowerCase()] || '#BF5E42';
-};
+import { getCategoryColor } from "@/lib/utils";
 
 interface WorkoutLibraryItem {
   id: string;

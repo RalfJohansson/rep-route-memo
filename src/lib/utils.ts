@@ -7,11 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export const getCategoryColor = (category: string) => {
   const colors: { [key: string]: string } = {
-    'intervallpass': '#BF5E42',
-    'distanspass': '#468771',
-    'långpass': '#7AA6DB',
-    'styrka': '#4E7C8C',
-    'tävling': '#000000',
+    'intervallpass': '#dd8862',
+    'distanspass': '#6fa787',
+    'långpass': '#7c93c4',
+    'styrka': '#4f7c80',
+    'tävling': '#35404d',
+    'simning': '#e3b65a',
+    'cykling': '#9A8cb0',
+    'lopning': '#dd8862',
   };
-  return colors[category.toLowerCase()] || '#BF5E42';
+  return colors[category.toLowerCase()] || '#dd8862';
 };
