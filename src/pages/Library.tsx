@@ -281,7 +281,7 @@ const Library = () => {
                                     size="sm"
                                     onClick={() => handleOpenDialog(workout)}
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <Edit className="h-4 w-4" style={{ color: '#c99a3e' }} />
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -289,7 +289,7 @@ const Library = () => {
                                     onClick={() => handleDeleteWorkout(workout.id)}
                                     className="text-destructive hover:text-destructive"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" style={{ color: '#c4574a' }} />
                                   </Button>
                                 </div>
                               </CardTitle>
@@ -329,7 +329,7 @@ const Library = () => {
                             size="sm"
                             onClick={() => handleOpenDialog(workout)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-4 w-4" style={{ color: '#c99a3e' }} />
                           </Button>
                           <Button
                             variant="ghost"
@@ -337,7 +337,7 @@ const Library = () => {
                             onClick={() => handleDeleteWorkout(workout.id)}
                             className="text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" style={{ color: '#c4574a' }} />
                           </Button>
                         </div>
                       </CardTitle>
