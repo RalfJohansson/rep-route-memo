@@ -10,9 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Upload } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
-import CsvImportDialog from "@/components/CsvImportDialog";
 
 interface WorkoutLibraryItem {
   id: string;
@@ -224,21 +223,10 @@ const Library = () => {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bibliotek</h1>
-        <div className="flex gap-2">
-          <CsvImportDialog
-            onImportComplete={fetchWorkouts}
-            trigger={
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-1" />
-                Importera
-              </Button>
-            }
-          />
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nytt pass
-          </Button>
-        </div>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nytt pass
+        </Button>
       </div>
 
       {/* Topp-kategorier */}
