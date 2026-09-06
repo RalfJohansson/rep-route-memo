@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Upload } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 
 interface WorkoutLibraryItem {
@@ -58,14 +58,6 @@ const Library = () => {
   const [effort, setEffort] = useState(5);
   const [description, setDescription] = useState("");
   const [pace, setPace] = useState("");
-
-  // Import state
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [csvData, setCsvData] = useState<any[]>([]);
-  const [validRows, setValidRows] = useState<any[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [duplicates, setDuplicates] = useState<string[]>([]);
-  const [isImporting, setIsImporting] = useState(false);
 
   // När toppkategorin ändras, uppdatera kategori
   useEffect(() => {
@@ -166,7 +158,7 @@ const Library = () => {
         .update(workoutData)
         .eq("id", editingWorkout.id);
 
-      if (error) {
+    if (error) {
         console.error("Error updating workout:", error.message, error.details);
         toast.error("Kunde inte uppdatera pass");
       } else {
@@ -207,192 +199,6 @@ const Library = () => {
     }
   };
 
-  // Import helpers
-  const resetImportState = () => {
-    setShowImportDialog(false);
-    setCsvData([]);
-    setValidRows([]);
-    setErrors([]);
-    setDuplicates([]);
-    setIsImporting(false);
-  };
-
-  const parseCSV = (text: string) => {
-    const lines = text.trim().split("\n");
-    if (lines.length === 0) return [];
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-    const result: any[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",").map(v => v.trim());
-      const row: any = {};
-      headers.forEach((h, idx) => {
-        row[h] = values[idx] !== undefined ? values[idx] : "";
-      });
-      result.push(row);
-    }
-    return result;
-  };
-
-  const validateRows = (rows: any[]) => {
-    const valid: any[] = [];
-    const errs: string[] = [];
-    const validActivities = ["Löpning", "Cykling", "Simning", "Styrka", "Tävling"];
-    const validPassCategories = ["Intervallpass", "Distanspass", "Långpass"];
-    rows.forEach((row, index) => {
-      const rowNum = index + 1;
-      const name = row.namn || row.name || "";
-      const activity = row.aktivitet || row.activity || "";
-      const passCategory = row.passkategori || row.passCategory || "";
-      const time = row.tid || row.time || "";
-      const pace = row.fart || row.pace || "";
-      const effortStr = row.anstrangning || row.effort || "";
-      const description = row.beskrivning || row.description || "";
-
-      if (!name) {
-        errs.push(`Rad ${rowNum}: Namn saknas`);
-        return;
-      }
-      if (!activity) {
-        errs.push(`Rad ${rowNum}: Aktivitet saknas`);
-        return;
-      }
-      if (!validActivities.includes(activity)) {
-        errs.push(`Rad ${rowNum}: Ogiltig aktivitet "${activity}"`);
-        return;
-      }
-      if (activity === "Löpning") {
-        if (!passCategory) {
-          errs.push(`Rad ${rowNum}: Passkategori saknas för Löpning`);
-          return;
-        }
-        if (!validPassCategories.includes(passCategory)) {
-          errs.push(`Rad ${rowNum}: Ogiltig passkategori "${passCategory}" för Löpning`);
-          return;
-        }
-      }
-      const effortNum = parseInt(effortStr, 10);
-      if (isNaN(effortNum) || effortNum < 1 || effortNum > 10) {
-        errs.push(`Rad ${rowNum}: Ansträngning måste vara ett heltal mellan 1 och 10`);
-        return;
-      }
-      valid.push({
-        name,
-        activity,
-        passCategory: activity === "Löpning" ? passCategory : undefined,
-        time,
-        pace,
-        effort: effortNum,
-        description,
-      });
-    });
-    return { valid, errors: errs };
-  };
-
-  const checkDuplicates = async (rows: any[]) => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return rows;
-    const existing = await supabase
-      .from("workout_library")
-      .select("name, category")
-      .eq("user_id", user.id);
-    const existingMap = new Set();
-    existing.data?.forEach((w: any) => {
-      existingMap.add(`${w.name.toLowerCase()}|${w.category}`);
-    });
-    const unique: any[] = [];
-    const dups: string[] = [];
-    rows.forEach((row) => {
-      const key = `${row.name.toLowerCase()}|${row.activity.toLowerCase() === "lopning" ? row.activity : (row.activity === "Löpning" ? (row.passCategory || "").toLowerCase() : row.activity.toLowerCase())}`;
-      // Simplify: we'll just check name and activity (top category)
-      const activityKey = row.activity.toLowerCase();
-      let categoryKey = "";
-      if (activityKey === "löpning") {
-        categoryKey = (row.passCategory || "").toLowerCase();
-      } else {
-        categoryKey = activityKey;
-      }
-      const dupKey = `${row.name.toLowerCase()}|${categoryKey}`;
-      if (existingMap.has(dupKey)) {
-        dups.push(row.name);
-      } else {
-        unique.push(row);
-        existingMap.add(dupKey);
-      }
-    });
-    return { unique, duplicates: dups };
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const rows = parseCSV(text);
-      const { valid, errors } = validateRows(rows);
-      setCsvData(rows);
-      setValidRows(valid);
-      setErrors(errors);
-    };
-    reader.readAsText(file);
-  };
-
-  const handleImport = async () => {
-    setIsImporting(true);
-    try {
-      const { unique, duplicates } = await checkDuplicates(validRows);
-      setDuplicates(duplicates);
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Ingen användare");
-      const toInsert = unique.map((row) => {
-        let categoryValue: string;
-        if (row.activity.toLowerCase() === "löpning") {
-          categoryValue = "lopning";
-        } else if (row.activity.toLowerCase() === "cykling") {
-          categoryValue = "cykling";
-        } else if (row.activity.toLowerCase() === "simning") {
-          categoryValue = "simning";
-        } else if (row.activity.toLowerCase() === "styrka") {
-          categoryValue = "styrka";
-        } else if (row.activity.toLowerCase() === "tävling") {
-          categoryValue = "tävling";
-        } else {
-          categoryValue = "lopning"; // fallback
-        }
-        // For löpning, we need to store the subcategory as category
-        if (row.activity.toLowerCase() === "löpning") {
-          categoryValue = row.passCategory?.toLowerCase() === "intervallpass" ? "intervallpass"
-            : row.passCategory?.toLowerCase() === "distanspass" ? "distanspass"
-            : row.passCategory?.toLowerCase() === "långpass" ? "långpass"
-            : "intervallpass"; // fallback
-        }
-        return {
-          name: row.name,
-          category: categoryValue as "intervallpass" | "distanspass" | "långpass" | "styrka" | "tävling",
-          duration: row.time || null,
-          effort: row.effort,
-          description: row.description || null,
-          pace: row.pace || null,
-          user_id: user.id,
-        };
-      });
-      // Insert in batches
-      const batchSize = 20;
-      for (let i = 0; i < toInsert.length; i += batchSize) {
-        const batch = toInsert.slice(i, i + batchSize);
-        await supabase.from("workout_library").insert(batch);
-      }
-      toast.success(`Importerade ${toInsert.length} pass`);
-      fetchWorkouts();
-      resetImportState();
-    } catch (err: any) {
-      console.error("Import error:", err);
-      toast.error("Misslyckades med import");
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   const getWorkoutsByCategory = (cat: string) => {
     return workouts.filter((w) => w.category === cat);
   };
@@ -417,19 +223,10 @@ const Library = () => {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bibliotek</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nytt pass
-          </Button>
-          <Button onClick={() => {
-            resetImportState();
-            setShowImportDialog(true);
-          }}>
-            <Upload className="h-4 w-4 mr-1" />
-            Importera träningspass
-          </Button>
-        </div>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nytt pass
+        </Button>
       </div>
 
       {/* Topp-kategorier */}
@@ -455,54 +252,53 @@ const Library = () => {
                   ))}
                 </TabsList>
 
-                {subCategoryMap[cat.value].map((sub) => (
-                  <TabsContent key={sub.value} value={sub.value} className="space-y-3">
-                    {getWorkoutsByCategory(sub.value).length === 0 ? (
-                      <Card>
-                        <CardContent className="py-8">
-                          <p className="text-center text-muted-foreground">
-                            Inga pass i denna underkategori
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      getWorkoutsByCategory(sub.value).map((workout) => (
-                        <Card
-                          key={workout.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => {
-                            setViewingWorkout(workout);
-                            setShowDetailDialog(true);
-                          }}
-                        >
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-lg flex justify-between items-start">
-                              <span>{workout.name}</span>
-                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleOpenDialog(workout)}
-                                >
-                                  <Edit className="h-4 w-4" style={{ color: '#c99a3e' }} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteWorkout(workout.id)}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" style={{ color: '#c4574a' }} />
-                                </Button>
-                              </div>
-                            </CardTitle>
-                          </CardHeader>
+                  {subCategoryMap[cat.value].map((sub) => (
+                    <TabsContent key={sub.value} value={sub.value} className="space-y-3">
+                      {getWorkoutsByCategory(sub.value).length === 0 ? (
+                        <Card>
+                          <CardContent className="py-8">
+                            <p className="text-center text-muted-foreground">
+                              Inga pass i denna underkategori
+                            </p>
+                          </CardContent>
                         </Card>
-                      ))
-                    )}
-                  </TabsContent>
-                ))}
-
+                      ) : (
+                        getWorkoutsByCategory(sub.value).map((workout) => (
+                          <Card
+                            key={workout.id}
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => {
+                              setViewingWorkout(workout);
+                              setShowDetailDialog(true);
+                            }}
+                          >
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex justify-between items-start">
+                                <span>{workout.name}</span>
+                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenDialog(workout)}
+                                  >
+                                    <Edit className="h-4 w-4" style={{ color: '#c99a3e' }} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteWorkout(workout.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" style={{ color: '#c4574a' }} />
+                                  </Button>
+                                </div>
+                              </CardTitle>
+                            </CardHeader>
+                          </Card>
+                        ))
+                      )}
+                    </TabsContent>
+                  ))}
                 </Tabs>
             ) : (
               // Ingen underkategori, visa pass direkt
@@ -656,94 +452,6 @@ const Library = () => {
               {editingWorkout ? "Uppdatera" : "Skapa"} pass
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Importera träningspass</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Välj CSV-fil</Label>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-            {isImporting ? (
-              <div className="flex items-center space-x-2">
-                <div className="h-4 w-4 border border-primary rounded-full animate-spin"></div>
-                <span>Importerar...</span>
-              </div>
-            ) : (
-              <>
-                {csvData.length > 0 && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Förhandsgranskning</Label>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Namn</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktivitet</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passkategori</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tid</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fart</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ansträngning</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beskrivning</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {validRows.map((row, index) => (
-                              <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.activity}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.passCategory || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.time || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pace || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.effort}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.description || '-'}</td>
-                              </tr>
-                            ))}
-                            {errors.map((err, index) => (
-                              <tr key={`err-${index}`}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600" colSpan="7">
-                                  {err}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-500">
-                          {validRows.length} pass redo att importera, {errors.length} fel
-                        </span>
-                        <Button
-                          onClick={handleImport}
-                          disabled={validRows.length === 0 || isImporting}
-                          className="px-4 py-2"
-                        >
-                          Importera
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                )}
-                {csvData.length === 0 && (
-                  <p className="text-center text-gray-500">Ingen fil vald</p>
-                )}
-              </>
-            )}
-          </div>
-          <Button onClick={() => setShowImportDialog(false)} className="mt-4 w-full">
-            Avbryt
-          </Button>
         </DialogContent>
       </Dialog>
 
