@@ -405,14 +405,16 @@ const Library = () => {
       toast.error("Något gick fel vid import");
     } finally {
       setImportLoading(false);
-      setShowImportDialog(false);
-      // Reset import state
-      setImportFile(null);
-      setImportRows([]);
-      setImportErrors([]);
-      setImportValid([]);
-      setImportDuplicates([]);
-      fileInputRef.current?.value = "";
+            setShowImportDialog(false);
+            // Reset import state
+            setImportFile(null);
+            setImportRows([]);
+            setImportErrors([]);
+            setImportValid([]);
+            setImportDuplicates([]);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
     }
   };
 
