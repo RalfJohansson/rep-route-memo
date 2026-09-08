@@ -67,8 +67,22 @@ const Library = () => {
   const [importErrors, setImportErrors] = useState<any[]>([]);
   const [importValid, setImportValid] = useState<any[]>([]);
   const [importDuplicates, setImportDuplicates] = useState<any[]>([]);
-    const [activeTab, setActiveTab] = useState("valid");
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState("valid");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!showImportDialog) {
+      setImportFile(null);
+      setImportRows([]);
+      setImportErrors([]);
+      setImportValid([]);
+      setImportDuplicates([]);
+      setActiveTab("valid");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [showImportDialog]);
 
   // När toppkategorin ändras, uppdatera kategori
   useEffect(() => {
@@ -412,7 +426,9 @@ const Library = () => {
       setImportErrors([]);
       setImportValid([]);
       setImportDuplicates([]);
-      fileInputRef.current?.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
