@@ -423,19 +423,19 @@ const Library = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bibliotek</h1>
         <div className="flex gap-2">
-          <Button onClick={() => handleOpenDialog()} size="sm">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Nytt pass
-                  </Button>
-          <Button onClick={handleImportClick} disabled={importLoading} size="sm">
-                      {importLoading ? (
-                        <span>Importerar...</span>
-                      ) : (
-                        <>
-                          <span>Importera träningspass</span>
-                        </>
-                      )}
-                    </Button>
+          <Button onClick={() => handleOpenDialog()} className="h-8 px-3 text-xs">
+                              <Plus className="h-3 w-3 mr-1" />
+                              Nytt pass
+                            </Button>
+          <Button onClick={handleImportClick} disabled={importLoading} className="h-8 px-3 text-xs">
+                                {importLoading ? (
+                                  <span>Importerar...</span>
+                                ) : (
+                                  <>
+                                    <span>Importera träningspass</span>
+                                  </>
+                                )}
+                              </Button>
           <input
             type="file"
             accept=".csv"
