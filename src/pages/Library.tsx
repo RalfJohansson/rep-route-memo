@@ -500,4 +500,287 @@ const Library = () => {
                             <CardHeader className="pb-3">
                               <CardTitle className="text-lg flex justify-between items-start">
                                 <span>{workout.name}</span>
-                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>\n                                  <Button\n                                    variant=\"ghost\"\n                                    size=\"sm\"\n                                    onClick={() => handleOpenDialog(workout)}\n                                  >\n                                    <Edit className=\"h-4 w-4\" style={{ color: \"#c99a3e\" }} />\n                                  </Button>\n                                  <Button\n                                    variant=\"ghost\"\n                                    size=\"sm\"\n                                    onClick={() => handleDeleteWorkout(workout.id)}\n                                    className=\"text-destructive hover:text-destructive\"\n                                  >\n                                    <Trash2 className=\"h-4 w-4\" style={{ color: \"#c4574a\" }} />\n                                  </Button>\n                                </div>\n                              </CardTitle>\n                            </CardHeader>\n                          </Card>\n                        ))\n                      )}\n                    </TabsContent>\n                  ))}\n                </Tabs>\n              </>\n            ) : (\n              // Ingen underkategori, visa pass direkt\n              getWorkoutsByCategory(cat.value).length === 0 ? (\n                <Card>\n                  <CardContent className=\"py-8\">\n                    <p className=\"text-center text-muted-foreground\">\n                      Inga pass i denna kategori\n                    </p>\n                  </CardContent>\n                </Card>\n              ) : (\n                getWorkoutsByCategory(cat.value).map((workout) => (\n                  <Card\n                    key={workout.id}\n                    className=\"cursor-pointer hover:bg-muted/50 transition-colors\"\n                    onClick={() => {\n                      setViewingWorkout(workout);\n                      setShowDetailDialog(true);\n                    }}\n                  >\n                    <CardHeader className=\"pb-3\">\n                      <CardTitle className=\"text-lg flex justify-between items-start\">\n                        <span>{workout.name}</span>\n                        <div className=\"flex gap-1\" onClick={(e) => e.stopPropagation()}>\n                          <Button\n                            variant=\"ghost\"\n                            size=\"sm\"\n                            onClick={() => handleOpenDialog(workout)}\n                          >\n                            <Edit className=\"h-4 w-4\" style={{ color: \"#c99a3e\" }} />\n                          </Button>\n                          <Button\n                            variant=\"ghost\"\n                            size=\"sm\"\n                            onClick={() => handleDeleteWorkout(workout.id)}\n                            className=\"text-destructive hover:text-destructive\"\n                          >\n                            <Trash2 className=\"h-4 w-4\" style={{ color: \"#c4574a\" }} />\n                          </Button>\n                        </div>\n                      </CardTitle>\n                    </CardHeader>\n                  </Card>\n                ))\n              )\n            )}\n          </TabsContent>\n        ))}\n      </Tabs>\n\n      <Dialog open={showDialog} onOpenChange={setShowDialog}>\n        <DialogContent className=\"max-w-md\">\n          <DialogHeader>\n            <DialogTitle>\n              {editingWorkout ? \"Redigera pass\" : \"Skapa nytt pass\"}\n            </DialogTitle>\n          </DialogHeader>\n          <div className=\"space-y-4\">\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"name\">Namn på pass</Label>\n              <Input\n                id=\"name\"\n                value={name}\n                onChange={(e) => setName(e.target.value)}\n                placeholder=\"T.ex. 5x1000m\"\n              />\n            </div>\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"topCategory\">Aktivitet</Label>\n              <Select value={formTopCategory} onValueChange={setFormTopCategory}>\n                <SelectTrigger>\n                  <SelectValue />\n                </SelectTrigger>\n                <SelectContent>\n                  {topCategories.map((cat) => (\n                    <SelectItem key={cat.value} value={cat.value}>\n                      {cat.label}\n                    </SelectItem>\n                  ))}\n                </SelectContent>\n              </Select>\n            </div>\n            {formTopCategory === \"lopning\" && (\n              <div className=\"space-y-2\">\n                <Label>Passkategori</Label>\n                <RadioGroup\n                  value={formSubCategory || \"\"}\n                  onValueChange={setFormSubCategory}\n                  className=\"flex flex-col space-y-1\"\n                >\n                  {subCategoryMap.lopning.map((sub) => (\n                    <div key={sub.value} className=\"flex items-center space-x-2\">\n                      <RadioGroupItem value={sub.value} id={sub.value} />\n                      <Label htmlFor={sub.value} className=\"font-normal cursor-pointer\">\n                        {sub.label}\n                      </Label>\n                    </div>\n                  ))}\n                </RadioGroup>\n              </div>\n            )}\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"duration\">Tid</Label>\n              <Input\n                id=\"duration\"\n                type=\"text\"\n                value={duration}\n                onChange={(e) => setDuration(e.target.value)}\n                placeholder=\"T.ex. 45 eller 1:30\"\n              />\n            </div>\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"pace\">Fart</Label>\n              <Input\n                id=\"pace\"\n                type=\"text\"\n                value={pace}\n                onChange={(e) => setPace(e.target.value)}\n                placeholder=\"T.ex. 5:00/km\"\n              />\n            </div>\n            <div className=\"space-y-2\">\n              <Label>Ansträngning (1-10)</Label>\n              <div className=\"flex gap-1\">\n                {[...Array(10)].map((_, i) => (\n                  <Button\n                    key={i + 1}\n                    type=\"button\"\n                    variant={effort === i + 1 ? \"default\" : \"outline\"}\n                    size=\"sm\"\n                    onClick={() => setEffort(i + 1)}\n                    className=\"flex-1 p-0 h-9\"\n                  >\n                    {i + 1}\n                  </Button>\n                ))}\n              </div>\n            </div>\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"description\">Beskrivning</Label>\n              <Textarea\n                id=\"description\"\n                value={description}\n                onChange={(e) => setDescription(e.target.value)}\n                placeholder=\"Beskrivning av passet...\"\n                rows={3}\n              />\n            </div>\n            <Button onClick={handleSaveWorkout} className=\"w-full\">\n              {editingWorkout ? \"Uppdatera\" : \"Skapa\"} pass\n            </Button>\n          </div>\n        </DialogContent>\n      </Dialog>\n\n      {/* Import Dialog */}\n      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>\n        <DialogContent className=\"max-w-2xl\">\n          <DialogHeader>\n            <DialogTitle>Importera träningspass</DialogTitle>\n          </DialogHeader>\n          <div className=\"space-y-4\">\n            {importLoading ? (\n              <div className=\"flex items-center justify-center py-8\">\n                <span>Läser in och validerar...</span>\n              </div>\n            ) : (\n              <>\n                <Tabs value={importErrors.length > 0 ? \"errors\" : \"valid\"} onValueChange={(v) => setActiveTab(v)}>\n                  <TabsList className=\"grid w-full grid-cols-2\">\n                    <TabsTrigger value=\"valid\" className=\"text-[11px]\">\n                      Giltiga pass ({importValid.length})\n                    </TabsTrigger>\n                    <TabsTrigger value=\"errors\" className=\"text-[11px]\">\n                      Fel ({importErrors.length + importDuplicates.length})\n                    </TabsTrigger>\n                  </TabsList>\n\n                  {importErrors.length > 0 || importDuplicates.length > 0 ? (\n                    <TabsContent key=\"errors\" value=\"errors\" className=\"space-y-4\">\n                      <div className=\"space-y-2\">\n                        <h3 className=\"text-lg font-medium\">Felaktiga rader</h3>\n                        {importErrors.map((err) => (\n                          <div key={err.row} className=\"p-3 bg-red-50 border border-red-200 rounded-md\">\n                            <p className=\"font-medium text-red-600\">Rad {err.row}: {err.message}</p>\n                          </div>\n                        ))}\n                        {importDuplicates.map((dup) => (\n                          <div key={dup.row} className=\"p-3 bg-yellow-50 border border-yellow-200 rounded-md\">\n                            <p className=\"font-medium text-yellow-600\">Rad {dup.row}: {dup.message}</p>\n                            <p className=\"text-sm text-muted-foreground\">\n                              Namn: {dup.name}, Aktivitet: {dup.activity}, Passkategori: {dup.passCategory || \"-\"}\n                            </p>\n                          </div>\n                        ))}\n                      </div>\n                    </TabsContent>\n                  ) : null}\n\n                  <TabsContent key=\"valid\" value=\"valid\" className=\"space-y-4\">\n                    {importValid.length === 0 ? (\n                      <p className=\"text-center text-muted-foreground py-8\">Inga giltiga pass att importera</p>\n                    ) : (\n                      <div className=\"space-y-2\">\n                        <h3 className=\"text-lg font-medium\">Pass som kommer att importeras</h3>\n                        <div className=\"space-y-2\">\n                          {importValid.map((v) => (\n                            <div key={v.row} className=\"p-3 bg-green-50 border border-green-200 rounded-md\">\n                              <p className=\"font-medium\">{v.workout.name}</p>\n                  <p className=\"text-sm text-muted-foreground\">\n                    Aktivitet: {v.workout.category === \"lopning\" ? \"Löpning\" : v.workout.category === \"cykling\" ? \"Cykling\" : v.workout.category === \"simning\" ? \"Simning\" : v.workout.category === \"styrka\" ? \"Styrka\" : \"Tävling\"}\n                    {v.workout.category === \"lopning\" ? \n                      `, Passkategori: ${v.workout.category === \"intervallpass\" ? \"Intervallpass\" : v.workout.category === \"distanspass\" ? \"Distanspass\" : \"Långpass\"}` : \"\"}\n                  </p>\n                  {v.workout.duration && (\n                    <p className=\"text-sm text-muted-foreground\">Tid: {v.workout.duration}</p>\n                  )}\n                  {v.workout.pace && (\n                    <p className=\"text-sm text-muted-foreground\">Fart: {v.workout.pace}</p>\n                  )}\n                  {v.workout.description && (\n                    <p className=\"text-sm text-muted-foreground\">Beskrivning: {v.workout.description}</p>\n                  )}\n                            </div>\n                          ))}\n                        </div>\n                      </div>\n                    )}\n                  </TabsContent>\n                </Tabs>\n                <div className=\"mt-4 flex justify-end space-x-2\">\n                  <Button onClick={() => setShowImportDialog(false)} variant=\"outline\">\n                    Avbryt\n                  </Button>\n                  <Button\n                    onClick={handleImportConfirm}\n                    disabled={importLoading || (importValid.length === 0 && importDuplicates.length === 0)}\n                    className=\"w-auto\"\n                  >\n                    {importLoading ? \"Importerar...\" : \"Importera\"}\n                  </Button>\n                </div>\n              </>\n            )}\n          </div>\n        </DialogContent>\n      </Dialog>\n\n      <WorkoutDetailDialog\n        workout={viewingWorkout}\n        open={showDetailDialog}\n        onOpenChange={setShowDetailDialog}\n      />\n    </div>\n  );\n};\n\nexport default Library;\n"
+                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenDialog(workout)}
+                                  >
+                                    <Edit className="h-4 w-4" style={{ color: "#c99a3e" }} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteWorkout(workout.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" style={{ color: "#c4574a" }} />
+                                  </Button>
+                                </div>
+                              </CardTitle>
+                            </CardHeader>
+                          </Card>
+                        ))
+                      )}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </>
+            ) : (
+              // Ingen underkategori, visa pass direkt
+              getWorkoutsByCategory(cat.value).length === 0 ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">
+                      Inga pass i denna kategori
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                getWorkoutsByCategory(cat.value).map((workout) => (
+                  <Card
+                    key={workout.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      setViewingWorkout(workout);
+                      setShowDetailDialog(true);
+                    }}
+                  >
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex justify-between items-start">
+                        <span>{workout.name}</span>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenDialog(workout)}
+                          >
+                            <Edit className="h-4 w-4" style={{ color: "#c99a3e" }} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteWorkout(workout.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" style={{ color: "#c4574a" }} />
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))
+              )
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingWorkout ? "Redigera pass" : "Skapa nytt pass"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Namn på pass</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="T.ex. 5x1000m"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="topCategory">Aktivitet</Label>
+              <Select value={formTopCategory} onValueChange={setFormTopCategory}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {topCategories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {formTopCategory === "lopning" && (
+              <div className="space-y-2">
+                <Label>Passkategori</Label>
+                <RadioGroup
+                  value={formSubCategory || ""}
+                  onValueChange={setFormSubCategory}
+                  className="flex flex-col space-y-1"
+                >
+                  {subCategoryMap.lopning.map((sub) => (
+                    <div key={sub.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={sub.value} id={sub.value} />
+                      <Label htmlFor={sub.value} className="font-normal cursor-pointer">
+                        {sub.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="duration">Tid</Label>
+              <Input
+                id="duration"
+                type="text"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="T.ex. 45 eller 1:30"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pace">Fart</Label>
+              <Input
+                id="pace"
+                type="text"
+                value={pace}
+                onChange={(e) => setPace(e.target.value)}
+                placeholder="T.ex. 5:00/km"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Ansträngning (1-10)</Label>
+              <div className="flex gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <Button
+                    key={i + 1}
+                    type="button"
+                    variant={effort === i + 1 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setEffort(i + 1)}
+                    className="flex-1 p-0 h-9"
+                  >
+                    {i + 1}
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Beskrivning</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Beskrivning av passet..."
+                rows={3}
+              />
+            </div>
+            <Button onClick={handleSaveWorkout} className="w-full">
+              {editingWorkout ? "Uppdatera" : "Skapa"} pass
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Importera träningspass</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {importLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <span>Läser in och validerar...</span>
+              </div>
+            ) : (
+              <>
+                <Tabs value={importErrors.length > 0 ? "errors" : "valid"} onValueChange={(v) => setActiveTab(v)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="valid" className="text-[11px]">
+                      Giltiga pass ({importValid.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="errors" className="text-[11px]">
+                      Fel ({importErrors.length + importDuplicates.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {importErrors.length > 0 || importDuplicates.length > 0 ? (
+                    <TabsContent key="errors" value="errors" className="space-y-4">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">Felaktiga rader</h3>
+                        {importErrors.map((err) => (
+                          <div key={err.row} className="p-3 bg-red-50 border border-red-200 rounded-md">
+                            <p className="font-medium text-red-600">Rad {err.row}: {err.message}</p>
+                          </div>
+                        ))}
+                        {importDuplicates.map((dup) => (
+                          <div key={dup.row} className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <p className="font-medium text-yellow-600">Rad {dup.row}: {dup.message}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Namn: {dup.name}, Aktivitet: {dup.activity}, Passkategori: {dup.passCategory || "-"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+                  ) : null}
+
+                  <TabsContent key="valid" value="valid" className="space-y-4">
+                    {importValid.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">Inga giltiga pass att importera</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">Pass som kommer att importeras</h3>
+                        <div className="space-y-2">
+                          {importValid.map((v) => (
+                            <div key={v.row} className="p-3 bg-green-50 border border-green-200 rounded-md">
+                              <p className="font-medium">{v.workout.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aktivitet: {v.workout.category === "lopning" ? "Löpning" : v.workout.category === "cykling" ? "Cykling" : v.workout.category === "simning" ? "Simning" : v.workout.category === "styrka" ? "Styrka" : "Tävling"}
+                    {v.workout.category === "lopning" ? 
+                      `, Passkategori: ${v.workout.category === "intervallpass" ? "Intervallpass" : v.workout.category === "distanspass" ? "Distanspass" : "Långpass"}` : ""}
+                  </p>
+                  {v.workout.duration && (
+                    <p className="text-sm text-muted-foreground">Tid: {v.workout.duration}</p>
+                  )}
+                  {v.workout.pace && (
+                    <p className="text-sm text-muted-foreground">Fart: {v.workout.pace}</p>
+                  )}
+                  {v.workout.description && (
+                    <p className="text-sm text-muted-foreground">Beskrivning: {v.workout.description}</p>
+                  )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+                <div className="mt-4 flex justify-end space-x-2">
+                  <Button onClick={() => setShowImportDialog(false)} variant="outline">
+                    Avbryt
+                  </Button>
+                  <Button
+                    onClick={handleImportConfirm}
+                    disabled={importLoading || (importValid.length === 0 && importDuplicates.length === 0)}
+                    className="w-auto"
+                  >
+                    {importLoading ? "Importerar..." : "Importera"}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <WorkoutDetailDialog
+        workout={viewingWorkout}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
+    </div>
+  );
+};
+
+export default Library;
