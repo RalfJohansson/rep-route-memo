@@ -683,11 +683,11 @@ const Library = () => {
       </Dialog>
 
       {/* Import Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Importera träningspass</DialogTitle>
-          </DialogHeader>
+            <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Importera träningspass</DialogTitle>
+                </DialogHeader>
           <div className="space-y-4">
             {importLoading ? (
               <div className="flex items-center justify-center py-8">
