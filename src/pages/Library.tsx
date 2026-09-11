@@ -737,10 +737,9 @@ const Library = () => {
                             <div key={v.row} className="p-3 bg-green-50 border border-green-200 rounded-md">
                               <p className="font-medium">{v.workout.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Aktivitet: {v.workout.category === "lopning" ? "Löpning" : v.workout.category === "cykling" ? "Cykling" : v.workout.category === "simning" ? "Simning" : v.workout.category === "styrka" ? "Styrka" : "Tävling"}
-                    {v.workout.category === "lopning" ? 
-                      `, Passkategori: ${v.workout.category === "intervallpass" ? "Intervallpass" : v.workout.category === "distanspass" ? "Distanspass" : "Långpass"}` : ""}
-                  </p>
+                                      Aktivitet: {v.original.aktivitet}
+                                      {v.original.passkategori ? `, Passkategori: ${v.original.passkategori}` : ""}
+                                    </p>
                   {v.workout.duration && (
                     <p className="text-sm text-muted-foreground">Tid: {v.workout.duration}</p>
                   )}
