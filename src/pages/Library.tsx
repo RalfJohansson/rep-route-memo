@@ -231,11 +231,12 @@ const Library = () => {
   };
 
   // CSV Import handlers
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImportClick = () => {
+      setShowImportDialog(true);
+      fileInputRef.current?.click();
+    };
+  
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImportFile(file);
@@ -661,7 +662,7 @@ const Library = () => {
                   >
                     {i + 1}
                   </Button>
-                )}
+                                  ))}
               </div>
             </div>
             <div className="space-y-2">
