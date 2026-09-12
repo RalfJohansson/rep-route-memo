@@ -43,9 +43,10 @@ serve(async (req) => {
 
     // Get Strava connection
     const { data: connection, error: connectionError } = await supabaseClient
-      .from('strava_connections')
+      .from('user_integrations')
       .select('*')
       .eq('user_id', user.id)
+      .eq('provider', 'strava')
       .single();
 
     if (connectionError || !connection) {
@@ -85,13 +86,14 @@ serve(async (req) => {
 
       // Update connection with new tokens
       const { error: updateError } = await supabaseClient
-        .from('strava_connections')
+        .from('user_integrations')
         .update({
           access_token: refreshData.access_token,
           refresh_token: refreshData.refresh_token,
           expires_at: refreshData.expires_at,
         })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('provider', 'strava');
 
       if (updateError) {
         console.error('Error updating Strava connection after refresh:', updateError);

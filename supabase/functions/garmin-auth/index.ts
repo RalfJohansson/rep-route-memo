@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts"; // Updated Deno std version
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 
 const corsHeaders = {
@@ -18,37 +18,37 @@ serve(async (req) => {
       throw new Error('Missing authorization code');
     }
 
-    const clientId = Deno.env.get('STRAVA_CLIENT_ID');
-    const clientSecret = Deno.env.get('STRAVA_CLIENT_SECRET');
-    const redirectUri = Deno.env.get('STRAVA_REDIRECT_URI');
+    const clientId = Deno.env.get('GARMIN_CLIENT_ID');
+    const clientSecret = Deno.env.get('GARMIN_CLIENT_SECRET');
+    const redirectUri = Deno.env.get('GARMIN_REDIRECT_URI');
     
     if (!clientId || !clientSecret || !redirectUri) {
-      throw new Error('Strava credentials not configured');
+      throw new Error('Garmin credentials not configured');
     }
 
     // Exchange authorization code for access token
-    const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
+    const tokenResponse = await fetch('https://services.garmin.com/oauth2/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
+      body: new URLSearchParams({
         client_id: clientId,
         client_secret: clientSecret,
         code: code,
         grant_type: 'authorization_code',
         redirect_uri: redirectUri,
-      }),
+      }).toString(),
     });
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('Strava token exchange error:', errorData);
+      console.error('Garmin token exchange error:', errorData);
       throw new Error(`Failed to exchange code for token: ${errorData}`);
     }
 
     const tokenData = await tokenResponse.json();
-    console.log('Token exchange successful');
+    console.log('Garmin token exchange successful');
 
     // Get user from request
     const authHeader = req.headers.get('Authorization');
@@ -72,11 +72,11 @@ serve(async (req) => {
       .from('user_integrations')
       .upsert({
         user_id: user.id,
-        provider: 'strava',
-        provider_user_id: tokenData.athlete.id,
+        provider: 'garmin',
+        provider_user_id: tokenData.user.userId, // Assuming the user ID is in tokenData.user.userId
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
-        expires_at: tokenData.expires_at,
+        expires_at: tokenData.expires_in ? Math.floor(Date.now() / 1000) + tokenData.expires_in : 0, // Garmin returns expires_in seconds
         scopes: scope || null,
         updated_at: new Date().toISOString(),
       }, {
@@ -85,13 +85,13 @@ serve(async (req) => {
 
     if (upsertError) {
       console.error('Database error:', upsertError);
-      throw new Error('Failed to store Strava connection');
+      throw new Error('Failed to store Garmin connection');
     }
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        athlete: tokenData.athlete 
+        user: tokenData.user 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -100,7 +100,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in strava-auth:', error);
+    console.error('Error in garmin-auth:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ error: errorMessage }),

@@ -96,7 +96,10 @@ const Schedule = () => {
       console.error("Error fetching scheduled workouts:", error.message, error.details);
       toast.error("Kunde inte hämta schema");
     } else {
-      setWorkouts(data || []);
+      setWorkouts((data || []).map(item => ({
+        ...item,
+        workout_library: item.workout_library[0] || null
+      })));
     }
   };
 

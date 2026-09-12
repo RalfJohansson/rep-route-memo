@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts"; // Updated Deno std version
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 
 const corsHeaders = {
@@ -8,7 +8,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 200 }); // Explicitly set status to 200
+    return new Response(null, { headers: corsHeaders, status: 200 });
   }
 
   try {
@@ -28,16 +28,16 @@ serve(async (req) => {
       throw new Error('Invalid user token');
     }
 
-    // Delete Strava connection
+    // Delete Garmin connection
     const { error: deleteError } = await supabase
       .from('user_integrations')
       .delete()
       .eq('user_id', user.id)
-      .eq('provider', 'strava');
+      .eq('provider', 'garmin');
 
     if (deleteError) {
       console.error('Database error:', deleteError);
-      throw new Error('Failed to disconnect Strava');
+      throw new Error('Failed to disconnect Garmin');
     }
 
     return new Response(
@@ -49,7 +49,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in strava-disconnect:', error);
+    console.error('Error in garmin-disconnect:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ error: errorMessage }),

@@ -242,11 +242,11 @@ const Library = () => {
     setImportFile(file);
     setImportLoading(true);
     try {
-      const text = await file.text();
-      // Strip UTF-8 BOM if present
-      if (text.startsWith('\uFEFF')) {
-        text = text.slice(1);
-      }
+          let text = await file.text();
+          // Strip UTF-8 BOM if present
+          if (text.startsWith('\uFEFF')) {
+            text = text.slice(1);
+          }
       const rows = parseCSV(text);
       setImportRows(rows);
       toast.info(`Läste ${rows.length} rader från CSV-filen`);

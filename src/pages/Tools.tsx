@@ -38,6 +38,8 @@ const Tools = () => {
   const [loading, setLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
+  const [garminConnected, setGarminConnected] = useState(false);
+  const [connectingGarmin, setConnectingGarmin] = useState(false);
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ const Tools = () => {
       await Promise.all([
         fetchPaceZones(),
         checkStravaConnection(),
+        checkGarminConnection(),
         fetchAllCompletedWorkoutsForTimeline(),
       ]);
       setLoading(false);
@@ -61,15 +64,35 @@ const Tools = () => {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('strava_connections')
+        .from('user_integrations')
         .select('id')
         .eq('user_id', user.id)
+        .eq('provider', 'strava')
         .maybeSingle();
 
       if (error) throw error;
       setStravaConnected(!!data);
     } catch (error) {
       console.error('Error checking Strava connection:', error);
+    }
+  };
+
+  const checkGarminConnection = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_integrations')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('provider', 'garmin')
+        .maybeSingle();
+
+      if (error) throw error;
+      setGarminConnected(!!data);
+    } catch (error) {
+      console.error('Error checking Garmin connection:', error);
     }
   };
 
@@ -143,7 +166,10 @@ const Tools = () => {
         throw error;
       }
       console.log("Tools: Fetched completed workouts data:", data);
-      setAllCompletedWorkouts(data || []);
+            setAllCompletedWorkouts((data || []).map(item => ({
+              ...item,
+              workout_library: item.workout_library[0] || null
+            })));
     } catch (error: any) {
       console.error("Tools: Error fetching all completed workouts for timeline in catch block:", error);
       setAllCompletedWorkouts([]);
@@ -175,23 +201,28 @@ const Tools = () => {
   };
 
   const handleStravaConnect = () => {
-    const clientId = "184846";
-    const redirectUri = `${window.location.origin}/tools`;
-    const scope = "read,activity:read_all";
-    
-    const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
-    
-    console.log("Generated Strava Auth URL:", stravaAuthUrl);
-    console.log("Redirect URI sent to Strava:", redirectUri);
-    
-    window.location.href = stravaAuthUrl;
-  };
+      const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
+      const redirectUri = `${window.location.origin}/tools`;
+      const scope = "read,activity:read_all";
+  
+      if (!clientId) {
+        toast.error("Strava client ID not configured");
+        return;
+      }
+  
+      const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
+  
+      console.log("Generated Strava Auth URL:", stravaAuthUrl);
+      console.log("Redirect URI sent to Strava:", redirectUri);
+  
+      window.location.href = stravaAuthUrl;
+    };
 
   const handleStravaDisconnect = async () => {
     try {
       setConnectingStrava(true);
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Du måste vara inloggad");
         return;
@@ -215,6 +246,52 @@ const Tools = () => {
     }
   };
 
+  const handleGarminConnect = () => {
+      const clientId = import.meta.env.VITE_GARMIN_CLIENT_ID || '';
+      const redirectUri = `${window.location.origin}/tools`;
+      const scope = "https://www.garmin.com/fitness/activity"; // Example scope, adjust as needed
+  
+      if (!clientId) {
+        toast.error("Garmin client ID not configured");
+        return;
+      }
+  
+      const garminAuthUrl = `https://connect.garmin.com/oauthAuthorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
+  
+      console.log("Generated Garmin Auth URL:", garminAuthUrl);
+      console.log("Redirect URI sent to Garmin:", redirectUri);
+  
+      window.location.href = garminAuthUrl;
+    };
+
+  const handleGarminDisconnect = async () => {
+    try {
+      setConnectingGarmin(true);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        toast.error("Du måste vara inloggad");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('garmin-disconnect', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      setGarminConnected(false);
+      toast.success("Frånkopplad från Garmin");
+    } catch (error) {
+      console.error('Error disconnecting Garmin:', error);
+      toast.error("Kunde inte koppla från Garmin");
+    } finally {
+      setConnectingGarmin(false);
+    }
+  };
+
   useEffect(() => {
     const handleStravaCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -231,7 +308,7 @@ const Tools = () => {
         setConnectingStrava(true);
         try {
           const { data: { session } } = await supabase.auth.getSession();
-          
+
           if (!session) {
             toast.error("Du måste vara inloggad");
             return;
@@ -248,7 +325,7 @@ const Tools = () => {
 
           setStravaConnected(true);
           toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
-          
+
           // Clean up URL
           window.history.replaceState({}, '', '/tools');
         } catch (error) {
@@ -261,8 +338,54 @@ const Tools = () => {
       }
     };
 
+    const handleGarminCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const error = urlParams.get('error');
+
+      if (error) {
+        toast.error('Garmin-anslutning avbröts');
+        window.history.replaceState({}, '', '/tools');
+        return;
+      }
+
+      if (code && !garminConnected) {
+        setConnectingGarmin(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+
+          if (!session) {
+            toast.error("Du måste vara inloggad");
+            return;
+          }
+
+          const { data, error: authError } = await supabase.functions.invoke('garmin-auth', {
+            body: { code },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (authError) throw authError;
+
+          setGarminConnected(true);
+          toast.success(`Ansluten till Garmin som ${data.user.profile.displayName}`); // Adjust based on actual response
+
+          // Clean up URL
+          window.history.replaceState({}, '', '/tools');
+        } catch (error) {
+          console.error('Error connecting to Garmin:', error);
+          toast.error("Kunde inte ansluta till Garmin");
+          window.history.replaceState({}, '', '/tools');
+        } finally {
+          setConnectingGarmin(false);
+        }
+      }
+    };
+
     handleStravaCallback();
-  }, [stravaConnected]);
+    handleGarminCallback();
+  }, [stravaConnected, garminConnected]);
 
   const handleCalculate = async () => {
     const minutes = parseInt(time5kMinutes);
@@ -277,7 +400,7 @@ const Tools = () => {
     const vdot = calculateVDOT(totalSeconds);
 
     const pace5kSecondsPerKm = totalSeconds / 5;
-    
+
     const zones: PaceZones = {
       pace_1k: formatPace(pace5kSecondsPerKm * 0.94),
       pace_5k: formatPace(pace5kSecondsPerKm),
@@ -342,8 +465,8 @@ const Tools = () => {
                   ✓ Ansluten till Strava
                 </p>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleStravaDisconnect}
                 disabled={connectingStrava}
                 className="w-full"
@@ -356,12 +479,58 @@ const Tools = () => {
               <p className="text-sm text-muted-foreground">
                 Genom att ansluta Strava kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
               </p>
-              <Button 
+              <Button
                 onClick={handleStravaConnect}
                 disabled={connectingStrava}
                 className="w-full"
               >
                 {connectingStrava ? "Ansluter..." : "Anslut till Strava"}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Garmin Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {/* Placeholder for Garmin logo - we'll add the asset later */}
+            <div className="h-4 w-4 bg-gray-200 rounded">Garmin</div>
+            Garmin Connect
+          </CardTitle>
+          <CardDescription>
+            Anslut ditt Garmin-konto för att automatiskt hämta träningsdata från Garmin Connect
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {garminConnected ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  ✓ Ansluten till Garmin
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleGarminDisconnect}
+                disabled={connectingGarmin}
+                className="w-full"
+              >
+                {connectingGarmin ? "Kopplar från..." : "Koppla från Garmin"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Genom att ansluta Garmin kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
+              </p>
+              <Button
+                onClick={handleGarminConnect}
+                disabled={connectingGarmin}
+                className="w-full"
+              >
+                {connectingGarmin ? "Ansluter..." : "Anslut till Garmin"}
               </Button>
             </div>
           )}
@@ -398,8 +567,8 @@ const Tools = () => {
             </div>
           </div>
           <Button onClick={handleCalculate} className="w-full">
-                      Beräkna tempozoner
-                    </Button>
+            Beräkna tempozoner
+          </Button>
 
           {paceZones && (
             <div className="pt-4 border-t">
