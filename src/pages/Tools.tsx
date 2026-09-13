@@ -44,20 +44,30 @@ const Tools = () => {
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
 
   useEffect(() => {
-    const loadInitialData = async () => {
-      setLoading(true);
-      console.log("Tools: Starting initial data load.");
-      await Promise.all([
-        fetchPaceZones(),
-        checkStravaConnection(),
-        checkGarminConnection(),
-        fetchAllCompletedWorkoutsForTimeline(),
-      ]);
-      setLoading(false);
-      console.log("Tools: Initial data load complete.");
-    };
-    loadInitialData();
-  }, []);
+      const loadInitialData = async () => {
+        setLoading(true);
+        console.log("Tools: Starting initial data load.");
+        // Check applied migrations for integrations
+        const { data: migrationData, error: migrationError } = await supabase
+          .from('schema_migrations')
+          .select('version, name')
+          .like('name', '%integrations%');
+        if (migrationError) {
+          console.error('Error fetching migrations:', migrationError);
+        } else {
+          console.log('Applied integrations migrations:', migrationData);
+        }
+        await Promise.all([
+          fetchPaceZones(),
+          checkStravaConnection(),
+          checkGarminConnection(),
+          fetchAllCompletedWorkoutsForTimeline(),
+        ]);
+        setLoading(false);
+        console.log("Tools: Initial data load complete.");
+      };
+      loadInitialData();
+    }, []);
 
   const checkStravaConnection = async () => {
     try {
