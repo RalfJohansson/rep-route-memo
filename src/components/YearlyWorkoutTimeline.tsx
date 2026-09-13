@@ -32,14 +32,19 @@ const YearlyWorkoutTimeline = ({ completedWorkouts }: YearlyWorkoutTimelineProps
   const yearEnd = endOfYear(new Date(currentYear, 0, 1));
 
   // Map workouts to a more accessible structure for quick lookup
-  const workoutsByDate: { [key: string]: CompletedWorkout[] } = completedWorkouts.reduce((acc, workout) => {
-    const dateKey = format(new Date(workout.scheduled_date), "yyyy-MM-dd");
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
-    acc[dateKey].push(workout);
-    return acc;
-  }, {});
+    // Filter out workouts that don't have a workout_library (shouldn't happen, but safe)
+    const workoutsByDate: { [key: string]: CompletedWorkout[] } = completedWorkouts.reduce((acc, workout) => {
+      // Skip workouts without a valid workout_library
+      if (!workout.workout_library) {
+        return acc;
+      }
+      const dateKey = format(new Date(workout.scheduled_date), "yyyy-MM-dd");
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(workout);
+      return acc;
+    }, {});
 
   // Weekday labels (Mon, Tue, ..., Sun)
   const weekDaysLabels = Array.from({ length: 7 }, (_, i) => format(addDays(new Date(2023, 0, 2), i), "EEEEEE", { locale: sv }));
