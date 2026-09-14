@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo.png";
+import garminLogo from "@/assets/garmin-logo.png";
 import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline";
 import { format, startOfYear, endOfYear } from "date-fns";
 
@@ -505,11 +506,9 @@ const Tools = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-                                <div className="h-4 w-4 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                                  G
-                                </div>
-                                Garmin Connect
-                              </CardTitle>
+                                          <img src={garminLogo} alt="Garmin" className="h-4 w-auto" />
+                                          Garmin Connect
+                                        </CardTitle>
           <CardDescription>
             Anslut ditt Garmin-konto för att automatiskt hämta träningsdata från Garmin Connect
           </CardDescription>
