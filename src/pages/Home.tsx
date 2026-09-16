@@ -91,40 +91,40 @@ const Home = () => {
   }, [trainedTime, distance]);
 
   // Check connection statuses via auth state change
-    useEffect(() => {
-      const { data: subscription } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          if (session?.user) {
-            const userId = session.user.id;
-  
-            // Check Strava
-            const { data: stravaData } = await supabase
-              .from('user_integrations')
-              .select('id, provider, provider_user_id, expires_at')
-              .eq('user_id', userId)
-              .eq('provider', 'strava')
-              .maybeSingle();
-            setStravaConnected(!!stravaData);
-  
-            // Check Garmin
-            const { data: garminData } = await supabase
-              .from('user_integrations')
-              .select('id, provider, provider_user_id, expires_at')
-              .eq('user_id', userId)
-              .eq('provider', 'garmin')
-              .maybeSingle();
-            setGarminConnected(!!garminData);
-          } else {
-            setStravaConnected(false);
-            setGarminConnected(false);
+      useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (_event, session) => {
+            if (session?.user) {
+              const userId = session.user.id;
+   
+              // Check Strava
+              const { data: stravaData } = await supabase
+                .from('user_integrations')
+                .select('id, provider, provider_user_id, expires_at')
+                .eq('user_id', userId)
+                .eq('provider', 'strava')
+                .maybeSingle();
+              setStravaConnected(!!stravaData);
+   
+              // Check Garmin
+              const { data: garminData } = await supabase
+                .from('user_integrations')
+                .select('id, provider, provider_user_id, expires_at')
+                .eq('user_id', userId)
+                .eq('provider', 'garmin')
+                .maybeSingle();
+              setGarminConnected(!!garminData);
+            } else {
+              setStravaConnected(false);
+              setGarminConnected(false);
+            }
           }
-        }
-      );
-  
-      return () => {
-              subscription.subscription.unsubscribe();
-            };
-    }, []);
+        );
+   
+        return () => {
+          subscription.unsubscribe();
+        };
+      }, []);
 
   useEffect(() => {
     fetchWeekWorkouts();
