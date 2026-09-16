@@ -90,37 +90,41 @@ const Home = () => {
     }
   }, [trainedTime, distance]);
 
-  // Check connection statuses
-  useEffect(() => {
-    const checkConnections = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Check Strava
-        const { data: stravaData } = await supabase
-          .from('user_integrations')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('provider', 'strava')
-          .maybeSingle();
-        setStravaConnected(!!stravaData);
-
-        // Check Garmin
-        const { data: garminData } = await supabase
-          .from('user_integrations')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('provider', 'garmin')
-          .maybeSingle();
-        setGarminConnected(!!garminData);
-      } catch (error) {
-        console.error('Error checking connections:', error);
-      }
-    };
-
-    checkConnections();
-  }, []);
+  // Check connection statuses via auth state change
+    useEffect(() => {
+      const { data: subscription } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (session?.user) {
+            const userId = session.user.id;
+  
+            // Check Strava
+            const { data: stravaData } = await supabase
+              .from('user_integrations')
+              .select('id, provider, provider_user_id, expires_at')
+              .eq('user_id', userId)
+              .eq('provider', 'strava')
+              .maybeSingle();
+            setStravaConnected(!!stravaData);
+  
+            // Check Garmin
+            const { data: garminData } = await supabase
+              .from('user_integrations')
+              .select('id, provider, provider_user_id, expires_at')
+              .eq('user_id', userId)
+              .eq('provider', 'garmin')
+              .maybeSingle();
+            setGarminConnected(!!garminData);
+          } else {
+            setStravaConnected(false);
+            setGarminConnected(false);
+          }
+        }
+      );
+  
+      return () => {
+              subscription.subscription.unsubscribe();
+            };
+    }, []);
 
   useEffect(() => {
     fetchWeekWorkouts();

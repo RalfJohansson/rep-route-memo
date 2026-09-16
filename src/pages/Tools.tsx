@@ -70,42 +70,44 @@ const Tools = () => {
     }, []);
 
   const checkStravaConnection = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_integrations')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('provider', 'strava')
-        .maybeSingle();
-
-      if (error) throw error;
-      setStravaConnected(!!data);
-    } catch (error) {
-      console.error('Error checking Strava connection:', error);
-    }
-  };
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+  
+        const { data, error } = await supabase
+          .from('user_integrations')
+          .select('id, provider, provider_user_id, expires_at')
+          .eq('user_id', user.id)
+          .eq('provider', 'strava')
+          .maybeSingle();
+  
+        if (error) throw error;
+        console.log('Strava connection data:', data);
+        setStravaConnected(!!data);
+      } catch (error) {
+        console.error('Error checking Strava connection:', error);
+      }
+    };
 
   const checkGarminConnection = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_integrations')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('provider', 'garmin')
-        .maybeSingle();
-
-      if (error) throw error;
-      setGarminConnected(!!data);
-    } catch (error) {
-      console.error('Error checking Garmin connection:', error);
-    }
-  };
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+  
+        const { data, error } = await supabase
+          .from('user_integrations')
+          .select('id, provider, provider_user_id, expires_at')
+          .eq('user_id', user.id)
+          .eq('provider', 'garmin')
+          .maybeSingle();
+  
+        if (error) throw error;
+        console.log('Garmin connection data:', data);
+        setGarminConnected(!!data);
+      } catch (error) {
+        console.error('Error checking Garmin connection:', error);
+      }
+    };
 
   const fetchPaceZones = async () => {
     try {
