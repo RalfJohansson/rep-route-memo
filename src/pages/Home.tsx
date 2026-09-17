@@ -95,22 +95,22 @@ const Home = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (_event, session) => {
             if (session?.user) {
-              const userId = session.user.id;
-   
-              // Check Strava
-              const { data: stravaData } = await supabase
-                .from('user_integrations')
-                .select('id, provider, provider_user_id, expires_at')
-                .eq('user_id', userId)
-                .eq('provider', 'strava')
-                .maybeSingle();
-              setStravaConnected(!!stravaData);
-   
-              // Check Garmin
+              // Check Strava via secure edge function
+              const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              });
+              if (!stravaError && stravaData) {
+                setStravaConnected(stravaData.connected);
+              } else {
+                console.error('Error fetching Strava status:', stravaError);
+                setStravaConnected(false);
+              }
+  
+              // Check Garmin (unchanged, direct query)
               const { data: garminData } = await supabase
                 .from('user_integrations')
                 .select('id, provider, provider_user_id, expires_at')
-                .eq('user_id', userId)
+                .eq('user_id', session.user.id)
                 .eq('provider', 'garmin')
                 .maybeSingle();
               setGarminConnected(!!garminData);
@@ -120,7 +120,7 @@ const Home = () => {
             }
           }
         );
-   
+  
         return () => {
           subscription.unsubscribe();
         };

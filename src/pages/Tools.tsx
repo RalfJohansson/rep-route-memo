@@ -70,24 +70,27 @@ const Tools = () => {
     }, []);
 
   const checkStravaConnection = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            setStravaConnected(false);
+            return;
+          }
   
-        const { data, error } = await supabase
-          .from('user_integrations')
-          .select('id, provider, provider_user_id, expires_at')
-          .eq('user_id', user.id)
-          .eq('provider', 'strava')
-          .maybeSingle();
+          const { data, error } = await supabase.functions.invoke('strava-status', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
   
-        if (error) throw error;
-        console.log('Strava connection data:', data);
-        setStravaConnected(!!data);
-      } catch (error) {
-        console.error('Error checking Strava connection:', error);
-      }
-    };
+          if (error) throw error;
+          console.log('Strava status:', data);
+          setStravaConnected(data.connected);
+        } catch (error) {
+          console.error('Error checking Strava connection:', error);
+          setStravaConnected(false);
+        }
+      };
 
   const checkGarminConnection = async () => {
       try {
@@ -335,9 +338,10 @@ const Tools = () => {
           });
 
           if (authError) throw authError;
-
-          setStravaConnected(true);
-          toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
+          
+                    // Verify the connection is persisted in the database
+                    await checkStravaConnection();
+                    toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
 
           // Clean up URL
           window.history.replaceState({}, '', '/tools');
