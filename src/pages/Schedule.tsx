@@ -41,7 +41,7 @@ interface ScheduledWorkout {
     effort: number | null;
     description: string | null;
     pace?: string | null;
-  };
+  } | null;
 }
 
 const categories = [
@@ -294,53 +294,57 @@ const Schedule = () => {
                           </div>
                         ) : (
                           dayWorkouts
-                                                      .filter((workout) => workout.workout_library !== null)
-                                                      .map((workout) => (
-                                                        <div
-                                                          key={workout.id}
-                                                          draggable
-                                                          onDragStart={() => handleDragStart(workout.id)}
-                                                          onClick={() => {
-                                                            handleOpenDetailDialog(workout.workout_library);
-                                                          }}
-                                                          className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[52px] overflow-hidden"
-                                                        >
-                                                          <div
-                                                            className="w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
-                                                            style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
-                                                          >
-                                                            <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
-                                                              {workout.workout_library.category === 'intervallpass' ? 'Intervall' :
-                                                               workout.workout_library.category === 'distanspass' ? 'Distans' :
-                                                               workout.workout_library.category === 'långpass' ? 'Långpass' :
-                                                               workout.workout_library.category === 'styrka' ? 'Styrka' :
-                                                               workout.workout_library.category === 'tävling' ? 'Tävling' :
-                                                               workout.workout_library.category === 'simning' ? 'Simning' :
-                                                               workout.workout_library.category === 'cykling' ? 'Cykling' :
-                                                               workout.workout_library.category}
-                                                            </span>
-                                                          </div>
-                                                          <Grip
-                                                            className="h-4 w-4 text-muted-foreground cursor-move"
-                                                            onMouseDown={(e) => e.stopPropagation()}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                          />
-                                                          <div className="flex-1 py-3">
-                                                            <p className="text-sm font-medium">{workout.workout_library.name}</p>
-                                                          </div>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              handleDeleteWorkout(workout.id);
-                                                            }}
-                                                            className="h-8 text-destructive hover:text-destructive mr-2"
-                                                          >
-                                                            Ta bort
-                                                          </Button>
-                                                        </div>
-                                                      ))
+                                                                                .filter((workout) => workout.workout_library != null)
+                                                                                .map((workout) => {
+                                                                                  const library = workout.workout_library!;
+                                                                                  
+                                                                                  return (
+                                                                                    <div
+                                                                                      key={workout.id}
+                                                                                      draggable
+                                                                                      onDragStart={() => handleDragStart(workout.id)}
+                                                                                      onClick={() => {
+                                                                                        handleOpenDetailDialog(library);
+                                                                                      }}
+                                                                                      className="flex items-center gap-3 rounded-lg border bg-card cursor-pointer hover:bg-accent/5 transition-colors min-h-[52px] overflow-hidden"
+                                                                                    >
+                                                                                      <div
+                                                                                        className="w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
+                                                                                        style={{ backgroundColor: getCategoryColor(library.category) }}
+                                                                                      >
+                                                                                        <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
+                                                                                          {library.category === 'intervallpass' ? 'Intervall' :
+                                                                                           library.category === 'distanspass' ? 'Distans' :
+                                                                                           library.category === 'långpass' ? 'Långpass' :
+                                                                                           library.category === 'styrka' ? 'Styrka' :
+                                                                                           library.category === 'tävling' ? 'Tävling' :
+                                                                                           library.category === 'simning' ? 'Simning' :
+                                                                                           library.category === 'cykling' ? 'Cykling' :
+                                                                                           library.category}
+                                                                                        </span>
+                                                                                      </div>
+                                                                                      <Grip
+                                                                                        className="h-4 w-4 text-muted-foreground cursor-move"
+                                                                                        onMouseDown={(e) => e.stopPropagation()}
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                      />
+                                                                                      <div className="flex-1 py-3">
+                                                                                        <p className="text-sm font-medium">{library.name}</p>
+                                                                                      </div>
+                                                                                      <Button
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        onClick={(e) => {
+                                                                                          e.stopPropagation();
+                                                                                          handleDeleteWorkout(workout.id);
+                                                                                        }}
+                                                                                        className="h-8 text-destructive hover:text-destructive mr-2"
+                                                                                      >
+                                                                                        Ta bort
+                                                                                      </Button>
+                                                                                    </div>
+                                                                                  );
+                                                                                })
                         )}
                       </CardContent>
                     </Card>
