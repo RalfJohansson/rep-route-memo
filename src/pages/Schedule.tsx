@@ -294,8 +294,8 @@ const Schedule = () => {
                           </div>
                         ) : (
                           dayWorkouts
-                                                                                .filter((workout) => workout.workout_library)
-                                                                                .map((workout) => (
+                                                      .filter((workout) => workout.workout_library !== null)
+                                                      .map((workout) => (
                                                         <div
                                                           key={workout.id}
                                                           draggable
