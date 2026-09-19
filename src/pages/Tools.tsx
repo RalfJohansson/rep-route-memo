@@ -8,7 +8,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
 import stravaLogo from "@/assets/strava-logo.png";
-import garminLogo from "@/assets/garmin-logo.png";
 import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline";
 import { format, startOfYear, endOfYear } from "date-fns";
 
@@ -38,10 +37,8 @@ const Tools = () => {
   const [paceZones, setPaceZones] = useState<PaceZones | null>(null);
   const [loading, setLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
-  const [connectingStrava, setConnectingStrava] = useState(false);
-  const [garminConnected, setGarminConnected] = useState(false);
-  const [connectingGarmin, setConnectingGarmin] = useState(false);
-  const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
+    const [connectingStrava, setConnectingStrava] = useState(false);
+    const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
 
   useEffect(() => {
       const loadInitialData = async () => {
@@ -58,11 +55,10 @@ const Tools = () => {
           console.log('Applied integrations migrations:', migrationData);
         }
         await Promise.all([
-          fetchPaceZones(),
-          checkStravaConnection(),
-          checkGarminConnection(),
-          fetchAllCompletedWorkoutsForTimeline(),
-        ]);
+                  fetchPaceZones(),
+                  checkStravaConnection(),
+                  fetchAllCompletedWorkoutsForTimeline(),
+                ]);
         setLoading(false);
         console.log("Tools: Initial data load complete.");
       };
@@ -76,41 +72,28 @@ const Tools = () => {
             setStravaConnected(false);
             return;
           }
-  
-          const { data, error } = await supabase.functions.invoke('strava-status', {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
+
+          const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
           });
-  
-          if (error) throw error;
-          console.log('Strava status:', data);
-          setStravaConnected(data.connected);
+
+          if (stravaError) {
+            console.error('Error fetching Strava status:', stravaError);
+            setStravaConnected(false);
+            return;
+          }
+
+          if (stravaData) {
+            setStravaConnected(stravaData.connected);
+            console.log('Strava status data:', stravaData);
+          } else {
+            setStravaConnected(false);
+          }
         } catch (error) {
           console.error('Error checking Strava connection:', error);
           setStravaConnected(false);
         }
       };
-
-  const checkGarminConnection = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-  
-        const { data, error } = await supabase
-          .from('user_integrations')
-          .select('id, provider, provider_user_id, expires_at')
-          .eq('user_id', user.id)
-          .eq('provider', 'garmin')
-          .maybeSingle();
-  
-        if (error) throw error;
-        console.log('Garmin connection data:', data);
-        setGarminConnected(!!data);
-      } catch (error) {
-        console.error('Error checking Garmin connection:', error);
-      }
-    };
 
   const fetchPaceZones = async () => {
     try {
@@ -150,7 +133,7 @@ const Tools = () => {
     console.log("Tools: Attempting to fetch all completed workouts for timeline...");
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      console.log("Tools: User from supabase.auth.getUser():", user ? user.id : "No user");
+      console.log("Tools: User from supabase.auth.getUser():\", user ? user.id : \"No user\");
 
       if (!user) {
         console.log("Tools: No user found, setting allCompletedWorkouts to empty array.");
@@ -161,33 +144,25 @@ const Tools = () => {
       const yearStart = startOfYear(new Date());
       const yearEnd = endOfYear(new Date());
 
-      console.log("Tools: Fetching workouts for user:", user.id, "between", format(yearStart, "yyyy-MM-dd"), "and", format(yearEnd, "yyyy-MM-dd"));
+      console.log("Tools: Fetching workouts for user:\", user.id, \"between\", format(yearStart, \"yyyy-MM-dd\"), \"and\", format(yearEnd, \"yyyy-MM-dd\"));
 
       const { data, error } = await supabase
-        .from("scheduled_workouts")
-        .select(`
-          scheduled_date,
-          workout_library (
-            category
-          )
-        `)
-        .eq("user_id", user.id)
-        .eq("completed", true)
-        .gte("scheduled_date", format(yearStart, "yyyy-MM-dd"))
-        .lte("scheduled_date", format(yearEnd, "yyyy-MM-dd"));
+        .from(\"scheduled_workouts\")
+        .select(`\n          scheduled_date,\n          workout_library (\n            category\n          )\n        `)
+        .eq(\"user_id\", user.id)
+        .eq(\"completed\", true)
+        .gte(\"scheduled_date\", format(yearStart, \"yyyy-MM-dd\"))
+        .lte(\"scheduled_date\", format(yearEnd, \"yyyy-MM-dd\"));
 
       if (error) {
-        console.error("Tools: Supabase error fetching all completed workouts for timeline:", error);
+        console.error(\"Tools: Supabase error fetching all completed workouts for timeline:\", error);
         setAllCompletedWorkouts([]);
         throw error;
       }
-      console.log("Tools: Fetched completed workouts data:", data);
-            setAllCompletedWorkouts((data || []).map(item => ({
-              ...item,
-              workout_library: item.workout_library[0] || null
-            })));
+      console.log(\"Tools: Fetched completed workouts data:\", data);
+            setAllCompletedWorkouts((data || []).map(item => ({\n              ...item,\n              workout_library: item.workout_library[0] || null\n            })));
     } catch (error: any) {
-      console.error("Tools: Error fetching all completed workouts for timeline in catch block:", error);
+      console.error(\"Tools: Error fetching all completed workouts for timeline in catch block:\", error);
       setAllCompletedWorkouts([]);
     }
   };
@@ -219,18 +194,18 @@ const Tools = () => {
   const handleStravaConnect = () => {
       const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
       const redirectUri = `${window.location.origin}/tools`;
-      const scope = "read,activity:read_all";
-  
+      const scope = \"read,activity:read_all\";
+ 
       if (!clientId) {
-        toast.error("Strava client ID not configured");
+        toast.error(\"Strava client ID not configured\");
         return;
       }
-  
+ 
       const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
-  
-      console.log("Generated Strava Auth URL:", stravaAuthUrl);
-      console.log("Redirect URI sent to Strava:", redirectUri);
-  
+ 
+      console.log(\"Generated Strava Auth URL:\", stravaAuthUrl);
+      console.log(\"Redirect URI sent to Strava:\", redirectUri);
+ 
       window.location.href = stravaAuthUrl;
     };
 
@@ -240,7 +215,7 @@ const Tools = () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        toast.error("Du måste vara inloggad");
+        toast.error(\"Du måste vara inloggad\");
         return;
       }
 
@@ -253,10 +228,10 @@ const Tools = () => {
       if (error) throw error;
 
       setStravaConnected(false);
-      toast.success("Frånkopplad från Strava");
+      toast.success(\"Frånkopplad från Strava\");
     } catch (error) {
       console.error('Error disconnecting Strava:', error);
-      toast.error("Kunde inte koppla från Strava");
+      toast.error(\"Kunde inte koppla från Strava\");
     } finally {
       setConnectingStrava(false);
     }
@@ -265,18 +240,18 @@ const Tools = () => {
   const handleGarminConnect = () => {
       const clientId = import.meta.env.VITE_GARMIN_CLIENT_ID || '';
       const redirectUri = `${window.location.origin}/tools`;
-      const scope = "https://www.garmin.com/fitness/activity"; // Example scope, adjust as needed
-  
+      const scope = \"https://www.garmin.com/fitness/activity\"; // Example scope, adjust as needed
+ 
       if (!clientId) {
-        toast.error("Garmin client ID not configured");
+        toast.error(\"Garmin client ID not configured\");
         return;
       }
-  
+ 
       const garminAuthUrl = `https://connect.garmin.com/oauthAuthorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
-  
-      console.log("Generated Garmin Auth URL:", garminAuthUrl);
-      console.log("Redirect URI sent to Garmin:", redirectUri);
-  
+ 
+      console.log(\"Generated Garmin Auth URL:\", garminAuthUrl);
+      console.log(\"Redirect URI sent to Garmin:\", redirectUri);
+ 
       window.location.href = garminAuthUrl;
     };
 
@@ -286,7 +261,7 @@ const Tools = () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        toast.error("Du måste vara inloggad");
+        toast.error(\"Du måste vara inloggad\");
         return;
       }
 
@@ -299,10 +274,10 @@ const Tools = () => {
       if (error) throw error;
 
       setGarminConnected(false);
-      toast.success("Frånkopplad från Garmin");
+      toast.success(\"Frånkopplad från Garmin\");
     } catch (error) {
       console.error('Error disconnecting Garmin:', error);
-      toast.error("Kunde inte koppla från Garmin");
+      toast.error(\"Kunde inte koppla från Garmin\");
     } finally {
       setConnectingGarmin(false);
     }
@@ -326,7 +301,7 @@ const Tools = () => {
           const { data: { session } } = await supabase.auth.getSession();
 
           if (!session) {
-            toast.error("Du måste vara inloggad");
+            toast.error(\"Du måste vara inloggad\");
             return;
           }
 
@@ -347,7 +322,7 @@ const Tools = () => {
           window.history.replaceState({}, '', '/tools');
         } catch (error) {
           console.error('Error connecting to Strava:', error);
-          toast.error("Kunde inte ansluta till Strava");
+          toast.error(\"Kunde inte ansluta till Strava\");
           window.history.replaceState({}, '', '/tools');
         } finally {
           setConnectingStrava(false);
@@ -372,7 +347,7 @@ const Tools = () => {
           const { data: { session } } = await supabase.auth.getSession();
 
           if (!session) {
-            toast.error("Du måste vara inloggad");
+            toast.error(\"Du måste vara inloggad\");
             return;
           }
 
@@ -392,7 +367,7 @@ const Tools = () => {
           window.history.replaceState({}, '', '/tools');
         } catch (error) {
           console.error('Error connecting to Garmin:', error);
-          toast.error("Kunde inte ansluta till Garmin");
+          toast.error(\"Kunde inte ansluta till Garmin\");
           window.history.replaceState({}, '', '/tools');
         } finally {
           setConnectingGarmin(false);
@@ -402,14 +377,14 @@ const Tools = () => {
 
     handleStravaCallback();
     handleGarminCallback();
-  }, [stravaConnected, garminConnected]);
+  }, [stravaConnected]);
 
   const handleCalculate = async () => {
     const minutes = parseInt(time5kMinutes);
     const seconds = parseInt(time5kSeconds);
 
     if (!minutes || minutes < 0 || isNaN(seconds) || seconds < 0 || seconds >= 60) {
-      toast.error("Ange giltig tid (minuter och sekunder)");
+      toast.error(\"Ange giltig tid (minuter och sekunder)\");
       return;
     }
 
@@ -437,7 +412,7 @@ const Tools = () => {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 
-      const { error } = await supabase.from("pace_zones").insert({
+      const { error } = await supabase.from(\"pace_zones\").insert({
         user_id: user.id,
         vdot_score: Math.round(vdot),
         time_5k: totalSeconds,
@@ -445,218 +420,28 @@ const Tools = () => {
       });
 
       if (error) throw error;
-      toast.success("Tempozoner sparade!");
+      toast.success(\"Tempozoner sparade!\");
     } catch (error: any) {
-      toast.error("Kunde inte spara tempozoner");
+      toast.error(\"Kunde inte spara tempozoner\");
     }
   };
 
   if (loading) {
-    console.log("Tools: Rendering loading spinner.");
+    console.log(\"Tools: Rendering loading spinner.\");
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className=\"flex items-center justify-center min-h-screen\">
+        <div className=\"animate-spin rounded-full h-12 w-12 border-b-2 border-primary\"></div>
       </div>
     );
   }
 
-  console.log("Tools: Rendering main content. allCompletedWorkouts.length:", allCompletedWorkouts.length);
+  console.log(\"Tools: Rendering main content. allCompletedWorkouts.length:\", allCompletedWorkouts.length);
 
   return (
-    <div className="p-4 space-y-4">
+    <div className=\"p-4 space-y-4\">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <img src={stravaLogo} alt="Strava" className="h-4 w-auto" />
-            Strava Integration
-          </CardTitle>
-          <CardDescription>
-            Anslut ditt Strava-konto för att automatiskt hämta träningsdata från Strava
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {stravaConnected ? (
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-800 dark:text-green-200">
-                  ✓ Ansluten till Strava
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleStravaDisconnect}
-                disabled={connectingStrava}
-                className="w-full"
-              >
-                {connectingStrava ? "Kopplar från..." : "Koppla från Strava"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Genom att ansluta Strava kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
-              </p>
-              <Button
-                onClick={handleStravaConnect}
-                disabled={connectingStrava}
-                className="w-full"
-              >
-                {connectingStrava ? "Ansluter..." : "Anslut till Strava"}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Garmin Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-                                          <img src={garminLogo} alt="Garmin" className="h-4 w-auto" />
-                                          Garmin Connect
-                                        </CardTitle>
-          <CardDescription>
-            Anslut ditt Garmin-konto för att automatiskt hämta träningsdata från Garmin Connect
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {garminConnected ? (
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-800 dark:text-green-200">
-                  ✓ Ansluten till Garmin
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleGarminDisconnect}
-                disabled={connectingGarmin}
-                className="w-full"
-              >
-                {connectingGarmin ? "Kopplar från..." : "Koppla från Garmin"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Genom att ansluta Garmin kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.
-              </p>
-              <Button
-                onClick={handleGarminConnect}
-                disabled={connectingGarmin}
-                className="w-full"
-              >
-                {connectingGarmin ? "Ansluter..." : "Anslut till Garmin"}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>VDOT Tempokalkylator</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Din 5K-tid</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  type="number"
-                  placeholder="Minuter"
-                  value={time5kMinutes}
-                  onChange={(e) => setTime5kMinutes(e.target.value)}
-                  min="0"
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  type="number"
-                  placeholder="Sekunder"
-                  value={time5kSeconds}
-                  onChange={(e) => setTime5kSeconds(e.target.value)}
-                  min="0"
-                  max="59"
-                />
-              </div>
-            </div>
-          </div>
-          <Button onClick={handleCalculate} className="w-full">
-            Beräkna tempozoner
-          </Button>
-
-          {paceZones && (
-            <div className="pt-4 border-t">
-              <h3 className="text-lg font-semibold mb-4">Dina tempozoner</h3>
-              <Accordion type="multiple" className="w-full">
-                <AccordionItem value="race-pace">
-                  <AccordionTrigger className="text-sm font-semibold">
-                    Tävlingstempo
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">1K</p>
-                        <p className="font-semibold">{paceZones.pace_1k} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">5K</p>
-                        <p className="font-semibold">{paceZones.pace_5k} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">10K</p>
-                        <p className="font-semibold">{paceZones.pace_10k} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">Halvmaraton</p>
-                        <p className="font-semibold">{paceZones.pace_half_marathon} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted col-span-2">
-                        <p className="text-xs text-muted-foreground">Maraton</p>
-                        <p className="font-semibold">{paceZones.pace_marathon} min/km</p>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="training-zones">
-                  <AccordionTrigger className="text-sm font-semibold">
-                    Träningszoner
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">Intervall</p>
-                        <p className="font-semibold">{paceZones.pace_interval} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">Tröskel</p>
-                        <p className="font-semibold">{paceZones.pace_threshold} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">Tempo</p>
-                        <p className="font-semibold">{paceZones.pace_tempo} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted">
-                        <p className="text-xs text-muted-foreground">Distansfart</p>
-                        <p className="font-semibold">{paceZones.pace_easy} min/km</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted col-span-2">
-                        <p className="text-xs text-muted-foreground">Lugn (Långpass)</p>
-                        <p className="font-semibold">{paceZones.pace_long_run} min/km</p>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
-    </div>
+          <CardTitle className=\"flex items-center gap-2\">\n            <img src={stravaLogo} alt=\"Strava\" className=\"h-4 w-auto\" />\n            Strava Integration\n          </CardTitle>\n          <CardDescription>\n            Anslut ditt Strava-konto för att automatiskt hämta träningsdata från Strava\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          {stravaConnected ? (\n            <div className=\"space-y-3\">\n              <div className=\"p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800\">\n                <p className=\"text-sm text-green-800 dark:text-green-200\">\n                  ✓ Ansluten till Strava\n                </p>\n              </div>\n              <Button\n                variant=\"outline\"\n                onClick={handleStravaDisconnect}\n                disabled={connectingStrava}\n                className=\"w-full\"\n              >\n                {connectingStrava ? \"Kopplar från...\" : \"Koppla från Strava\"}\n              </Button>\n            </div>\n          ) : (\n            <div className=\"space-y-3\">\n              <p className=\"text-sm text-muted-foreground\">\n                Genom att ansluta Strava kan appen automatiskt hämta dina träningspass när du markerar ett pass som genomfört.\n              </p>\n              <Button\n                onClick={handleStravaConnect}\n                disabled={connectingStrava}\n                className=\"w-full\"\n              >\n                {connectingStrava ? \"Ansluter...\" : \"Anslut till Strava\"}\n              </Button>\n            </div>\n          )}\n        </CardContent>\n      </Card>\n\n\n      <Card>\n        <CardHeader>\n          <CardTitle>VDOT Tempokalkylator</CardTitle>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          <div className=\"space-y-2\">\n            <Label>Din 5K-tid</Label>\n            <div className=\"flex gap-2\">\n              <div className=\"flex-1\">\n                <Input\n                  type=\"number\"\n                  placeholder=\"Minuter\"\n                  value={time5kMinutes}\n                  onChange={(e) => setTime5kMinutes(e.target.value)}\n                  min=\"0\"\n                />\n              </div>\n              <div className=\"flex-1\">\n                <Input\n                  type=\"number\"\n                  placeholder=\"Sekunder\"\n                  value={time5kSeconds}\n                  onChange={(e) => setTime5kSeconds(e.target.value)}\n                  min=\"0\"\n                  max=\"59\"\n                />\n              </div>\n            </div>\n          </div>\n          <Button onClick={handleCalculate} className=\"w-full\">\n            Beräkna tempozoner\n          </Button>\n\n          {paceZones && (\n            <div className=\"pt-4 border-t\">\n              <h3 className=\"text-lg font-semibold mb-4\">Dina tempozoner</h3>\n              <Accordion type=\"multiple\" className=\"w-full\">\n                <AccordionItem value=\"race-pace\">\n                  <AccordionTrigger className=\"text-sm font-semibold\">\n                    Tävlingstempo\n                  </AccordionTrigger>\n                  <AccordionContent>\n                    <div className=\"grid grid-cols-2 gap-3 pt-2\">\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">1K</p>\n                        <p className=\"font-semibold\">{paceZones.pace_1k} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">5K</p>\n                        <p className=\"font-semibold\">{paceZones.pace_5k} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">10K</p>\n                        <p className=\"font-semibold\">{paceZones.pace_10k} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">Halvmaraton</p>\n                        <p className=\"font-semibold\">{paceZones.pace_half_marathon} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted col-span-2\">\n                        <p className=\"text-xs text-muted-foreground\">Maraton</p>\n                        <p className=\"font-semibold\">{paceZones.pace_marathon} min/km</p>\n                      </div>\n                    </div>\n                  </AccordionContent>\n                </AccordionItem>\n\n                <AccordionItem value=\"training-zones\">\n                  <AccordionTrigger className=\"text-sm font-semibold\">\n                    Träningszoner\n                  </AccordionTrigger>\n                  <AccordionContent>\n                    <div className=\"grid grid-cols-2 gap-3 pt-2\">\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">Intervall</p>\n                        <p className=\"font-semibold\">{paceZones.pace_interval} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">Tröskel</p>\n                        <p className=\"font-semibold\">{paceZones.pace_threshold} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">Tempo</p>\n                        <p className=\"font-semibold\">{paceZones.pace_tempo} min/km</p>\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted\">\n                        <p className=\"text-xs text-muted-foreground\">Distansfart</p>\n                        <p className=\"font-semibold\">{paceZones.pace_easy} min/km\n                      </div>\n                      <div className=\"p-3 rounded-lg bg-muted col-span-2\">\n                        <p className=\"text-xs text-muted-foreground\">Lugn (Långpass)</p>\n                        <p className=\"font-semibold\">{paceZones.pace_long_run} min/km</p>\n                      </div>\n                    </div>\n                  </AccordionContent>\n                </AccordionItem>\n              </Accordion>\n            </div>\n          )}\n        </CardContent>\n      </Card>\n\n      <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />\n    </div>
   );
 };
 
