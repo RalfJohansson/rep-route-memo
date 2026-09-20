@@ -91,39 +91,40 @@ const Home = () => {
   }, [trainedTime, distance]);
 
   // Check connection statuses via auth state change
-      useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (_event, session) => {
-            if (session?.user) {
-              // Check Strava via secure edge function
-              const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
-                headers: { Authorization: `Bearer ${session.access_token}` },\n              });
-              if (!stravaError && stravaData) {
-                setStravaConnected(stravaData.connected);
-              } else {
-                console.error('Error fetching Strava status:', stravaError);
-                setStravaConnected(false);
-              }
-
-              // Check Garmin (unchanged, direct query)
-              const { data: garminData } = await supabase
-                .from('user_integrations')
-                .select('id, provider, provider_user_id, expires_at')
-                .eq('user_id', session.user.id)
-                .eq('provider', 'garmin')
-                .maybeSingle();
-              setGarminConnected(!!garminData);
-            } else {
-              setStravaConnected(false);
-              setGarminConnected(false);
-            }
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          // Check Strava via secure edge function
+          const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (!stravaError && stravaData) {
+            setStravaConnected(stravaData.connected);
+          } else {
+            console.error('Error fetching Strava status:', stravaError);
+            setStravaConnected(false);
           }
-        );
 
-        return () => {
-          subscription.unsubscribe();
-        };
-      }, []);
+          // Check Garmin (direct query for now)
+          const { data: garminData } = await supabase
+            .from('user_integrations')
+            .select('id, provider, provider_user_id, expires_at')
+            .eq('user_id', session.user.id)
+            .eq('provider', 'garmin')
+            .maybeSingle();
+          setGarminConnected(!!garminData);
+        } else {
+          setStravaConnected(false);
+          setGarminConnected(false);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     fetchWeekWorkouts();
@@ -139,19 +140,44 @@ const Home = () => {
 
       // Hämta veckans pass för att visa
       const { data, error } = await supabase
-        .from(\"scheduled_workouts\")
-        .select(`\n          *,\n          workout_library (\n            name,\n            category,\n            duration,\n            effort,\n            description,\n            pace\n          )\n        `)
-        .eq(\"user_id\", user.id)
-        .gte(\"scheduled_date\", format(weekStart, \"yyyy-MM-dd\"))
-        .lte(\"scheduled_date\", format(weekEnd, \"yyyy-MM-dd\"))
-        .order(\"scheduled_date\");
+        .from("scheduled_workouts")
+        .select(`
+          *,
+          workout_library (
+            name,
+            category,
+            duration,
+            effort,
+            description,
+            pace
+          )
+        `)
+        .eq("user_id", user.id)
+        .gte("scheduled_date", format(weekStart, "yyyy-MM-dd"))
+        .lte("scheduled_date", format(weekEnd, "yyyy-MM-dd"))
+        .order("scheduled_date");
 
       if (error) throw error;
 
       setWorkouts(data || []);
-      \n      // Hämta alla genomförda pass för statistik (totalt från början)\n      const { data: allCompletedData, error: statsError } = await supabase\n        .from(\"scheduled_workouts\")\n        .select(\"completed, trained_time, distance\")\n        .eq(\"user_id\", user.id)\n        .eq(\"completed\", true);\n\n      if (statsError) throw statsError;\n\n      // Beräkna total statistik\n      const completed = allCompletedData?.length || 0;\n      const totalTime = allCompletedData?.reduce((sum, w) => sum + (w.trained_time || 0), 0) || 0;\n      const totalDistance = allCompletedData?.reduce((sum, w) => sum + (Number(w.distance) || 0), 0) || 0;\n      \n      setStats({ completed, totalTime, totalDistance });
+      
+      // Hämta alla genomförda pass för statistik (totalt från början)
+      const { data: allCompletedData, error: statsError } = await supabase
+        .from("scheduled_workouts")
+        .select("completed, trained_time, distance")
+        .eq("user_id", user.id)
+        .eq("completed", true);
+
+      if (statsError) throw statsError;
+
+      // Beräkna total statistik
+      const completed = allCompletedData?.length || 0;
+      const totalTime = allCompletedData?.reduce((sum, w) => sum + (w.trained_time || 0), 0) || 0;
+      const totalDistance = allCompletedData?.reduce((sum, w) => sum + (Number(w.distance) || 0), 0) || 0;
+      
+      setStats({ completed, totalTime, totalDistance });
     } catch (error: any) {
-      toast.error(\"Kunde inte hämta pass\");
+      toast.error("Kunde inte hämta pass");
     } finally {
       setLoading(false);
     }
@@ -160,17 +186,33 @@ const Home = () => {
   const handleToggleComplete = async (workout: ScheduledWorkout) => {
     if (!workout.completed) {
       setSelectedWorkout(workout);
-      setTrainedTime(\"\");
-      setDistance(\"\");
-      setCalculatedPace(\"\");
-      setNotes(\"\");
+      setTrainedTime("");
+      setDistance("");
+      setCalculatedPace("");
+      setNotes("");
       setJoyRating(3);
       setStravaActivities([]);
       setGarminActivities([]);
       setShowStravaActivities(false);
       setShowGarminActivities(false);
     } else {
-      // Uncheck - behåll all data, ändra bara completed status\n      const { error } = await supabase\n        .from(\"scheduled_workouts\")\n        .update({\n          completed: false,\n          updated_at: new Date().toISOString(), // Uppdatera updated_at\n        })\n        .eq(\"id\", workout.id);\n\n      if (error) {\n        toast.error(\"Kunde inte uppdatera\");\n      } else {\n        toast.success(\"Pass omarkerat\");\n        fetchWeekWorkouts();\n      }\n    }\n  };
+      // Uncheck - behåll all data, ändra bara completed status
+      const { error } = await supabase
+        .from("scheduled_workouts")
+        .update({
+          completed: false,
+          updated_at: new Date().toISOString(), // Uppdatera updated_at
+        })
+        .eq("id", workout.id);
+
+      if (error) {
+        toast.error("Kunde inte uppdatera");
+      } else {
+        toast.success("Pass omarkerat");
+        fetchWeekWorkouts();
+      }
+    }
+  };
 
   const handleFetchActivities = async () => {
     if (!selectedWorkout) return;
@@ -188,7 +230,7 @@ const Home = () => {
     } else if (['intervallpass', 'distanspass', 'långpass', 'tävling'].includes(workoutCategory)) {
       stravaActivityType = 'Run';
     } else {
-      toast.info(\"Denna passkategori stöds inte för automatisk hämtning från externa tjänster.\");
+      toast.info("Denna passkategori stöds inte för automatisk hämtning från externa tjänster.");
       return;
     }
 
@@ -219,7 +261,7 @@ const Home = () => {
           toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
         }
       } catch (error: any) {
-        toast.error(error.message || \"Kunde inte hämta från Strava\");
+        toast.error(error.message || "Kunde inte hämta från Strava");
       } finally {
         setLoadingStrava(false);
       }
@@ -228,7 +270,7 @@ const Home = () => {
     // If we haven't found anything and are connected, show message
     if (stravaConnected && 
         (!showStravaActivities || stravaActivities.length === 0)) {
-      toast.info(\"Inga aktiviteter hittades från Strava\");
+      toast.info("Inga aktiviteter hittades från Strava");
     }
   };
 
@@ -288,8 +330,26 @@ const Home = () => {
     if (!selectedWorkout) return;
 
     const { error } = await supabase
-      .from(\"scheduled_workouts\")
-      .update({\n        completed: true,\n        trained_time: trainedTime ? parseInt(trainedTime) : null,\n        distance: distance ? parseFloat(distance) : null,\n        pace: calculatedPace ? `${calculatedPace} min/km` : null,\n        notes: notes || null,\n        joy_rating: joyRating,\n        updated_at: new Date().toISOString(), // Uppdatera updated_at\n      })\n      .eq(\"id\", selectedWorkout.id);\n\n    if (error) {\n      toast.error(\"Kunde inte spara\");\n    } else {\n      toast.success(\"Pass markerat som genomfört!\");\n      setSelectedWorkout(null);\n      fetchWeekWorkouts();\n    }\n  };
+      .from("scheduled_workouts")
+      .update({
+        completed: true,
+        trained_time: trainedTime ? parseInt(trainedTime) : null,
+        distance: distance ? parseFloat(distance) : null,
+        pace: calculatedPace ? `${calculatedPace} min/km` : null,
+        notes: notes || null,
+        joy_rating: joyRating,
+        updated_at: new Date().toISOString(), // Uppdatera updated_at
+      })
+      .eq("id", selectedWorkout.id);
+
+    if (error) {
+      toast.error("Kunde inte spara");
+    } else {
+      toast.success("Pass markerat som genomfört!");
+      setSelectedWorkout(null);
+      fetchWeekWorkouts();
+    }
+  };
 
   const getJoyColor = (rating: number) => {
     if (rating === 1) return '#FF0000';
@@ -299,14 +359,258 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className=\"flex items-center justify-center min-h-screen\">
-        <div className=\"animate-spin rounded-full h-12 w-12 border-b-2 border-primary\"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className=\"p-4 space-y-6\">\n      <div className=\"relative rounded-2xl p-6 text-white shadow-md overflow-hidden\">\n        <div \n          className=\"absolute inset-0 bg-cover bg-center\"\n          style={{ backgroundImage: `url(${heroImage})` }}\n        />\n        <div className=\"absolute inset-0 bg-[#d4c4b0]/70\" />\n        <div className=\"relative z-10\">\n          <h1 className=\"text-2xl font-bold mb-2\">Denna vecka</h1>\n          <p className=\"text-white/90\">\n            {format(startOfWeek(new Date(), { weekStartsOn: 1 }), \"d MMM\", { locale: sv })} -{\" \"}\n            {format(endOfWeek(new Date(), { weekStartsOn: 1 }), \"d MMM\", { locale: sv })}\n          </p>\n        </div>\n      </div>\n\n      <div className=\"grid grid-cols-3 gap-3\">\n        <Card>\n          <CardContent className=\"pt-2 pb-2 text-center\">\n            <CheckCircle2 className=\"h-5 w-5 mx-auto mb-1 text-accent\" />\n            <p className=\"text-xl font-bold\">{stats.completed}</p>\n            <p className=\"text-xs text-muted-foreground\">Genomförda</p>\n          </CardContent>\n        </Card>\n        <Card>\n          <CardContent className=\"pt-2 pb-2 text-center\">\n            <Clock className=\"h-5 w-5 mx-auto mb-1 text-primary\" />\n            <p className=\"text-xl font-bold\">{stats.totalTime}</p>\n            <p className=\"text-xs text-muted-foreground\">Minuter</p>\n          </CardContent>\n        </Card>\n        <Card>\n          <CardContent className=\"pt-2 pb-2 text-center\">\n            <MapPin className=\"h-5 w-5 mx-auto mb-1 text-secondary\" />\n            <p className=\"text-xl font-bold\">{stats.totalDistance.toFixed(1)}</p>\n            <p className=\"text-xs text-muted-foreground\">Km</p>\n          </CardContent>\n        </Card>\n      </div>\n\n      <Card>\n        <CardHeader>\n          <CardTitle>Veckans pass</CardTitle>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          {Array.from({ length: 7 }, (_, i) => {\n            const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });\n            const currentDay = addDays(weekStart, i);\n            const dateStr = format(currentDay, \"yyyy-MM-dd\");\n            const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);\n            \n            return (\n              <div key={dateStr} className=\"space-y-2\">\n                <h3 className=\"text-sm font-medium text-muted-foreground\">\n                  {format(currentDay, \"EEEE d MMM\", { locale: sv })}\n                </h3>\n                {dayWorkouts.length === 0 ? (\n                  <div className=\"rounded-lg border bg-card p-3\">\n                    <p className=\"text-sm text-muted-foreground text-center\">Vila</p>\n                  </div>\n                ) : (\n                  dayWorkouts.map((workout) => (\n                    <div\n                      key={workout.id}\n                      className=\"flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden min-h-[52px]\"\n                      onClick={(e) => {\n                        if ((e.target as HTMLElement).closest('button')) return;\n                        setViewingWorkout(workout);\n                      }}\n                    >\n                      <div\n                        className=\"w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none\"\n                        style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}\n                      >\n                        <span className=\"writing-mode-vertical-rl rotate-180 text-[8px]\">\n                          {workout.workout_library.category === 'intervallpass' ? 'Intervall' :\n                           workout.workout_library.category === 'distanspass' ? 'Distans' :\n                           workout.workout_library.category === 'långpass' ? 'Långpass' :\n                           workout.workout_library.category === 'styrka' ? 'Styrka' :\n                           workout.workout_library.category === 'tävling' ? 'Tävling' :\n                           workout.workout_library.category === 'simning' ? 'Simning' :\n                           workout.workout_library.category === 'cykling' ? 'Cykling' :\n                           workout.workout_library.category}\n                        </span>\n                      </div>\n                      <Checkbox\n                        checked={workout.completed}\n                        onCheckedChange={() => handleToggleComplete(workout)}\n                        className=\"h-5 w-5\"\n                        onClick={(e) => e.stopPropagation()}\n                      />\n                      <div className=\"flex-1 py-3\">\n                        <p className=\"font-medium\">{workout.workout_library.name}</p>\n                      </div>\n                      {workout.completed && workout.joy_rating && (\n                        <div className=\"flex items-center pr-3\">\n                          <Smile\n                            className=\"h-5 w-5\"\n                            style={{ color: getJoyColor(workout.joy_rating) }}\n                          />\n                        </div>\n                      )}\n                    </div>\n                  ))\n                )}\n              </div>\n            );\n          })}\n        </CardContent>\n      </Card>\n\n      <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>\n        <DialogContent className=\"max-w-md\">\n          <DialogHeader>\n            <DialogTitle>Markera pass som genomfört</DialogTitle>\n          </DialogHeader>\n          <div className=\"space-y-4\">\n            {/* Activity source buttons */}\n            <div className=\"space-y-2\">\n              {stravaConnected && (\n                <Button\n                  onClick={handleFetchActivities}\n                  variant=\"outline\"\n                  className=\"w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700\"\n                  disabled={loadingStrava}\n                >\n                  {loadingStrava ? (\n                    <span>Hämtar från Strava...</span>\n                  ) : (\n                    <span>Hämta genomfört pass från Strava</span>\n                  )}\n                </Button>\n              )}\n              {!stravaConnected && (\n                <p className=\"text-sm text-muted-foreground\">\n                  Ingen extern tjänst ansluten. Anslut Strava i Verktyg för att hämta aktiviteter automatiskt.\n                </p>\n              )}\n            </div>\n\n            {/* Strava activities */}\n            {showStravaActivities && stravaActivities.length > 0 && (\n              <div className=\"space-y-2 border rounded-lg p-3 bg-muted/50\">\n                <Label>Välj aktivitet från Strava:</Label>\n                {stravaActivities.map((activity) => (\n                  <Button\n                    key={activity.id}\n                    onClick={() => handleSelectStravaActivity(activity)}\n                    variant=\"outline\"\n                    className=\"w-full justify-start text-left h-auto py-2\"\n                  >\n                    <div className=\"flex flex-col items-start w-full\">\n                      <span className=\"font-medium\">{activity.name}</span>\n                      <span className=\"text-xs text-muted-foreground\">\n                        {activity.distance} km • {Math.round(activity.moving_time / 60)} min\n                      </span>\n                    </div>\n                  </Button>\n                ))}\n              </div>\n            )}\n\n            {/* Manual input fields */}\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"trainedTime\">Tränad tid (minuter)</Label>\n              <Input\n                id=\"trainedTime\"\n                type=\"number\"\n                value={trainedTime}\n                onChange={(e) => setTrainedTime(e.target.value)}\n                placeholder=\"45\"\n              />\n            </div>\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"distance\">Distans (km)</Label>\n              <Input\n                id=\"distance\"\n                type=\"number\"\n                step=\"0.1\"\n                value={distance}\n                onChange={(e) => setDistance(e.target.value)}\n                placeholder=\"10.5\"\n              />\n            </div>\n            {calculatedPace && (\n              <div className=\"space-y-2\">\n                <Label>Tempo</Label>\n                <div className=\"px-3 py-2 rounded-md bg-muted text-sm\">\n                  {calculatedPace} min/km\n                </div>\n              </div>\n            )}\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"notes\">Anteckningar</Label>\n              <Textarea\n                id=\"notes\"\n                value={notes}\n                onChange={(e) => setNotes(e.target.value)}\n                placeholder=\"Hur kändes passet?\"\n                rows={3}\n              />\n            </div>\n            <div className=\"space-y-2\">\n              <Label>Hur mycket glädje? (1-5)</Label>\n              <div className=\"flex gap-2\">\n                {[1, 2, 3, 4, 5].map((rating) => (\n                  <Button\n                    key={rating}\n                    type=\"button\"\n                    variant={joyRating === rating ? \"default\" : \"outline\"}\n                    size=\"sm\"\n                    onClick={() => setJoyRating(rating)}\n                    className=\"flex-1\"\n                  >\n                    {rating}\n                  </Button>\n                ))}\n              </div>\n            </div>\n            <Button onClick={handleSubmitWorkout} className=\"w-full\">\n              Spara\n            </Button>\n          </div>\n        </DialogContent>\n      </Dialog>\n\n      <WorkoutDetailDialog\n        workout={viewingWorkout ? {\n          name: viewingWorkout.workout_library.name,\n          duration: viewingWorkout.workout_library.duration,\n          effort: viewingWorkout.workout_library.effort,\n          description: viewingWorkout.workout_library.description,\n          category: viewingWorkout.workout_library.category,\n          completed: viewingWorkout.completed,\n          trained_time: viewingWorkout.trained_time,\n          distance: viewingWorkout.distance,\n          actual_pace: viewingWorkout.pace,\n          notes: viewingWorkout.notes,\n          joy_rating: viewingWorkout.joy_rating,\n        } : null}\n        open={!!viewingWorkout}\n        onOpenChange={(open) => !open && setViewingWorkout(null)}\n      />\n    </div>\n  );
+    <div className="p-4 space-y-6">
+      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-[#d4c4b0]/70" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
+          <p className="text-white/90">
+            {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
+            {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <Card>
+          <CardContent className="pt-2 pb-2 text-center">
+            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-accent" />
+            <p className="text-xl font-bold">{stats.completed}</p>
+            <p className="text-xs text-muted-foreground">Genomförda</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-2 pb-2 text-center">
+            <Clock className="h-5 w-5 mx-auto mb-1 text-primary" />
+            <p className="text-xl font-bold">{stats.totalTime}</p>
+            <p className="text-xs text-muted-foreground">Minuter</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-2 pb-2 text-center">
+            <MapPin className="h-5 w-5 mx-auto mb-1 text-secondary" />
+            <p className="text-xl font-bold">{stats.totalDistance.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">Km</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Veckans pass</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Array.from({ length: 7 }, (_, i) => {
+            const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+            const currentDay = addDays(weekStart, i);
+            const dateStr = format(currentDay, "yyyy-MM-dd");
+            const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
+            
+            return (
+              <div key={dateStr} className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {format(currentDay, "EEEE d MMM", { locale: sv })}
+                </h3>
+                {dayWorkouts.length === 0 ? (
+                  <div className="rounded-lg border bg-card p-3">
+                    <p className="text-sm text-muted-foreground text-center">Vila</p>
+                  </div>
+                ) : (
+                  dayWorkouts.map((workout) => (
+                    <div
+                      key={workout.id}
+                      className="flex items-center gap-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors cursor-pointer overflow-hidden min-h-[52px]"
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('button')) return;
+                        setViewingWorkout(workout);
+                      }}
+                    >
+                      <div
+                        className="w-6 flex items-center justify-center text-white font-medium flex-shrink-0 self-stretch outline-none"
+                        style={{ backgroundColor: getCategoryColor(workout.workout_library.category) }}
+                      >
+                        <span className="writing-mode-vertical-rl rotate-180 text-[8px]">
+                          {workout.workout_library.category === 'intervallpass' ? 'Intervall' : 
+                           workout.workout_library.category === 'distanspass' ? 'Distans' : 
+                           workout.workout_library.category === 'långpass' ? 'Långpass' : 
+                           workout.workout_library.category === 'styrka' ? 'Styrka' : 
+                           workout.workout_library.category === 'tävling' ? 'Tävling' : 
+                           workout.workout_library.category === 'simning' ? 'Simning' : 
+                           workout.workout_library.category === 'cykling' ? 'Cykling' : 
+                           workout.workout_library.category}
+                        </span>
+                      </div>
+                      <Checkbox
+                        checked={workout.completed}
+                        onCheckedChange={() => handleToggleComplete(workout)}
+                        className="h-5 w-5"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex-1 py-3">
+                        <p className="font-medium">{workout.workout_library.name}</p>
+                      </div>
+                      {workout.completed && workout.joy_rating && (
+                        <div className="flex items-center pr-3">
+                          <Smile
+                            className="h-5 w-5"
+                            style={{ color: getJoyColor(workout.joy_rating) }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!selectedWorkout} onOpenChange={(open) => !open && setSelectedWorkout(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Markera pass som genomfört</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Activity source buttons */}
+            <div className="space-y-2">
+              {stravaConnected && (
+                <Button
+                  onClick={handleFetchActivities}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                  disabled={loadingStrava}
+                >
+                  {loadingStrava ? (
+                    <span>Hämtar från Strava...</span>
+                  ) : (
+                    <span>Hämta genomfört pass från Strava</span>
+                  )}
+                </Button>
+              )}
+              {!stravaConnected && (
+                <p className="text-sm text-muted-foreground">
+                  Ingen extern tjänst ansluten. Anslut Strava i Verktyg för att hämta aktiviteter automatiskt.
+                </p>
+              )}
+            </div>
+
+            {/* Strava activities */}
+            {showStravaActivities && stravaActivities.length > 0 && (
+              <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
+                <Label>Välj aktivitet från Strava:</Label>
+                {stravaActivities.map((activity) => (
+                  <Button
+                    key={activity.id}
+                    onClick={() => handleSelectStravaActivity(activity)}
+                    variant="outline"
+                    className="w-full justify-start text-left h-auto py-2"
+                  >
+                    <div className="flex flex-col items-start w-full">
+                      <span className="font-medium">{activity.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {activity.distance} km • {Math.round(activity.moving_time / 60)} min
+                      </span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Manual input fields */}
+            <div className="space-y-2">
+              <Label htmlFor="trainedTime">Tränad tid (minuter)</Label>
+              <Input
+                id="trainedTime"
+                type="number"
+                value={trainedTime}
+                onChange={(e) => setTrainedTime(e.target.value)}
+                placeholder="45"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="distance">Distans (km)</Label>
+              <Input
+                id="distance"
+                type="number"
+                step="0.1"
+                value={distance}
+                onChange={(e) => setDistance(e.target.value)}
+                placeholder="10.5"
+              />
+            </div>
+            {calculatedPace && (
+              <div className="space-y-2">
+                <Label>Tempo</Label>
+                <div className="px-3 py-2 rounded-md bg-muted text-sm">
+                  {calculatedPace} min/km
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Anteckningar</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Hur kändes passet?"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Hur mycket glädje? (1-5)</Label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <Button
+                    key={rating}
+                    type="button"
+                    variant={joyRating === rating ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setJoyRating(rating)}
+                    className="flex-1"
+                  >
+                    {rating}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleSubmitWorkout} className="w-full">
+              Spara
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <WorkoutDetailDialog
+        workout={viewingWorkout ? {
+          name: viewingWorkout.workout_library.name,
+          duration: viewingWorkout.workout_library.duration,
+          effort: viewingWorkout.workout_library.effort,
+          description: viewingWorkout.workout_library.description,
+          category: viewingWorkout.workout_library.category,
+          completed: viewingWorkout.completed,
+          trained_time: viewingWorkout.trained_time,
+          distance: viewingWorkout.distance,
+          actual_pace: viewingWorkout.pace,
+          notes: viewingWorkout.notes,
+          joy_rating: viewingWorkout.joy_rating,
+        } : null}
+        open={!!viewingWorkout}
+        onOpenChange={(open) => !open && setViewingWorkout(null)}
+      />
+    </div>
+  );
 };
 
 export default Home;
