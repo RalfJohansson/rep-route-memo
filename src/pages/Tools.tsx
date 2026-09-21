@@ -200,14 +200,14 @@ const Tools = () => {
   };
 
   const handleStravaConnect = () => {
-    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
-    const redirectUri = `${window.location.origin}/tools`;
-    const scope = "read,activity:read_all";
-
-    if (!clientId) {
-      toast.error("Strava client ID not configured");
-      return;
-    }
+      const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
+      const redirectUri = import.meta.env.VITE_STRAVA_REDIRECT_URI || `${window.location.origin}/tools`;
+      const scope = "read,activity:read_all";
+  
+      if (!clientId) {
+        toast.error("Strava client ID not configured");
+        return;
+      }
 
     const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
 
