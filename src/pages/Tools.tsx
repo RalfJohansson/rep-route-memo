@@ -246,75 +246,54 @@ const Tools = () => {
   };
 
   useEffect(() => {
-    const handleStravaCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
-
-      if (error) {
-        toast.error('Strava-anslutning avbröts');
-        window.history.replaceState({}, '', '/tools');
-        return;
-      }
-
-      if (code && !stravaConnected) {
-        setConnectingStrava(true);
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-
-          if (!session) {
-            toast.error("Du måste vara inloggad");
-            return;
-          }
-
-          const { data, error: authError } = await supabase.functions.invoke('strava-auth', {
-            body: { code },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-
-          if (authError) throw authError;
-          
-          // Verify the connection is persisted in the database
-          await checkStravaConnection();
-          toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
-
-          // Clean up URL
+      const handleStravaCallback = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+  
+        if (error) {
+          toast.error('Strava-anslutning avbröts');
           window.history.replaceState({}, '', '/tools');
-        } catch (error) {
-          console.error('Error connecting to Strava:', error);
-          toast.error("Kunde inte ansluta till Strava");
-          window.history.replaceState({}, '', '/tools');
-        } finally {
-          setConnectingStrava(false);
+          return;
         }
-      }
-    };
-
-    const handleGarminCallback = async () => {
-      // Garmin callback handler kept for compatibility but does nothing
-      // since we removed Garmin from the UI
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
-
-      if (error) {
-        toast.error('Garmin-anslutning avbröts');
-        window.history.replaceState({}, '', '/tools');
-        return;
-      }
-
-      if (code) {
-        // Just clean up the URL if there's a code (even if we don't connect)
-        window.history.replaceState({}, '', '/tools');
-        return;
-      }
-    };
-
-    handleStravaCallback();
-    handleGarminCallback();
-  }, [stravaConnected]);
+  
+        if (code && !stravaConnected) {
+          setConnectingStrava(true);
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+  
+            if (!session) {
+              toast.error("Du måste vara inloggad");
+              return;
+            }
+  
+            const { data, error: authError } = await supabase.functions.invoke('strava-auth', {
+              body: { code },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+  
+            if (authError) throw authError;
+            
+            // Verify the connection is persisted in the database
+            await checkStravaConnection();
+            toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
+  
+            // Clean up URL
+            window.history.replaceState({}, '', '/tools');
+          } catch (error) {
+            console.error('Error connecting to Strava:', error);
+            toast.error("Kunde inte ansluta till Strava");
+            window.history.replaceState({}, '', '/tools');
+          } finally {
+            setConnectingStrava(false);
+          }
+        }
+      };
+  
+      handleStravaCallback();
+    }, [stravaConnected]);
 
   const handleCalculate = async () => {
     const minutes = parseInt(time5kMinutes);
