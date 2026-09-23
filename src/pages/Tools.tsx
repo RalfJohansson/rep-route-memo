@@ -200,9 +200,9 @@ const Tools = () => {
   };
 
   const handleStravaConnect = () => {
-      const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
-      const redirectUri = import.meta.env.VITE_STRAVA_REDIRECT_URI || `${window.location.origin}/tools`;
-      const scope = "read,activity:read_all";
+        const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
+        const redirectUri = "https://rep-route-memo.vercel.app/tools";
+        const scope = "read,activity:read_all";
   
       if (!clientId) {
         toast.error("Strava client ID not configured");
