@@ -66,34 +66,37 @@ const Tools = () => {
   }, []);
 
   const checkStravaConnection = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setStravaConnected(false);
-        return;
-      }
-
-      const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (stravaError) {
-        console.error('Error fetching Strava status:', stravaError);
-        setStravaConnected(false);
-        return;
-      }
-
-      if (stravaData) {
-        setStravaConnected(stravaData.connected);
-        console.log('Strava status data:', stravaData);
-      } else {
-        setStravaConnected(false);
-      }
-    } catch (error) {
-      console.error('Error checking Strava connection:', error);
-      setStravaConnected(false);
-    }
-  };
+        try {
+          // Refresh session to ensure we have a fresh access token
+          await supabase.auth.getUser();
+          const { data: { session } } = await supabase.auth.getSession();
+          console.log('Tools: session', session ? 'present' : 'null');
+          if (!session) {
+            setStravaConnected(false);
+            return;
+          }
+  
+          const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          console.log('Tools: strava-status response', { stravaData, stravaError });
+          if (stravaError) {
+            console.error('Error fetching Strava status:', stravaError);
+            setStravaConnected(false);
+            return;
+          }
+  
+          if (stravaData) {
+            setStravaConnected(stravaData.connected);
+            console.log('Strava status data:', stravaData);
+          } else {
+            setStravaConnected(false);
+          }
+        } catch (error) {
+          console.error('Error checking Strava connection:', error);
+          setStravaConnected(false);
+        }
+      };
 
   const fetchPaceZones = async () => {
     try {

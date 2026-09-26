@@ -87,31 +87,41 @@ const Home = () => {
   }, [trainedTime, distance]);
 
   // Check connection statuses via auth state change
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          // Check Strava via secure edge function
-          const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-          if (!stravaError && stravaData) {
-            setStravaConnected(stravaData.connected);
+    useEffect(() => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (session?.user) {
+            try {
+              // Refresh session to ensure we have a fresh access token
+              await supabase.auth.getUser();
+              const { data: { session: freshSession } } = await supabase.auth.getSession();
+              if (freshSession?.user) {
+                const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
+                  headers: { Authorization: `Bearer ${freshSession.access_token}` },
+                });
+                if (!stravaError && stravaData) {
+                  setStravaConnected(stravaData.connected);
+                } else {
+                  console.error('Error fetching Strava status:', stravaError);
+                  setStravaConnected(false);
+                }
+              } else {
+                setStravaConnected(false);
+              }
+            } catch (error) {
+              console.error('Error refreshing user:', error);
+              setStravaConnected(false);
+            }
           } else {
-            console.error('Error fetching Strava status:', stravaError);
             setStravaConnected(false);
           }
-
-        } else {
-          setStravaConnected(false);
         }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+      );
+  
+      return () => {
+        subscription.unsubscribe();
+      };
+    }, []);
 
   useEffect(() => {
     fetchWeekWorkouts();
@@ -222,30 +232,38 @@ const Home = () => {
     // Try Strava if connected
     if (stravaConnected) {
       setLoadingStrava(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
-          body: {
-            date: selectedWorkout.scheduled_date,
-            activityType: stravaActivityType
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.activities && data.activities.length > 0) {
-          setStravaActivities(data.activities);
-          setShowStravaActivities(true);
-          
-          // Try to auto-select the best match
-          const bestMatch = findBestActivityMatch(data.activities, selectedWorkout);
-                    if (bestMatch) {
-                      selectActivity(bestMatch);
-                      return;
-                    }
-        } else {
-          toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
-        }
-      } catch (error: any) {
+              try {
+                // Refresh session to ensure we have a fresh access token
+                await supabase.auth.getUser();
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                  throw new Error('No session');
+                }
+      
+                const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
+                  body: {
+                    date: selectedWorkout.scheduled_date,
+                    activityType: stravaActivityType
+                  },
+                  headers: { Authorization: `Bearer ${session.access_token}` }
+                });
+      
+                if (error) throw error;
+      
+                if (data.activities && data.activities.length > 0) {
+                  setStravaActivities(data.activities);
+                  setShowStravaActivities(true);
+                  
+                  // Try to auto-select the best match
+                  const bestMatch = findBestActivityMatch(data.activities, selectedWorkout);
+                            if (bestMatch) {
+                              selectActivity(bestMatch);
+                              return;
+                            }
+                } else {
+                  toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
+                }
+              } catch (error: any) {
         toast.error(error.message || "Kunde inte hämta från Strava");
       } finally {
         setLoadingStrava(false);
