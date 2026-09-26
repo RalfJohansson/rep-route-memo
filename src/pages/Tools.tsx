@@ -70,7 +70,6 @@ const Tools = () => {
           // Refresh session to ensure we have a fresh access token
           await supabase.auth.getUser();
           const { data: { session } } = await supabase.auth.getSession();
-          console.log('Tools: session', session ? 'present' : 'null');
           if (!session) {
             setStravaConnected(false);
             return;
@@ -79,7 +78,7 @@ const Tools = () => {
           const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
             headers: { Authorization: `Bearer ${session.access_token}` },
           });
-          console.log('Tools: strava-status response', { stravaData, stravaError });
+  
           if (stravaError) {
             console.error('Error fetching Strava status:', stravaError);
             setStravaConnected(false);
