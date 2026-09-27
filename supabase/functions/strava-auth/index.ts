@@ -51,42 +51,40 @@ serve(async (req) => {
     console.log('Token exchange successful');
 
     // Get user from request
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Missing authorization header');
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      throw new Error('Invalid user token');
-    }
-
-    // Store connection in database
-    const { error: upsertError } = await supabase
-      .from('user_integrations')
-      .upsert({
-        user_id: user.id,
-        provider: 'strava',
-        provider_user_id: tokenData.athlete.id,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        expires_at: tokenData.expires_at,
-        scopes: scope || null,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,provider'
-      });
-
-    if (upsertError) {
-      console.error('Database error:', upsertError);
-      throw new Error('Failed to store Strava connection');
-    }
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+          throw new Error('Missing authorization header');
+        }
+    
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+    
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+        if (userError || !user) {
+          throw new Error('Invalid user token');
+        }
+    
+        // Store connection in database
+        const { error: upsertError } = await supabase
+          .from('strava_connections')
+          .upsert({
+            user_id: user.id,
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_at: tokenData.expires_at,
+            athlete_id: tokenData.athlete.id,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id'
+          });
+    
+        if (upsertError) {
+          console.error('Database error:', upsertError);
+          throw new Error('Failed to store Strava connection');
+        }
 
     return new Response(
       JSON.stringify({ 

@@ -29,16 +29,15 @@ serve(async (req) => {
     }
 
     // Delete Strava connection
-    const { error: deleteError } = await supabase
-      .from('user_integrations')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('provider', 'strava');
-
-    if (deleteError) {
-      console.error('Database error:', deleteError);
-      throw new Error('Failed to disconnect Strava');
-    }
+        const { error: deleteError } = await supabase
+          .from('strava_connections')
+          .delete()
+          .eq('user_id', user.id);
+    
+        if (deleteError) {
+          console.error('Database error:', deleteError);
+          throw new Error('Failed to disconnect Strava');
+        }
 
     return new Response(
       JSON.stringify({ success: true }),

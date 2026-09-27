@@ -29,29 +29,28 @@ serve(async (req) => {
     }
 
     // Fetch only non-sensitive fields for the current user
-    const { data: connection, error: dbError } = await supabase
-      .from('user_integrations')
-      .select('provider_user_id, expires_at')
-      .eq('user_id', user.id)
-      .eq('provider', 'strava')
-      .maybeSingle();
-
-    if (dbError) {
-      console.error('Database error:', dbError);
-      throw new Error('Failed to fetch Strava status');
-    }
-
-    return new Response(
-      JSON.stringify({
-        connected: !!connection,
-        provider_user_id: connection?.provider_user_id ?? null,
-        expires_at: connection?.expires_at ?? null,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+        const { data: connection, error: dbError } = await supabase
+          .from('strava_connections')
+          .select('athlete_id, expires_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+    
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to fetch Strava status');
+        }
+    
+        return new Response(
+          JSON.stringify({
+            connected: !!connection,
+            athlete_id: connection?.athlete_id ?? null,
+            expires_at: connection?.expires_at ?? null,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
   } catch (error) {
     console.error('Error in strava-status:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

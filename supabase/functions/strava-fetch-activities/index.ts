@@ -42,17 +42,16 @@ serve(async (req) => {
     }
 
     // Get Strava connection
-    const { data: connection, error: connectionError } = await supabaseClient
-      .from('user_integrations')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('provider', 'strava')
-      .single();
-
-    if (connectionError || !connection) {
-      console.error('Error: Strava not connected or connection error:', connectionError);
-      throw new Error('Strava not connected');
-    }
+        const { data: connection, error: connectionError } = await supabaseClient
+          .from('strava_connections')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+    
+        if (connectionError || !connection) {
+          console.error('Error: Strava not connected or connection error:', connectionError);
+          throw new Error('Strava not connected');
+        }
 
     // Check if token is expired
     const now = Math.floor(Date.now() / 1000);
@@ -85,22 +84,21 @@ serve(async (req) => {
       accessToken = refreshData.access_token;
 
       // Update connection with new tokens
-      const { error: updateError } = await supabaseClient
-        .from('user_integrations')
-        .update({
-          access_token: refreshData.access_token,
-          refresh_token: refreshData.refresh_token,
-          expires_at: refreshData.expires_at,
-        })
-        .eq('user_id', user.id)
-        .eq('provider', 'strava');
-
-      if (updateError) {
-        console.error('Error updating Strava connection after refresh:', updateError);
-        throw new Error('Failed to update Strava connection after token refresh');
-      }
-
-      console.log('Token refreshed successfully');
+            const { error: updateError } = await supabaseClient
+              .from('strava_connections')
+              .update({
+                access_token: refreshData.access_token,
+                refresh_token: refreshData.refresh_token,
+                expires_at: refreshData.expires_at,
+              })
+              .eq('user_id', user.id);
+      
+            if (updateError) {
+              console.error('Error updating Strava connection after refresh:', updateError);
+              throw new Error('Failed to update Strava connection after token refresh');
+            }
+      
+            console.log('Token refreshed successfully');
     }
 
     // Parse date to get start and end of day in UTC
