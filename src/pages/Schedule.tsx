@@ -219,7 +219,18 @@ const Schedule = () => {
   }
 
   const sortedWeeks = Object.keys(workoutsByWeek)
-      .sort();
+      .sort((a, b) => {
+        // Nuvarande vecka först
+        if (a === currentWeekKey) return -1;
+        if (b === currentWeekKey) return 1;
+        // Framtida veckor därefter (i kronologisk ordning)
+        if (a > currentWeekKey && b > currentWeekKey) return a.localeCompare(b);
+        // Tidigare veckor sist (i omvänd kronologisk ordning, senast först)
+        if (a < currentWeekKey && b < currentWeekKey) return b.localeCompare(a);
+        // Framtida före tidigare
+        if (a > currentWeekKey) return -1;
+        return 1;
+      });
 
   const getWorkoutsForDate = (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
