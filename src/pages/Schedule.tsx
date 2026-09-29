@@ -71,44 +71,37 @@ const Schedule = () => {
   }, []);
 
   const fetchScheduledWorkouts = async () => {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) return;
-  
-      console.log("Schedule: Fetching scheduled workouts for user:", user.id);
-  
-      const { data, error } = await supabase
-        .from("scheduled_workouts")
-        .select(`
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("scheduled_workouts")
+      .select(`
+        id,
+        scheduled_date,
+        workout_library (
           id,
-          scheduled_date,
-          workout_library (
-            id,
-            name,
-            category,
-            duration,
-            effort,
-            description,
-            pace
-          )
-        `)
-        .eq("user_id", user.id)
-        .order("scheduled_date");
-  
-      console.log("Schedule: Raw data from Supabase:", data);
-      console.log("Schedule: Error from Supabase:", error);
-  
-      if (error) {
-        console.error("Error fetching scheduled workouts:", error.message, error.details);
-        toast.error("Kunde inte hämta schema");
-      } else {
-        const mapped = (data || []).map(item => ({
-          ...item,
-          workout_library: item.workout_library[0] || null
-        }));
-        console.log("Schedule: Mapped workouts:", mapped);
-        setWorkouts(mapped);
-      }
-    };
+          name,
+          category,
+          duration,
+          effort,
+          description,
+          pace
+        )
+      `)
+      .eq("user_id", user.id)
+      .order("scheduled_date");
+
+    if (error) {
+      console.error("Error fetching scheduled workouts:", error.message, error.details);
+      toast.error("Kunde inte hämta schema");
+    } else {
+      setWorkouts((data || []).map(item => ({
+        ...item,
+        workout_library: item.workout_library[0] || null
+      })));
+    }
+  };
 
   const fetchLibraryWorkouts = async () => {
     const user = (await supabase.auth.getUser()).data.user;
@@ -128,40 +121,32 @@ const Schedule = () => {
   };
 
   const handleAddWorkout = async () => {
-      if (!selectedWorkoutId || !selectedDate) {
-        toast.error("Välj pass och datum");
-        return;
-      }
-  
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) return;
-  
-      console.log("Schedule: Adding workout:", {
-        user_id: user.id,
-        workout_id: selectedWorkoutId,
-        scheduled_date: selectedDate,
-      });
-  
-      const { data: inserted, error } = await supabase.from("scheduled_workouts").insert({
-        user_id: user.id,
-        workout_id: selectedWorkoutId,
-        scheduled_date: selectedDate,
-      }).select();
-  
-      console.log("Schedule: Insert result:", { inserted, error });
-  
-      if (error) {
-        console.error("Error adding workout to schedule:", error.message, error.details);
-        toast.error("Kunde inte lägga till pass");
-      } else {
-        toast.success("Pass tillagt!");
-        setShowAddDialog(false);
-        setSelectedWorkoutId("");
-        setSelectedCategory("");
-        setSelectedDate("");
-        await fetchScheduledWorkouts();
-      }
-    };
+    if (!selectedWorkoutId || !selectedDate) {
+      toast.error("Välj pass och datum");
+      return;
+    }
+
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+
+    const { error } = await supabase.from("scheduled_workouts").insert({
+      user_id: user.id,
+      workout_id: selectedWorkoutId,
+      scheduled_date: selectedDate,
+    });
+
+    if (error) {
+      console.error("Error adding workout to schedule:", error.message, error.details);
+      toast.error("Kunde inte lägga till pass");
+    } else {
+      toast.success("Pass tillagt!");
+      setShowAddDialog(false);
+      setSelectedWorkoutId("");
+      setSelectedCategory("");
+      setSelectedDate("");
+      fetchScheduledWorkouts();
+    }
+  };
 
   const handleDragStart = (workoutId: string) => {
     setDraggedWorkout(workoutId);
@@ -318,8 +303,10 @@ const Schedule = () => {
                             <p className="text-sm text-muted-foreground text-center">Dra och släpp pass här</p>
                           </div>
                         ) : (
-                          dayWorkouts.map((workout) => {
-                                                                                                            const library = workout.workout_library || { id: '', name: 'Laddar...', category: 'övrigt', duration: null, effort: null, description: null, pace: null };
+                          dayWorkouts
+                                                                                .filter((workout) => workout.workout_library != null)
+                                                                                .map((workout) => {
+                                                                                  const library = workout.workout_library!;
                                                                                   
                                                                                   return (
                                                                                     <div
