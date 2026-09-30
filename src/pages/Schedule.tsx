@@ -238,7 +238,8 @@ const Schedule = () => {
   }
 
   const sortedWeeks = Object.keys(workoutsByWeek)
-        .sort((a, b) => a.localeCompare(b));
+          .sort((a, b) => a.localeCompare(b))
+          .filter(weekKey => weekKey >= currentWeekKey);
 
   const getWorkoutsForDate = (date: Date) => {
       const dateStr = format(date, "yyyy-MM-dd");
