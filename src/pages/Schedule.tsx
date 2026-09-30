@@ -71,37 +71,46 @@ const Schedule = () => {
   }, []);
 
   const fetchScheduledWorkouts = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("scheduled_workouts")
-      .select(`
-        id,
-        scheduled_date,
-        workout_library (
-          id,
-          name,
-          category,
-          duration,
-          effort,
-          description,
-          pace
-        )
-      `)
-      .eq("user_id", user.id)
-      .order("scheduled_date");
-
-    if (error) {
-      console.error("Error fetching scheduled workouts:", error.message, error.details);
-      toast.error("Kunde inte hämta schema");
-    } else {
-      setWorkouts((data || []).map(item => ({
-        ...item,
-        workout_library: item.workout_library[0] || null
-      })));
-    }
-  };
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) return;
+  
+        // Hämta scheduled_workouts
+        const { data: scheduledData, error: scheduledError } = await supabase
+          .from("scheduled_workouts")
+          .select("id, scheduled_date, workout_id")
+          .eq("user_id", user.id)
+          .order("scheduled_date");
+  
+        if (scheduledError) {
+          console.error("Error fetching scheduled workouts:", scheduledError.message, scheduledError.details);
+          toast.error("Kunde inte hämta schema");
+          return;
+        }
+  
+        // Hämta workout_library för att bygga en lookup-tabell
+        const { data: libraryData, error: libraryError } = await supabase
+          .from("workout_library")
+          .select("id, name, category, duration, effort, description, pace")
+          .eq("user_id", user.id);
+  
+        if (libraryError) {
+          console.error("Error fetching library workouts:", libraryError.message, libraryError.details);
+          toast.error("Kunde inte hämta bibliotek");
+          return;
+        }
+  
+        // Bygg lookup-tabell
+        const libraryMap = new Map(libraryData?.map(w => [w.id, w]) || []);
+  
+        // Kombinera data
+        const combinedData = (scheduledData || []).map(item => ({
+          ...item,
+          workout_library: libraryMap.get(item.workout_id) || null
+        }));
+  
+        console.log("Schedule: Combined data:", combinedData);
+        setWorkouts(combinedData);
+      };
 
   const fetchLibraryWorkouts = async () => {
     const user = (await supabase.auth.getUser()).data.user;
@@ -306,10 +315,8 @@ const Schedule = () => {
                             <p className="text-sm text-muted-foreground text-center">Dra och släpp pass här</p>
                           </div>
                         ) : (
-                          dayWorkouts
-                                                                                .filter((workout) => workout.workout_library != null)
-                                                                                .map((workout) => {
-                                                                                  const library = workout.workout_library!;
+                          dayWorkouts.map((workout) => {
+                                                                                                            const library = workout.workout_library || { id: '', name: 'Laddar...', category: 'övrigt', duration: null, effort: null, description: null, pace: null };
                                                                                   
                                                                                   return (
                                                                                     <div
