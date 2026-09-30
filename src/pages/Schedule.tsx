@@ -233,9 +233,12 @@ const Schedule = () => {
       });
 
   const getWorkoutsForDate = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return workouts.filter((w) => w.scheduled_date === dateStr);
-  };
+      const dateStr = format(date, "yyyy-MM-dd");
+      return workouts.filter((w) => {
+        const workoutDateStr = w.scheduled_date.split('T')[0];
+        return workoutDateStr === dateStr;
+      });
+    };
 
   return (
     <div className="p-4 space-y-6">
