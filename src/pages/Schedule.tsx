@@ -70,7 +70,21 @@ const Schedule = () => {
     fetchLibraryWorkouts();
   }, []);
 
-  const fetchScheduledWorkouts = async () => {
+  // Group workouts by week
+    const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const currentWeekKey = format(currentWeekStart, "yyyy-MM-dd");
+  
+    // Skrolla till nuvarande vecka när data har laddats
+    useEffect(() => {
+      if (workouts.length > 0) {
+        const weekElement = document.getElementById(`week-${currentWeekKey}`);
+        if (weekElement) {
+          weekElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+      }
+    }, [workouts, currentWeekKey]);
+  
+    const fetchScheduledWorkouts = async () => {
         const user = (await supabase.auth.getUser()).data.user;
         if (!user) return;
   
@@ -206,10 +220,6 @@ const Schedule = () => {
     }
   };
 
-  // Group workouts by week
-  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const currentWeekKey = format(currentWeekStart, "yyyy-MM-dd");
-  
   const workoutsByWeek = workouts.reduce((acc, workout) => {
     const workoutDate = parseISO(workout.scheduled_date);
     const weekStart = startOfWeek(workoutDate, { weekStartsOn: 1 });
@@ -228,18 +238,7 @@ const Schedule = () => {
   }
 
   const sortedWeeks = Object.keys(workoutsByWeek)
-      .sort((a, b) => {
-        // Nuvarande vecka först
-        if (a === currentWeekKey) return -1;
-        if (b === currentWeekKey) return 1;
-        // Framtida veckor därefter (i kronologisk ordning)
-        if (a > currentWeekKey && b > currentWeekKey) return a.localeCompare(b);
-        // Tidigare veckor sist (i omvänd kronologisk ordning, senast först)
-        if (a < currentWeekKey && b < currentWeekKey) return b.localeCompare(a);
-        // Framtida före tidigare
-        if (a > currentWeekKey) return -1;
-        return 1;
-      });
+        .sort((a, b) => a.localeCompare(b));
 
   const getWorkoutsForDate = (date: Date) => {
       const dateStr = format(date, "yyyy-MM-dd");
@@ -272,11 +271,11 @@ const Schedule = () => {
         </Card>
       ) : (
         sortedWeeks.map((weekKey) => {
-          const weekStart = parseISO(weekKey);
-          const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-          
-          return (
-            <div key={weekKey} className="space-y-3">
+                  const weekStart = parseISO(weekKey);
+                  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+        
+                  return (
+                    <div key={weekKey} id={`week-${weekKey}`} className="space-y-3">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold">
                   Vecka {format(weekStart, "w", { locale: sv })}
