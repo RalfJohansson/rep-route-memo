@@ -39,6 +39,11 @@ const Tools = () => {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
+  
+  // Intervals test state
+  const [intervalsTestResult, setIntervalsTestResult] = useState<any>(null);
+  const [intervalsTestLoading, setIntervalsTestLoading] = useState(false);
+  const [intervalsTestError, setIntervalsTestError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -74,17 +79,17 @@ const Tools = () => {
             setStravaConnected(false);
             return;
           }
-  
+
           const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
             headers: { Authorization: `Bearer ${session.access_token}` },
           });
-  
+
           if (stravaError) {
             console.error('Error fetching Strava status:', stravaError);
             setStravaConnected(false);
             return;
           }
-  
+
           if (stravaData) {
             setStravaConnected(stravaData.connected);
             console.log('Strava status data:', stravaData);
@@ -205,7 +210,7 @@ const Tools = () => {
         const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID || '';
         const redirectUri = "https://rep-route-memo.vercel.app/tools";
         const scope = "read,activity:read_all";
-  
+
       if (!clientId) {
         toast.error("Strava client ID not configured");
         return;
@@ -252,36 +257,36 @@ const Tools = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
-  
+
         if (error) {
           toast.error('Strava-anslutning avbröts');
           window.history.replaceState({}, '', '/tools');
           return;
         }
-  
+
         if (code && !stravaConnected) {
           setConnectingStrava(true);
           try {
             const { data: { session } } = await supabase.auth.getSession();
-  
+
             if (!session) {
               toast.error("Du måste vara inloggad");
               return;
             }
-  
+
             const { data, error: authError } = await supabase.functions.invoke('strava-auth', {
               body: { code },
               headers: {
                 Authorization: `Bearer ${session.access_token}`,
               },
             });
-  
+
             if (authError) throw authError;
             
             // Verify the connection is persisted in the database
             await checkStravaConnection();
             toast.success(`Ansluten till Strava som ${data.athlete.firstname} ${data.athlete.lastname}`);
-  
+
             // Clean up URL
             window.history.replaceState({}, '', '/tools');
           } catch (error) {
@@ -293,7 +298,7 @@ const Tools = () => {
           }
         }
       };
-  
+
       handleStravaCallback();
     }, [stravaConnected]);
 
@@ -341,6 +346,21 @@ const Tools = () => {
       toast.success("Tempozoner sparade!");
     } catch (error: any) {
       toast.error("Kunde inte spara tempozoner");
+    }
+  };
+
+  const handleTestIntervals = async () => {
+    setIntervalsTestLoading(true);
+    setIntervalsTestError(null);
+    setIntervalsTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('intervals-activitets');
+      if (error) throw error;
+      setIntervalsTestResult(data);
+    } catch (err: any) {
+      setIntervalsTestError(err.message || String(err));
+    } finally {
+      setIntervalsTestLoading(false);
     }
   };
 
@@ -498,6 +518,36 @@ const Tools = () => {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Intervals Test Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Testa Intervals.icu Edge Function</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={handleTestIntervals}
+            disabled={intervalsTestLoading}
+            className="w-full"
+          >
+            {intervalsTestLoading ? "Testar..." : "Testa Intervals.icu"}
+          </Button>
+          
+          {intervalsTestError && (
+            <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Fel:</h3>
+              <pre className="text-xs text-red-800 dark:text-red-200 whitespace-pre-wrap">{intervalsTestError}</pre>
+            </div>
+          )}
+          
+          {intervalsTestResult && (
+            <div className="mt-4 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+              <h3 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">Resultat:</h3>
+              <pre className="text-xs text-green-800 dark:text-green-200 whitespace-pre-wrap">{JSON.stringify(intervalsTestResult, null, 2)}</pre>
             </div>
           )}
         </CardContent>
