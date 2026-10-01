@@ -54,19 +54,22 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
 
-    const oldest = url.searchParams.get("oldest");
-    const newest = url.searchParams.get("newest");
+    const newest =
+      url.searchParams.get("newest") ??
+      new Date().toISOString().slice(0, 10);
 
-    const params = new URLSearchParams();
-
-    if (oldest) params.set("oldest", oldest);
-    if (newest) params.set("newest", newest);
+    const oldest =
+      url.searchParams.get("oldest") ??
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
 
     const intervalsUrl = new URL(
       "https://intervals.icu/api/v1/athlete/0/activities"
     );
-    if (oldest) intervalsUrl.searchParams.set("oldest", oldest);
-    if (newest) intervalsUrl.searchParams.set("newest", newest);
+
+    intervalsUrl.searchParams.set("oldest", oldest);
+    intervalsUrl.searchParams.set("newest", newest);
 
     const response = await fetch(intervalsUrl.toString(), {
       method: "GET",
