@@ -62,12 +62,17 @@ Deno.serve(async (req) => {
     if (oldest) params.set("oldest", oldest);
     if (newest) params.set("newest", newest);
 
-    const intervalsUrl =
-      `https://intervals.icu/api/v1/athlete/0/activities?${params.toString()}`;
+    const intervalsUrl = new URL(
+      "https://intervals.icu/api/v1/athlete/0/activities"
+    );
+    if (oldest) intervalsUrl.searchParams.set("oldest", oldest);
+    if (newest) intervalsUrl.searchParams.set("newest", newest);
 
-    const response = await fetch(intervalsUrl, {
+    const response = await fetch(intervalsUrl.toString(), {
+      method: "GET",
       headers: {
         Authorization: `Basic ${btoa(`API_KEY:${intervalsApiKey}`)}`,
+        Accept: "application/json",
       },
     });
 
