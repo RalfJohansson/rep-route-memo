@@ -210,72 +210,63 @@ const Home = () => {
   };
 
   const handleFetchActivities = async () => {
-    if (!selectedWorkout) return;
-
-    // Reset activity states
-    setStravaActivities([]);
-    setShowStravaActivities(false);
-
-    // Determine activity type based on workout category
-    const workoutCategory = selectedWorkout.workout_library.category;
-    let stravaActivityType: string | null = null;
-
-    if (workoutCategory === 'styrka') {
-      stravaActivityType = 'WeightTraining';
-    } else if (['intervallpass', 'distanspass', 'långpass', 'tävling'].includes(workoutCategory)) {
-      stravaActivityType = 'Run';
-    } else {
-      toast.info("Denna passkategori stöds inte för automatisk hämtning från externa tjänster.");
-      return;
-    }
-
-    // Try Strava if connected
-    if (stravaConnected) {
+      if (!selectedWorkout) return;
+  
+      // Reset activity states
+      setStravaActivities([]);
+      setShowStravaActivities(false);
+  
+      // Only support running activities for now
+      const workoutCategory = selectedWorkout.workout_library.category;
+      if (!['intervallpass', 'distanspass', 'långpass', 'tävling'].includes(workoutCategory)) {
+        toast.info("Denna passkategori stöds inte för automatisk hämtning från externa tjänster.");
+        return;
+      }
+  
       setLoadingStrava(true);
-              try {
-                // Refresh session to ensure we have a fresh access token
-                await supabase.auth.getUser();
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
-                  throw new Error('No session');
-                }
-      
-                const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
-                  body: {
-                    date: selectedWorkout.scheduled_date,
-                    activityType: stravaActivityType
-                  },
-                  headers: { Authorization: `Bearer ${session.access_token}` }
-                });
-      
-                if (error) throw error;
-      
-                if (data.activities && data.activities.length > 0) {
-                  setStravaActivities(data.activities);
-                  setShowStravaActivities(true);
-                  
-                  // Try to auto-select the best match
-                  const bestMatch = findBestActivityMatch(data.activities, selectedWorkout);
-                            if (bestMatch) {
-                              selectActivity(bestMatch);
-                              return;
-                            }
-                } else {
-                  toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
-                }
-              } catch (error: any) {
-        toast.error(error.message || "Kunde inte hämta från Strava");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No session');
+        }
+  
+        const { data, error } = await supabase.functions.invoke('intervals-activitets', {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+  
+        if (error) throw error;
+  
+        if (data.success && data.activities && data.activities.length > 0) {
+          // Filter activities by date (match scheduled_date)
+          const workoutDate = selectedWorkout.scheduled_date;
+          const matchingActivities = data.activities.filter((activity: any) => {
+            const activityDate = activity.start_date_local?.split('T')[0];
+            return activityDate === workoutDate &&
+              ['Run', 'VirtualRun', 'TrailRun'].includes(activity.type);
+          });
+  
+          if (matchingActivities.length > 0) {
+            setStravaActivities(matchingActivities);
+            setShowStravaActivities(true);
+  
+            // Try to auto-select the best match
+            const bestMatch = findBestActivityMatch(matchingActivities, selectedWorkout);
+            if (bestMatch) {
+              selectActivity(bestMatch);
+              return;
+            }
+          } else {
+            toast.info("Inget genomfört löppass hittades från Garmin för detta datum.");
+          }
+        } else {
+          toast.info("Inget genomfört löppass hittades från Garmin för detta datum.");
+        }
+      } catch (error: any) {
+        toast.error(error.message || "Kunde inte hämta från Garmin");
       } finally {
         setLoadingStrava(false);
       }
-    }
-
-    // If we haven't found anything and are connected, show message
-    if (stravaConnected && 
-        (!showStravaActivities || stravaActivities.length === 0)) {
-      toast.info("Inga aktiviteter hittades från Strava");
-    }
-  };
+    };
 
   const findBestActivityMatch = (activities: any[], workout: ScheduledWorkout) => {
     // We'll implement a simple matching algorithm based on date and type
@@ -292,32 +283,31 @@ const Home = () => {
 
   const selectActivity = (activity: any) => {
       // Map the activity to the form fields
+      // Intervals.icu returns distance in meters, convert to km
+      const distanceKm = activity.distance / 1000;
       setTrainedTime(Math.round(activity.moving_time / 60).toString());
-      setDistance(activity.distance);
+      setDistance(distanceKm.toString());
       
       // Calculate pace if we have time and distance
-      if (activity.moving_time && activity.distance) {
+      if (activity.moving_time && distanceKm > 0) {
         const totalSeconds = activity.moving_time;
-        const distanceKm = parseFloat(activity.distance);
-        if (distanceKm > 0) {
-          const secondsPerKm = totalSeconds / distanceKm;
-          let minutes = Math.floor(secondsPerKm / 60);
-          let seconds = Math.floor(secondsPerKm % 60);
-          if (seconds >= 60) {
-            minutes += 1;
-            seconds = 0;
-          }
-          setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        const secondsPerKm = totalSeconds / distanceKm;
+        let minutes = Math.floor(secondsPerKm / 60);
+        let seconds = Math.floor(secondsPerKm % 60);
+        if (seconds >= 60) {
+          minutes += 1;
+          seconds = 0;
         }
+        setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       }
       
-      // Set notes to indicate source
-      setNotes(`Importerat från Strava: ${activity.name}`);
+      // Set notes to activity name
+      setNotes(activity.name);
       
       // Close the activity selectors
       setShowStravaActivities(false);
       
-      toast.success(`Data från Strava inläst!`);
+      toast.success(`Data från Garmin inläst!`);
     };
 
   const handleSelectStravaActivity = (activity: any) => {
@@ -483,20 +473,18 @@ const Home = () => {
           <div className="space-y-4">
             {/* Activity source buttons */}
             <div className="space-y-2">
-              {stravaConnected && (
-                <Button
-                  onClick={handleFetchActivities}
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  disabled={loadingStrava}
-                >
-                  {loadingStrava ? (
-                    <span>Hämtar från Strava...</span>
-                  ) : (
-                    <span>Hämta genomfört pass från Strava</span>
-                  )}
-                </Button>
-              )}
+              <Button
+                onClick={handleFetchActivities}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                disabled={loadingStrava}
+              >
+                {loadingStrava ? (
+                  <span>Hämtar från Garmin...</span>
+                ) : (
+                  <span>Hämta genomfört pass från Garmin</span>
+                )}
+              </Button>
               {!stravaConnected && (
                 <p className="text-sm text-muted-foreground">
                   Ingen extern tjänst ansluten. Anslut Strava i Verktyg för att hämta aktiviteter automatiskt.
@@ -505,26 +493,28 @@ const Home = () => {
             </div>
 
             {/* Strava activities */}
-            {showStravaActivities && stravaActivities.length > 0 && (
-              <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
-                <Label>Välj aktivitet från Strava:</Label>
-                {stravaActivities.map((activity) => (
-                  <Button
-                    key={activity.id}
-                    onClick={() => handleSelectStravaActivity(activity)}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-2"
-                  >
-                    <div className="flex flex-col items-start w-full">
-                      <span className="font-medium">{activity.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {activity.distance} km • {Math.round(activity.moving_time / 60)} min
-                      </span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
+                        {showStravaActivities && stravaActivities.length > 0 && (
+                          <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
+                            <Label>Välj aktivitet från Garmin:</Label>
+                            {stravaActivities.map((activity: any) => (
+                              <Button
+                                key={activity.id}
+                                onClick={() => handleSelectStravaActivity(activity)}
+                                variant="outline"
+                                className="w-full justify-start text-left h-auto py-2"
+                              >
+                                <div className="flex flex-col items-start w-full">
+                                  <span className="font-medium">{activity.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {activity.distance ? (activity.distance / 1000).toFixed(1) : '0'} km • {Math.round(activity.moving_time / 60)} min • {activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '0'} min/km
+                                    {activity.average_heartrate && ` • ${Math.round(activity.average_heartrate)} bpm`}
+                                    {activity.max_heartrate && ` (max ${Math.round(activity.max_heartrate)})`}
+                                  </span>
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        )}
 
             {/* Manual input fields */}
             <div className="space-y-2">
