@@ -313,12 +313,14 @@ const Home = () => {
 
       const data = await response.json();
       
-      if (data && data.length > 0) {
-        setGarminActivities(data);
-        setShowGarminActivities(true);
-      } else {
-        toast.info("Inga Garmin-aktiviteter hittades för detta datum");
-      }
+            const activities = Array.isArray(data.activities) ? data.activities : [];
+      
+            if (activities.length > 0) {
+              setGarminActivities(activities);
+              setShowGarminActivities(true);
+            } else {
+              toast.info("Inga Garmin-aktiviteter hittades för detta datum");
+            }
     } catch (error: any) {
       toast.error(error.message || "Kunde inte hämta från Garmin");
     } finally {
