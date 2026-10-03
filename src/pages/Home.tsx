@@ -626,7 +626,7 @@ const Home = () => {
                     <div className="flex flex-col items-start w-full">
                       <span className="font-medium">{activity.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {activity.distance / 1000} km • {Math.round(activity.moving_time / 60)} min
+                        {(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km • {Math.round(activity.moving_time / 60)} min • {activity.average_heartrate ? `${activity.average_heartrate} bpm` : ''}
                       </span>
                     </div>
                   </Button>
