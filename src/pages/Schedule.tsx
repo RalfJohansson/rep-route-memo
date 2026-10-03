@@ -385,40 +385,40 @@ const Schedule = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Välj typ av pass</label>
               <Select value={selectedCategory} onValueChange={(value) => {
-                setSelectedCategory(value);
-                setSelectedWorkoutId("");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Välj typ" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                              setSelectedCategory(value);
+                              setSelectedWorkoutId("");
+                            }}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Välj typ" />
+                              </SelectTrigger>
+                              <SelectContent className="z-[9999]">
+                                {categories.map((cat) => (
+                                  <SelectItem key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
             </div>
             {selectedCategory && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Välj pass</label>
-                <Select value={selectedWorkoutId} onValueChange={setSelectedWorkoutId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Välj ett pass" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {libraryWorkouts
-                      .filter((workout) => workout.category === selectedCategory)
-                      .map((workout) => (
-                        <SelectItem key={workout.id} value={workout.id}>
-                          {workout.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Välj pass</label>
+                            <Select value={selectedWorkoutId} onValueChange={setSelectedWorkoutId}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Välj ett pass" />
+                              </SelectTrigger>
+                              <SelectContent className="z-[9999]">
+                                {libraryWorkouts
+                                  .filter((workout) => workout.category === selectedCategory)
+                                  .map((workout) => (
+                                    <SelectItem key={workout.id} value={workout.id}>
+                                      {workout.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
             <div className="space-y-2">
               <label className="text-sm font-medium">Välj datum</label>
               <input
