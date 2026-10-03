@@ -378,7 +378,7 @@ const Home = () => {
   const selectGarminActivity = (activity: any) => {
     const distanceKm = activity.distance / 1000;
     setTrainedTime(Math.round(activity.moving_time / 60).toString());
-    setDistance(distanceKm.toString());
+    setDistance(distanceKm.toFixed(2));
     
     if (activity.moving_time && distanceKm > 0) {
       const totalSeconds = activity.moving_time;
