@@ -14,6 +14,7 @@ import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
 import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
+import quotes from "@/data/quotes.json";
 
 interface ScheduledWorkout {
   id: string;
@@ -423,10 +424,20 @@ const Home = () => {
   };
 
   const getJoyColor = (rating: number) => {
-    if (rating === 1) return '#FF0000';
-    if (rating === 2) return '#FF9900';
-    return '#00A000'; // 3-5
-  };
+      if (rating === 1) return '#FF0000';
+      if (rating === 2) return '#FF9900';
+      return '#00A000'; // 3-5
+    };
+  
+    const getQuoteOfTheDay = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now.getTime() - start.getTime();
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        const index = dayOfYear % quotes.length;
+        return quotes[index];
+      };
 
   if (loading) {
     return (
@@ -445,7 +456,17 @@ const Home = () => {
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="relative z-10">
+            {/* Quote of the day banner */}
+            {quotes.length > 0 && (
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute left-0 right-0 bottom-0 top-1/4 bg-black/40"></div>
+                <div className="relative max-w-md mx-auto px-4 py-8 text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-white mb-2 break-words">{getQuoteOfTheDay().text}</p>
+                  <p className="text-lg md:text-xl text-white/80 break-words">– {getQuoteOfTheDay().author}</p>
                 </div>
+              </div>
+            )}
+          </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
