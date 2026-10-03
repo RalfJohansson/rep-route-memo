@@ -424,22 +424,24 @@ const Home = () => {
   };
 
   const getJoyColor = (rating: number) => {
-      if (rating === 1) return '#FF0000';
-      if (rating === 2) return '#FF9900';
-      return '#00A000'; // 3-5
-    };
-  
-    const getQuoteOfTheDay = () => {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        const diff = now.getTime() - start.getTime();
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayOfYear = Math.floor(diff / oneDay);
-        const index = dayOfYear % quotes.length;
-        return quotes[index];
+        if (rating === 1) return '#FF0000';
+        if (rating === 2) return '#FF9900';
+        return '#00A000'; // 3-5
       };
-
-  if (loading) {
+   
+      const getQuoteOfTheDay = () => {
+          const now = new Date();
+          const start = new Date(now.getFullYear(), 0, 0);
+          const diff = now.getTime() - start.getTime();
+          const oneDay = 1000 * 60 * 60 * 24;
+          const dayOfYear = Math.floor(diff / oneDay);
+          const index = dayOfYear % quotes.length;
+          return quotes[index];
+        };
+  
+      const quote = getQuoteOfTheDay();
+  
+    if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -449,24 +451,18 @@ const Home = () => {
 
   return (
     <div className="p-4 space-y-6">
-      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
-        <div 
+      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden min-h-[200px]">
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
-        <div className="relative z-10">
-            {/* Quote of the day banner */}
-            {quotes.length > 0 && (
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute left-0 right-0 bottom-0 top-1/4 bg-black/40"></div>
-                <div className="relative max-w-md mx-auto px-4 py-8 text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-white mb-2 break-words">{getQuoteOfTheDay().text}</p>
-                  <p className="text-lg md:text-xl text-white/80 break-words">– {getQuoteOfTheDay().author}</p>
-                </div>
-              </div>
-            )}
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
+          <div className="max-w-md text-center">
+            <p className="text-xl md:text-3xl font-bold text-white mb-2 break-words">{quote.text}</p>
+            <p className="text-base md:text-lg text-white/80 break-words">– {quote.author}</p>
           </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
