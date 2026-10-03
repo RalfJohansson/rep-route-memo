@@ -445,12 +445,7 @@ const Home = () => {
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold mb-2">Denna vecka</h1>
-          <p className="text-white/90">
-            {format(startOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })} -{" "}
-            {format(endOfWeek(new Date(), { weekStartsOn: 1 }), "d MMM", { locale: sv })}
-          </p>
-        </div>
+                </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
