@@ -459,8 +459,8 @@ const Home = () => {
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
           <div className="max-w-md text-center">
-            <p className="text-xl md:text-3xl font-bold text-white mb-2 break-words">{quote.text}</p>
-            <p className="text-base md:text-lg text-white/80 break-words">– {quote.author}</p>
+            <p className="text-xl md:text-3xl font-bold text-white mb-2 break-words" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, lineHeight: '1.375', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{quote.text}</p>
+            <p className="text-base md:text-lg text-white/80 break-words" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 400, lineHeight: '1.375', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{'\u2013 ' + quote.author}</p>
           </div>
         </div>
       </div>
