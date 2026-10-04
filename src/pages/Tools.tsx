@@ -39,16 +39,6 @@ const Tools = () => {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
-  
-  // Intervals test state
-  const [intervalsTestResult, setIntervalsTestResult] = useState<any>(null);
-  const [intervalsTestLoading, setIntervalsTestLoading] = useState(false);
-  const [intervalsTestError, setIntervalsTestError] = useState<string | null>(null);
-  
-  // Garmin test state
-  const [garminTestResult, setGarminTestResult] = useState<any>(null);
-  const [garminTestLoading, setGarminTestLoading] = useState(false);
-  const [garminTestError, setGarminTestError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -354,54 +344,6 @@ const Tools = () => {
     }
   };
 
-  const handleTestIntervals = async () => {
-    setIntervalsTestLoading(true);
-    setIntervalsTestError(null);
-    setIntervalsTestResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke('intervals-activitets');
-      if (error) throw error;
-      setIntervalsTestResult(data);
-    } catch (err: any) {
-      setIntervalsTestError(err.message || String(err));
-    } finally {
-      setIntervalsTestLoading(false);
-    }
-  };
-
-  const handleTestGarmin = async () => {
-    setGarminTestLoading(true);
-    setGarminTestError(null);
-    setGarminTestResult(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No session');
-      }
-
-      const response = await fetch(
-        "https://fawdbkimpeghhggmsrwn.supabase.co/functions/v1/garmin-aktiviteter?oldest=2026-09-28&newest=2026-09-28",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      setGarminTestResult(result);
-    } catch (err: any) {
-      setGarminTestError(err.message || String(err));
-    } finally {
-      setGarminTestLoading(false);
-    }
-  };
 
   if (loading) {
     console.log("Tools: Rendering loading spinner.");
@@ -562,65 +504,6 @@ const Tools = () => {
         </CardContent>
       </Card>
 
-      {/* Intervals Test Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Testa Intervals.icu Edge Function</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            onClick={handleTestIntervals}
-            disabled={intervalsTestLoading}
-            className="w-full"
-          >
-            {intervalsTestLoading ? "Testar..." : "Testa Intervals.icu"}
-          </Button>
-          
-          {intervalsTestError && (
-            <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Fel:</h3>
-              <pre className="text-xs text-red-800 dark:text-red-200 whitespace-pre-wrap">{intervalsTestError}</pre>
-            </div>
-          )}
-          
-          {intervalsTestResult && (
-            <div className="mt-4 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-              <h3 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">Resultat:</h3>
-              <pre className="text-xs text-green-800 dark:text-green-200 whitespace-pre-wrap">{JSON.stringify(intervalsTestResult, null, 2)}</pre>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Garmin Test Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Testa Garmin-aktiviteter Edge Function</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            onClick={handleTestGarmin}
-            disabled={garminTestLoading}
-            className="w-full"
-          >
-            {garminTestLoading ? "Testar..." : "Testa Garmin-aktiviteter"}
-          </Button>
-          
-          {garminTestError && (
-            <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Fel:</h3>
-              <pre className="text-xs text-red-800 dark:text-red-200 whitespace-pre-wrap">{garminTestError}</pre>
-            </div>
-          )}
-          
-          {garminTestResult && (
-            <div className="mt-4 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-              <h3 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">Resultat:</h3>
-              <pre className="text-xs text-green-800 dark:text-green-200 whitespace-pre-wrap">{JSON.stringify(garminTestResult, null, 2)}</pre>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       <YearlyWorkoutTimeline completedWorkouts={allCompletedWorkouts} />
     </div>
