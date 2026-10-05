@@ -51,7 +51,53 @@ const Home = () => {
   const [calculatedPace, setCalculatedPace] = useState("");
   const [notes, setNotes] = useState("");
   const [joyRating, setJoyRating] = useState(3);
-  
+
+  // Quote of the day
+  const quotes = [
+    "Det enda dåliga träningspasset är det som inte hände.",
+    "Din kropp tål nästan vad som helst. Det är ditt sinne som du måste övertyga.",
+    "Framgång handlar inte alltid om storhet. Det handlar om konsekvens. Konsekvent hårt arbete leder till framgång.",
+    "Begränsa inte dina utmaningar. Utmana dina gränser.",
+    "Smärtan du känner idag kommer att vara den styrka du känner imorgon.",
+    "Skjut dig själv för att ingen annan kommer att göra det åt dig.",
+    "Skillnaden mellan att vilja och uppnå är disciplin.",
+    "Tro att du kan och du är halvvägs.",
+    "Kroppen uppnår vad sinnet tror.",
+    "Gå den extra milen. Det är aldrig trångt.",
+    "Det handlar inte om att ha tid. Det handlar om att göra tid.",
+    "Lite framsteg varje dag ger stora resultat.",
+    "Hemligheten med att komma vidare är att komma igång.",
+    "Motivation är det som får dig att komma igång. Vana är det som håller dig igång.",
+    "Bli kär i processen, och resultaten kommer.",
+    "Konsistens är viktigare än perfektion.",
+    "Visa upp, även när du inte känner för det.",
+    "Resan på tusen mil börjar med ett enda steg.",
+    "Framgång är summan av små ansträngningar, upprepade dag in och dag ut.",
+    "Disciplin är bryggan mellan mål och prestation.",
+    "Din enda gräns är du.",
+    "Var starkare än din starkaste ursäkt.",
+    "Ju hårdare träning, desto större känsla av prestation.",
+    "Ett positivt tänkesätt kan erövra vad som helst.",
+    "Fokusera på ditt mål. Titta inte i någon riktning utan framåt.",
+    "Den enda personen du ska försöka bli bättre än är den du var igår.",
+    "Träna vansinnigt eller förbli densamma.",
+    "Du är ett träningspass från gott humör.",
+    "Tro på dig själv och allt vad du är. Vet att det finns något inom dig som är större än något hinder.",
+    "Styrka växer i de ögonblick när du tror att du inte kan fortsätta men du fortsätter ändå."
+  ];
+
+  const getQuoteOfTheDay = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - start.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    const index = dayOfYear % quotes.length;
+    return quotes[index];
+  };
+
+  const quote = getQuoteOfTheDay();
+
   // Activity fetching states
   const [stravaActivities, setStravaActivities] = useState<any[]>([]);
   const [showStravaActivities, setShowStravaActivities] = useState(false);
@@ -444,7 +490,10 @@ const Home = () => {
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
-        <div className="relative z-10">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 px-4">
+          <div className="max-w-md text-center text-white text-xl md:text-2xl font-serif leading-relaxed" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            {quote}
+          </div>
         </div>
       </div>
 
