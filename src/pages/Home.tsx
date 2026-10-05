@@ -491,7 +491,7 @@ const Home = () => {
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 px-4">
-          <div className="max-w-md text-center text-white text-xl md:text-2xl font-serif leading-relaxed" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+          <div className="max-w-md text-center text-white text-xl md:text-2xl leading-relaxed" style={{ fontFamily: "'Libre Baskerville', serif", fontWeight: 400, textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
             {quote}
           </div>
         </div>
