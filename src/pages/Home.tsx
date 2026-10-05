@@ -14,7 +14,6 @@ import { sv } from "date-fns/locale";
 import WorkoutDetailDialog from "@/components/WorkoutDetailDialog";
 import heroImage from "@/assets/hero-running.jpg";
 import { getCategoryColor } from "@/lib/utils"; // Importera getCategoryColor
-import quotes from "@/data/quotes.json";
 
 interface ScheduledWorkout {
   id: string;
@@ -428,18 +427,6 @@ const Home = () => {
         if (rating === 2) return '#FF9900';
         return '#00A000'; // 3-5
       };
-   
-      const getQuoteOfTheDay = () => {
-          const now = new Date();
-          const start = new Date(now.getFullYear(), 0, 0);
-          const diff = now.getTime() - start.getTime();
-          const oneDay = 1000 * 60 * 60 * 24;
-          const dayOfYear = Math.floor(diff / oneDay);
-          const index = dayOfYear % quotes.length;
-          return quotes[index];
-        };
-  
-      const quote = getQuoteOfTheDay();
   
     if (loading) {
     return (
@@ -451,17 +438,13 @@ const Home = () => {
 
   return (
     <div className="p-4 space-y-6">
-      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden min-h-[200px]">
+      <div className="relative rounded-2xl p-6 text-white shadow-md overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="absolute inset-0 bg-[#d4c4b0]/70" />
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
-          <div className="max-w-md text-center">
-            <p className="text-xl md:text-3xl font-bold text-white mb-2 break-words" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, lineHeight: '1.375', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{quote.text}</p>
-            <p className="text-base md:text-lg text-white/80 break-words" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 400, lineHeight: '1.375', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{'\u2013 ' + quote.author}</p>
-          </div>
+        <div className="relative z-10">
         </div>
       </div>
 
