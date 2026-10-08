@@ -63,6 +63,7 @@ const Tools = () => {
         fetchPaceZones(),
         checkStravaConnection(),
         fetchAllCompletedWorkoutsForTimeline(),
+        checkIntervalsConnection(),
       ]);
       setLoading(false);
       console.log("Tools: Initial data load complete.");
@@ -101,8 +102,41 @@ const Tools = () => {
           setStravaConnected(false);
         }
       };
-
-  const fetchPaceZones = async () => {
+  
+    const checkIntervalsConnection = async () => {
+      try {
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) {
+          setIntervalsConnected(false);
+          return;
+        }
+  
+        const { data, error } = await supabase
+          .from("user_integrations")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("provider", "intervals")
+          .maybeSingle();
+  
+        if (error) {
+          console.error("Error fetching Intervals connection:", error);
+          setIntervalsConnected(false);
+          return;
+        }
+  
+        if (data) {
+          setIntervalsConnected(true);
+          console.log("Intervals connection data:", data);
+        } else {
+          setIntervalsConnected(false);
+        }
+      } catch (error) {
+        console.error("Error checking Intervals connection:", error);
+        setIntervalsConnected(false);
+      }
+    };
+  
+    const fetchPaceZones = async () => {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
@@ -224,6 +258,17 @@ const Tools = () => {
     window.location.href = stravaAuthUrl;
   };
 
+  const handleIntervalsConnect = () => {
+    const redirectUri = "https://rep-route-memo.vercel.app/tools";
+
+    const intervalsAuthUrl = `https://intervals.icu/oauth/authorize?client_id=1229&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=ACTIVITY:READ`;
+
+    console.log("Generated Intervals Auth URL:", intervalsAuthUrl);
+    console.log("Redirect URI sent to Intervals:", redirectUri);
+
+    window.location.href = intervalsAuthUrl;
+  };
+
   const handleStravaDisconnect = async () => {
     try {
       setConnectingStrava(true);
@@ -249,6 +294,40 @@ const Tools = () => {
       toast.error("Kunde inte koppla från Strava");
     } finally {
       setConnectingStrava(false);
+    }
+  };
+
+  const handleIntervalsDisconnect = async () => {
+    try {
+      setConnectingIntervals(true);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        toast.error("Du måste vara inloggad");
+        return;
+      }
+
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        setIntervalsConnected(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("user_integrations")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("provider", "intervals");
+
+      if (error) throw error;
+
+      setIntervalsConnected(false);
+      toast.success("Frånkopplad från Intervals.icu");
+    } catch (error) {
+      console.error("Error disconnecting Intervals:", error);
+      toast.error("Kunde inte koppla från Intervals.icu");
+    } finally {
+      setConnectingIntervals(false);
     }
   };
 
@@ -301,6 +380,54 @@ const Tools = () => {
 
       handleStravaCallback();
     }, [stravaConnected]);
+
+  useEffect(() => {
+      const handleIntervalsCallback = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        if (error) {
+          toast.error("Intervals.icu-anslutning avbröts");
+          window.history.replaceState({}, '', '/tools');
+          return;
+        }
+
+        if (code && !intervalsConnected) {
+          setConnectingIntervals(true);
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+              toast.error("Du måste vara inloggad");
+              return;
+            }
+
+            const { data, error: authError } = await supabase.functions.invoke('intervals-auth', {
+              body: { code },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+
+            if (authError) throw authError;
+
+            await checkIntervalsConnection();
+            toast.success(`Ansluten till Intervals.icu`);
+
+            window.history.replaceState({}, '', '/tools');
+          } catch (error) {
+            console.error("Error connecting to Intervals.icu:", error);
+            toast.error("Kunde inte ansluta till Intervals.icu");
+            window.history.replaceState({}, '', '/tools');
+          } finally {
+            setConnectingIntervals(false);
+          }
+        }
+      };
+
+      handleIntervalsCallback();
+    }, [intervalsConnected]);
 
   const handleCalculate = async () => {
     const minutes = parseInt(time5kMinutes);
@@ -401,6 +528,50 @@ const Tools = () => {
                 className="w-full"
               >
                 {connectingStrava ? "Ansluter..." : "Anslut till Strava"}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Intervals.icu Integration
+          </CardTitle>
+          <CardDescription>
+            Anslut ditt Intervals.icu-konto för att automatiskt hämta träningsdata från Intervals.icu
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {intervalsConnected ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  ✓ Ansluten till Intervals.icu
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleIntervalsDisconnect}
+                disabled={connectingIntervals}
+                className="w-full"
+              >
+                {connectingIntervals ? "Kopplar från..." : "Koppla från Intervals.icu"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Genom att ansluta Intervals.icu kan appen automatiskt hämta dina träningspass.
+              </p>
+              <Button
+                onClick={handleIntervalsConnect}
+                disabled={connectingIntervals}
+                className="w-full"
+              >
+                {connectingIntervals ? "Ansluter..." : "Anslut till Intervals.icu"}
               </Button>
             </div>
           )}
