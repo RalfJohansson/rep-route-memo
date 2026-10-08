@@ -112,11 +112,10 @@ const Tools = () => {
         }
   
         const { data, error } = await supabase
-          .from("user_integrations")
-          .select("provider_user_id, expires_at")
-          .eq("user_id", user.id)
-          .eq("provider", "intervals")
-          .maybeSingle();
+  .from("intervals_connections")
+  .select("athlete_id, expires_at")
+  .eq("user_id", user.id)
+  .maybeSingle();
   
         if (error) {
           console.error("Error fetching Intervals connection:", error);
@@ -313,11 +312,9 @@ const Tools = () => {
       }
 
       const { error } = await supabase
-        .from("user_integrations")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("provider", "intervals");
-
+  .from("intervals_connections")
+  .delete()
+  .eq("user_id", user.id);
       if (error) throw error;
 
       setIntervalsConnected(false);
