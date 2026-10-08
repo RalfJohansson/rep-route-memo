@@ -39,6 +39,11 @@ const Tools = () => {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [connectingStrava, setConnectingStrava] = useState(false);
   const [allCompletedWorkouts, setAllCompletedWorkouts] = useState<CompletedWorkoutForTimeline[]>([]);
+  
+    // Intervals.icu connection state
+    const [intervalsConnected, setIntervalsConnected] = useState(false);
+    const [connectingIntervals, setConnectingIntervals] = useState(false);
+    const [intervalsError, setIntervalsError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
