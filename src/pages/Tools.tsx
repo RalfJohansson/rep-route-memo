@@ -113,7 +113,7 @@ const Tools = () => {
   
         const { data, error } = await supabase
           .from("user_integrations")
-          .select("*")
+          .select("provider_user_id, expires_at")
           .eq("user_id", user.id)
           .eq("provider", "intervals")
           .maybeSingle();
@@ -126,7 +126,6 @@ const Tools = () => {
   
         if (data) {
           setIntervalsConnected(true);
-          console.log("Intervals connection data:", data);
         } else {
           setIntervalsConnected(false);
         }
