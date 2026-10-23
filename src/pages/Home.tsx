@@ -277,11 +277,11 @@ const Home = () => {
   return (
     <div className="p-4 space-y-6">
       <div className="relative rounded-2xl overflow-hidden shadow-md">
-        <div
-          className="h-48 bg-cover bg-center sm:h-56 md:h-64"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
-      </div>
+              <div
+                className="h-24 bg-cover bg-center sm:h-32 md:h-48 opacity-90 blur-sm"
+                style={{ backgroundImage: `url(${heroImage})` }}
+              />
+            </div>
 
       <div className="grid grid-cols-3 gap-3">
         <Card>
