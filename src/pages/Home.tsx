@@ -52,14 +52,6 @@ const Home = () => {
   const [notes, setNotes] = useState("");
   const [joyRating, setJoyRating] = useState(3);
 
-  // Activity fetching states
-  const [stravaActivities, setStravaActivities] = useState<any[]>([]);
-  const [showStravaActivities, setShowStravaActivities] = useState(false);
-  const [loadingStrava, setLoadingStrava] = useState(false);
-  
-  // Connection status
-  const [stravaConnected, setStravaConnected] = useState(false);
-
   // Garmin activity fetching states
   const [garminActivities, setGarminActivities] = useState<any[]>([]);
   const [showGarminActivities, setShowGarminActivities] = useState(false);
@@ -75,13 +67,13 @@ const Home = () => {
         const secondsPerKm = totalSeconds / dist;
         let minutes = Math.floor(secondsPerKm / 60);
         let seconds = Math.floor(secondsPerKm % 60);
-        
+
         // Handle edge case where seconds might be 60
         if (seconds >= 60) {
           minutes += 1;
           seconds = 0;
         }
-        
+
         setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       } else {
         setCalculatedPace("");
@@ -90,43 +82,6 @@ const Home = () => {
       setCalculatedPace("");
     }
   }, [trainedTime, distance]);
-
-  // Check connection statuses via auth state change
-    useEffect(() => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          if (session?.user) {
-            try {
-              // Refresh session to ensure we have a fresh access token
-              await supabase.auth.getUser();
-              const { data: { session: freshSession } } = await supabase.auth.getSession();
-              if (freshSession?.user) {
-                const { data: stravaData, error: stravaError } = await supabase.functions.invoke('strava-status', {
-                  headers: { Authorization: `Bearer ${freshSession.access_token}` },
-                });
-                if (!stravaError && stravaData) {
-                  setStravaConnected(stravaData.connected);
-                } else {
-                  console.error('Error fetching Strava status:', stravaError);
-                  setStravaConnected(false);
-                }
-              } else {
-                setStravaConnected(false);
-              }
-            } catch (error) {
-              console.error('Error refreshing user:', error);
-              setStravaConnected(false);
-            }
-          } else {
-            setStravaConnected(false);
-          }
-        }
-      );
-  
-      return () => {
-        subscription.unsubscribe();
-      };
-    }, []);
 
   useEffect(() => {
     fetchWeekWorkouts();
@@ -193,8 +148,6 @@ const Home = () => {
       setCalculatedPace("");
       setNotes("");
       setJoyRating(3);
-      setStravaActivities([]);
-      setShowStravaActivities(false);
       setGarminActivities([]);
       setShowGarminActivities(false);
     } else {
@@ -213,74 +166,6 @@ const Home = () => {
         toast.success("Pass omarkerat");
         fetchWeekWorkouts();
       }
-    }
-  };
-
-  const handleFetchActivities = async () => {
-    if (!selectedWorkout) return;
-
-    // Reset activity states
-    setStravaActivities([]);
-    setShowStravaActivities(false);
-
-    // Determine activity type based on workout category
-    const workoutCategory = selectedWorkout.workout_library.category;
-    let stravaActivityType: string | null = null;
-
-    if (workoutCategory === 'styrka') {
-      stravaActivityType = 'WeightTraining';
-    } else if (['intervallpass', 'distanspass', 'långpass', 'tävling'].includes(workoutCategory)) {
-      stravaActivityType = 'Run';
-    } else {
-      toast.info("Denna passkategori stöds inte för automatisk hämtning från externa tjänster.");
-      return;
-    }
-
-    // Try Strava if connected
-    if (stravaConnected) {
-      setLoadingStrava(true);
-              try {
-                // Refresh session to ensure we have a fresh access token
-                await supabase.auth.getUser();
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
-                  throw new Error('No session');
-                }
-      
-                const { data, error } = await supabase.functions.invoke('strava-fetch-activities', {
-                  body: {
-                    date: selectedWorkout.scheduled_date,
-                    activityType: stravaActivityType
-                  },
-                  headers: { Authorization: `Bearer ${session.access_token}` }
-                });
-      
-                if (error) throw error;
-      
-                if (data.activities && data.activities.length > 0) {
-                  setStravaActivities(data.activities);
-                  setShowStravaActivities(true);
-                  
-                  // Try to auto-select the best match
-                  const bestMatch = findBestActivityMatch(data.activities, selectedWorkout);
-                            if (bestMatch) {
-                              selectActivity(bestMatch);
-                              return;
-                            }
-                } else {
-                  toast.info(`Inga ${stravaActivityType === 'Run' ? 'löppass' : 'styrkepass'} hittades på Strava för detta datum`);
-                }
-              } catch (error: any) {
-        toast.error(error.message || "Kunde inte hämta från Strava");
-      } finally {
-        setLoadingStrava(false);
-      }
-    }
-
-    // If we haven't found anything and are connected, show message
-    if (stravaConnected && 
-        (!showStravaActivities || stravaActivities.length === 0)) {
-      toast.info("Inga aktiviteter hittades från Strava");
     }
   };
 
@@ -313,67 +198,20 @@ const Home = () => {
 
       const data = await response.json();
       
-            const activities = Array.isArray(data.activities) ? data.activities : [];
+      const activities = Array.isArray(data.activities) ? data.activities : [];
       
-            if (activities.length > 0) {
-              setGarminActivities(activities);
-              setShowGarminActivities(true);
-            } else {
-              toast.info("Inga Garmin-aktiviteter hittades för detta datum");
-            }
+      if (activities.length > 0) {
+        setGarminActivities(activities);
+        setShowGarminActivities(true);
+      } else {
+        toast.info("Inga Garmin-aktiviteter hittades för detta datum");
+      }
     } catch (error: any) {
       toast.error(error.message || "Kunde inte hämta från Garmin");
     } finally {
       setLoadingGarmin(false);
     }
   };
-
-  const findBestActivityMatch = (activities: any[], workout: ScheduledWorkout) => {
-    // We'll implement a simple matching algorithm based on date and type
-    // For now, we'll just return the first activity if there's only one
-    // In a more advanced version, we could match by time, distance, etc.
-    if (activities.length === 1) {
-      return activities[0];
-    }
-    
-    // TODO: Implement more sophisticated matching
-    // For now, we'll return null to let the user choose
-    return null;
-  };
-
-  const selectActivity = (activity: any) => {
-      // Map the activity to the form fields
-      setTrainedTime(Math.round(activity.moving_time / 60).toString());
-      setDistance(activity.distance);
-      
-      // Calculate pace if we have time and distance
-      if (activity.moving_time && activity.distance) {
-        const totalSeconds = activity.moving_time;
-        const distanceKm = parseFloat(activity.distance);
-        if (distanceKm > 0) {
-          const secondsPerKm = totalSeconds / distanceKm;
-          let minutes = Math.floor(secondsPerKm / 60);
-          let seconds = Math.floor(secondsPerKm % 60);
-          if (seconds >= 60) {
-            minutes += 1;
-            seconds = 0;
-          }
-          setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      }
-      
-      // Set notes to indicate source
-      setNotes(`Importerat från Strava: ${activity.name}`);
-      
-      // Close the activity selectors
-      setShowStravaActivities(false);
-      
-      toast.success(`Data från Strava inläst!`);
-    };
-
-  const handleSelectStravaActivity = (activity: any) => {
-      selectActivity(activity);
-    };
 
   const selectGarminActivity = (activity: any) => {
     const distanceKm = activity.distance / 1000;
@@ -548,25 +386,6 @@ const Home = () => {
           <div className="space-y-4">
             {/* Activity source buttons */}
             <div className="space-y-2">
-              {stravaConnected && (
-                <Button
-                  onClick={handleFetchActivities}
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  disabled={loadingStrava}
-                >
-                  {loadingStrava ? (
-                    <span>Hämtar från Strava...</span>
-                  ) : (
-                    <span>Hämta genomfört pass från Strava</span>
-                  )}
-                </Button>
-              )}
-              {!stravaConnected && (
-                <p className="text-sm text-muted-foreground">
-                  Ingen extern tjänst ansluten. Anslut Strava i Verktyg för att hämta aktiviteter automatiskt.
-                </p>
-              )}
               {/* Garmin button */}
               <Button
                 onClick={handleFetchGarminActivities}
@@ -581,28 +400,6 @@ const Home = () => {
                 )}
               </Button>
             </div>
-
-            {/* Strava activities */}
-            {showStravaActivities && stravaActivities.length > 0 && (
-              <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
-                <Label>Välj aktivitet från Strava:</Label>
-                {stravaActivities.map((activity) => (
-                  <Button
-                    key={activity.id}
-                    onClick={() => handleSelectStravaActivity(activity)}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-2"
-                  >
-                    <div className="flex flex-col items-start w-full">
-                      <span className="font-medium">{activity.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {activity.distance} km • {Math.round(activity.moving_time / 60)} min
-                      </span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
 
             {/* Garmin activities */}
             {showGarminActivities && garminActivities.length > 0 && (
