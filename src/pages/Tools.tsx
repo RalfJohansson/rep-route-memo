@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { Activity } from "lucide-react";
+import intervalsLogo from "@/assets/intervals-logo-round.svg";
 import YearlyWorkoutTimeline from "@/components/YearlyWorkoutTimeline";
 import { format, startOfYear, endOfYear } from "date-fns";
 
@@ -354,8 +355,8 @@ const Tools = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-4 w-4" /> Intervals.icu Integration
-          </CardTitle>
+                      <img src={intervalsLogo} alt="Intervals.icu" className="h-6 w-auto" /> Intervals.icu Integration
+                    </CardTitle>
           <CardDescription>
             Anslut ditt Intervals.icu-konto för att automatiskt hämta träningsdata från Intervals.icu
           </CardDescription>
