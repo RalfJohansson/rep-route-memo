@@ -113,24 +113,16 @@ serve(async (req) => {
 
     console.log('Found activities:', activities.length);
     console.log('Raw activity types from Intervals.icu:', activities.map((a: any) => a.type));
-
-    // Filter for running activities: Run, VirtualRun, TrailRun
-    const runningActivities = activities.filter((activity: any) => {
-      const type = activity.type;
-      return type === 'Run' || type === 'VirtualRun' || type === 'TrailRun';
-    });
-
-    console.log('Filtered running activities:', runningActivities.length);
-
-    // Return activities with original Intervals.icu values (no conversion yet)
-    const formattedActivities = runningActivities.map((activity: any) => ({
-      id: activity.id,
-      name: activity.name,
-      type: activity.type,
-      distance: activity.distance,
-      moving_time: activity.moving_time,
-      start_date_local: activity.start_date_local,
-    }));
+    
+        // Return all activities (no filtering by type)
+        const formattedActivities = activities.map((activity: any) => ({
+          id: activity.id,
+          name: activity.name,
+          type: activity.type,
+          distance: activity.distance,
+          moving_time: activity.moving_time,
+          start_date_local: activity.start_date_local,
+        }));
 
     return new Response(
       JSON.stringify({

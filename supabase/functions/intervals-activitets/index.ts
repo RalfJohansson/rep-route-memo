@@ -106,19 +106,13 @@ Deno.serve(async (req) => {
 
     const activities = JSON.parse(responseText);
 
-    const runs = activities.filter(
-      (activity: any) =>
-        activity.type === "Run" ||
-        activity.type === "VirtualRun" ||
-        activity.type === "TrailRun"
-    );
-
+    // Return all activities (no filtering by type)
     return new Response(
       JSON.stringify({
         success: true,
         user_id: user.id,
-        count: runs.length,
-        activities: runs,
+        count: activities.length,
+        activities: activities,
       }),
       {
         status: 200,
