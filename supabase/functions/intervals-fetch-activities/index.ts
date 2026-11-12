@@ -70,7 +70,18 @@ serve(async (req) => {
     }
 
     // Parse request body for date range parameters
-    const { oldest, newest } = await req.json();
+    let oldest: number;
+    let newest: number;
+
+    try {
+      const body = await req.json();
+      oldest = body?.oldest;
+      newest = body?.newest;
+    } catch {
+      // If body is empty or invalid JSON, use defaults
+      oldest = undefined;
+      newest = undefined;
+    }
 
     // If not provided, fetch last 30 days
     const now = Math.floor(Date.now() / 1000);
@@ -93,6 +104,8 @@ serve(async (req) => {
       }
     );
 
+    console.log('Intervals.icu API response status:', intervalsResponse.status);
+
     if (!intervalsResponse.ok) {
       const errorText = await intervalsResponse.text();
       console.error('Intervals.icu API error:', intervalsResponse.status, errorText);
@@ -113,24 +126,26 @@ serve(async (req) => {
 
     console.log('Found activities:', activities.length);
     console.log('Raw activity types from Intervals.icu:', activities.map((a: any) => a.type));
-    
-        // Return all activities (no filtering by type)
-        const formattedActivities = activities.map((activity: any) => ({
-          id: activity.id,
-          name: activity.name,
-          type: activity.type,
-          distance: activity.distance,
-          moving_time: activity.moving_time,
-          start_date_local: activity.start_date_local,
-        }));
+
+    // Return all activities (no filtering by type)
+    const formattedActivities = activities.map((activity: any) => ({
+      id: activity.id,
+      name: activity.name,
+      type: activity.type,
+      distance: activity.distance,
+      moving_time: activity.moving_time,
+      start_date_local: activity.start_date_local,
+    }));
+
+    console.log('Returning formatted activities count:', formattedActivities.length);
 
     return new Response(
-          JSON.stringify({
-            success: true,
-            user_id: user.id,
-            count: formattedActivities.length,
-            activities: formattedActivities,
-          }),
+      JSON.stringify({
+        success: true,
+        user_id: user.id,
+        count: formattedActivities.length,
+        activities: formattedActivities,
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

@@ -257,12 +257,11 @@ const Home = () => {
       }
 
       const response = await supabase.functions.invoke('intervals-fetch-activities', {
-        body: {
-          oldest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000),
-          newest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) + 86400,
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
+              body: {
+                oldest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) - 86400,
+                newest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) + 86400 * 2,
+              },
+            });
 
       if (response.error) throw response.error;
 

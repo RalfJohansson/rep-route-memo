@@ -44,10 +44,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Not authenticated" }),
         {
           status: 401,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -96,10 +93,7 @@ Deno.serve(async (req) => {
         }),
         {
           status: 502,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -116,10 +110,7 @@ Deno.serve(async (req) => {
       }),
       {
         status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
@@ -131,10 +122,7 @@ Deno.serve(async (req) => {
       }),
       {
         status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
