@@ -16,11 +16,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const intervalsApiKey = Deno.env.get("INTERVALS_API_KEY");
-
-    if (!intervalsApiKey) {
-      throw new Error("INTERVALS_API_KEY is not configured");
-    }
 
     const supabase = createClient(
       supabaseUrl,
@@ -61,8 +56,37 @@ Deno.serve(async (req) => {
         .toISOString()
         .slice(0, 10);
 
+    // Get user's intervals connection to use the correct athlete_id
+    const { data: connection, error: connectionError } = await supabase
+      .from("intervals_connections")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (connectionError || !connection) {
+      return new Response(
+        JSON.stringify({ error: "Intervals not connected" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { access_token, athlete_id } = connection;
+
+    if (!access_token) {
+      return new Response(
+        JSON.stringify({ error: "Missing access token" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const intervalsUrl = new URL(
-      "https://intervals.icu/api/v1/athlete/0/activities"
+      `https://intervals.icu/api/v1/athlete/${athlete_id}/activities`
     );
 
     intervalsUrl.searchParams.set("oldest", oldest);
@@ -71,7 +95,7 @@ Deno.serve(async (req) => {
     const response = await fetch(intervalsUrl.toString(), {
       method: "GET",
       headers: {
-        Authorization: `Basic ${btoa(`API_KEY:${intervalsApiKey}`)}`,
+        Authorization: `Bearer ${access_token}`,
         Accept: "application/json",
       },
     });

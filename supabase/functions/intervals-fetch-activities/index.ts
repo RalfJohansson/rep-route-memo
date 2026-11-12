@@ -94,9 +94,9 @@ serve(async (req) => {
     console.log('Fetching Intervals activities for user:', user.id, 'athlete_id:', athlete_id);
     console.log('Date range - oldest:', new Date(searchOldest * 1000).toISOString(), 'newest:', new Date(searchNewest * 1000).toISOString());
 
-    // Call Intervals.icu API
+    // Call Intervals.icu API - use the actual athlete_id from the connection
     const intervalsResponse = await fetch(
-      `https://intervals.icu/api/v1/athlete/0/activities?oldest=${searchOldest}&newest=${searchNewest}`,
+      `https://intervals.icu/api/v1/athlete/${athlete_id}/activities?oldest=${searchOldest}&newest=${searchNewest}`,
       {
         headers: {
           'Authorization': `Bearer ${access_token}`,
