@@ -125,12 +125,12 @@ serve(async (req) => {
         }));
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        user_id: user.id,
-        count: runningActivities.length,
-        activities: formattedActivities,
-      }),
+          JSON.stringify({
+            success: true,
+            user_id: user.id,
+            count: formattedActivities.length,
+            activities: formattedActivities,
+          }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

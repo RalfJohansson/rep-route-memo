@@ -53,9 +53,14 @@ const Home = () => {
   const [joyRating, setJoyRating] = useState(3);
 
   // Garmin activity fetching states
-  const [garminActivities, setGarminActivities] = useState<any[]>([]);
-  const [showGarminActivities, setShowGarminActivities] = useState(false);
-  const [loadingGarmin, setLoadingGarmin] = useState(false);
+    const [garminActivities, setGarminActivities] = useState<any[]>([]);
+    const [showGarminActivities, setShowGarminActivities] = useState(false);
+    const [loadingGarmin, setLoadingGarmin] = useState(false);
+  
+    // Intervals activity fetching states
+    const [intervalsActivities, setIntervalsActivities] = useState<any[]>([]);
+    const [showIntervalsActivities, setShowIntervalsActivities] = useState(false);
+    const [loadingIntervals, setLoadingIntervals] = useState(false);
 
   // Calculate pace when time or distance changes
   useEffect(() => {
@@ -150,6 +155,8 @@ const Home = () => {
       setJoyRating(3);
       setGarminActivities([]);
       setShowGarminActivities(false);
+      setIntervalsActivities([]);
+      setShowIntervalsActivities(false);
     } else {
       // Uncheck - behåll all data, ändra bara completed status
       const { error } = await supabase
@@ -233,6 +240,80 @@ const Home = () => {
     setNotes(`Importerat från Garmin: ${activity.name}`);
     setShowGarminActivities(false);
     toast.success(`Data från Garmin inläst!`);
+  };
+
+  const handleFetchIntervalsActivities = async () => {
+    if (!selectedWorkout) return;
+
+    setIntervalsActivities([]);
+    setShowIntervalsActivities(false);
+    setLoadingIntervals(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Ingen inloggad session hittades");
+        return;
+      }
+
+      const response = await supabase.functions.invoke('intervals-fetch-activities', {
+        body: {
+          oldest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000),
+          newest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) + 86400,
+        },
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+
+      if (response.error) throw response.error;
+
+      const activities = Array.isArray(response.data?.activities) ? response.data.activities : [];
+
+      if (activities.length > 0) {
+        setIntervalsActivities(activities);
+        setShowIntervalsActivities(true);
+      } else {
+        toast.info("Inga aktiviteter hittades från Intervals.icu för detta datum");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Kunde inte hämta från Intervals.icu");
+    } finally {
+      setLoadingIntervals(false);
+    }
+  };
+
+  const selectIntervalsActivity = (activity: any) => {
+    // Map Intervals.icu activity to form fields
+    // Handle activities without distance (e.g. strength training)
+    const distanceKm = activity.distance ? activity.distance / 1000 : null;
+    
+    if (activity.moving_time) {
+      setTrainedTime(Math.round(activity.moving_time / 60).toString());
+    }
+    
+    if (distanceKm) {
+      setDistance(distanceKm.toFixed(2));
+    }
+    
+    // Calculate pace only if we have both time and distance
+    if (activity.moving_time && distanceKm && distanceKm > 0) {
+      const totalSeconds = activity.moving_time;
+      const secondsPerKm = totalSeconds / distanceKm;
+      let minutes = Math.floor(secondsPerKm / 60);
+      let seconds = Math.floor(secondsPerKm % 60);
+      if (seconds >= 60) {
+        minutes += 1;
+        seconds = 0;
+      }
+      setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }
+    
+    // Set notes to indicate source
+    setNotes(`Importerat från Intervals.icu: ${activity.name}`);
+    
+    // Close the activity selector
+    setShowIntervalsActivities(false);
+    
+    toast.success(`Data från Intervals.icu inläst!`);
   };
 
   const handleSubmitWorkout = async () => {
@@ -386,42 +467,79 @@ const Home = () => {
           <div className="space-y-4">
             {/* Activity source buttons */}
             <div className="space-y-2">
-              {/* Garmin button */}
-              <Button
-                onClick={handleFetchGarminActivities}
-                variant="outline"
-                className="w-full flex items-center justify-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                disabled={loadingGarmin}
-              >
-                {loadingGarmin ? (
-                  <span>Hämtar från Garmin...</span>
-                ) : (
-                  <span>Hämta genomfört pass från Garmin</span>
-                )}
-              </Button>
-            </div>
-
-            {/* Garmin activities */}
-            {showGarminActivities && garminActivities.length > 0 && (
-              <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
-                <Label>Välj aktivitet från Garmin:</Label>
-                {garminActivities.map((activity) => (
-                  <Button
-                    key={activity.id}
-                    onClick={() => selectGarminActivity(activity)}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-2"
-                  >
-                    <div className="flex flex-col items-start w-full">
-                      <span className="font-medium">{activity.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km • {Math.round(activity.moving_time / 60)} min • {activity.average_heartrate ? `${activity.average_heartrate} bpm` : ''}
-                      </span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
+                          {/* Garmin button */}
+                          <Button
+                            onClick={handleFetchGarminActivities}
+                            variant="outline"
+                            className="w-full flex items-center justify-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            disabled={loadingGarmin}
+                          >
+                            {loadingGarmin ? (
+                              <span>Hämtar från Garmin...</span>
+                            ) : (
+                              <span>Hämta genomfört pass från Garmin</span>
+                            )}
+                          </Button>
+                          {/* Intervals button */}
+                          <Button
+                            onClick={handleFetchIntervalsActivities}
+                            variant="outline"
+                            className="w-full flex items-center justify-center gap-1 text-purple-600 border-purple-600 hover:bg-purple-50 hover:text-purple-700"
+                            disabled={loadingIntervals}
+                          >
+                            {loadingIntervals ? (
+                              <span>Hämtar från Intervals...</span>
+                            ) : (
+                              <span>Hämta genomfört pass från Intervals.icu</span>
+                            )}
+                          </Button>
+                        </div>
+            
+                        {/* Garmin activities */}
+                                    {showGarminActivities && garminActivities.length > 0 && (
+                                      <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
+                                        <Label>Välj aktivitet från Garmin:</Label>
+                                        {garminActivities.map((activity) => (
+                                          <Button
+                                            key={activity.id}
+                                            onClick={() => selectGarminActivity(activity)}
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-auto py-2"
+                                          >
+                                            <div className="flex flex-col items-start w-full">
+                                              <span className="font-medium">{activity.name}</span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km • {Math.round(activity.moving_time / 60)} min • {activity.average_heartrate ? `${activity.average_heartrate} bpm` : ''}
+                                              </span>
+                                            </div>
+                                          </Button>
+                                        ))}
+                                      </div>
+                                    )}
+                        
+                                    {/* Intervals activities */}
+                                    {showIntervalsActivities && intervalsActivities.length > 0 && (
+                                      <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
+                                        <Label>Välj aktivitet från Intervals.icu:</Label>
+                                        {intervalsActivities.map((activity) => (
+                                          <Button
+                                            key={activity.id}
+                                            onClick={() => selectIntervalsActivity(activity)}
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-auto py-2"
+                                          >
+                                            <div className="flex flex-col items-start w-full">
+                                              <span className="font-medium">{activity.name}</span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {activity.distance ? `${(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km • ` : ''}
+                                                {activity.moving_time ? `${Math.round(activity.moving_time / 60)} min` : ''}
+                                                {activity.type ? ` • ${activity.type}` : ''}
+                                              </span>
+                                            </div>
+                                          </Button>
+                                        ))}
+                                      </div>
+                                    )}
 
             {/* Manual input fields */}
             <div className="space-y-2">
