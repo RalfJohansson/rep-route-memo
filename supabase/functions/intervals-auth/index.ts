@@ -87,27 +87,24 @@ serve(async (req) => {
       throw new Error("Invalid token response from Intervals.icu");
     }
 
-    // ----- 5. Upsert into public.user_integrations -----
-    const { error: upsertError } = await supabase
-      .from("user_integrations")
-      .upsert(
-        {
-          user_id: userId,
-          provider: "intervals",
-          provider_user_id: athleteId,
-          access_token: accessToken,
-          refresh_token: "", // column is NOT NULL; store empty string when none
-          scopes: scope,
-          expires_at: expiresAt,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,provider" }
-      );
-
-    if (upsertError) {
-      console.error("Database error:", upsertError);
-      throw new Error("Failed to store Intervals connection");
-    }
+    // ----- 5. Upsert into public.intervals_connections -----
+        const { error: upsertError } = await supabase
+          .from("intervals_connections")
+          .upsert(
+            {
+              user_id: userId,
+              access_token: accessToken,
+              athlete_id: athleteId,
+              expires_at: expiresAt,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          );
+    
+        if (upsertError) {
+          console.error("Database error:", upsertError);
+          throw new Error("Failed to store Intervals connection");
+        }
 
     // ----- 6. Return success (no secrets) -----
     return new Response(

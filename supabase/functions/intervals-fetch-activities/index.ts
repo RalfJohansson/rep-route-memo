@@ -95,14 +95,14 @@ serve(async (req) => {
     console.log('Date range - oldest:', new Date(searchOldest * 1000).toISOString(), 'newest:', new Date(searchNewest * 1000).toISOString());
 
     // Call Intervals.icu API
-    const intervalsResponse = await fetch(
-      `https://intervals.icu/api/v1/athlete/0/activities?oldest=${searchOldest}&newest=${searchNewest}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      }
-    );
+        const intervalsResponse = await fetch(
+          `https://intervals.icu/api/v1/athlete/${athlete_id}/activities?oldest=${searchOldest}&newest=${searchNewest}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${access_token}`,
+            },
+          }
+        );
 
     console.log('Intervals.icu API response status:', intervalsResponse.status);
 
