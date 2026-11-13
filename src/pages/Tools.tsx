@@ -75,9 +75,10 @@ const Tools = () => {
       }
 
       const { data, error } = await supabase
-        .from("intervals_connections")
-        .select("athlete_id, expires_at")
+        .from("user_integrations")
+        .select("provider_user_id, expires_at")
         .eq("user_id", user.id)
+        .eq("provider", "intervals")
         .maybeSingle();
 
       if (error) {
