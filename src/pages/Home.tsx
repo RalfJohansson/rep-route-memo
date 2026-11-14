@@ -274,13 +274,34 @@ const Home = () => {
         toast.info("Inga aktiviteter hittades från Intervals.icu för detta datum");
       }
     } catch (error: any) {
-      toast.error(error.message || "Kunde inte hämta från Intervals.icu");
-    } finally {
-      setLoadingIntervals(false);
-    }
-  };
-
-  const selectIntervalsActivity = (activity: any) => {
+          // Handle revoked/expired Intervals connection
+          // supabase.functions.invoke wraps the function's Response in error.context
+          let errorMessage = error.message || "Kunde inte hämta från Intervals.icu";
+          let shouldReconnect = false;
+    
+          if (error?.context?.json) {
+            try {
+              const body = await error.context.json();
+              if (body?.reconnect === true) {
+                shouldReconnect = true;
+                errorMessage = "Intervals-anslutningen har upphört. Anslut igen via Inställningar.";
+              }
+            } catch (e) {
+              // Ignore JSON parse errors
+            }
+          }
+    
+          toast.error(errorMessage);
+          if (shouldReconnect) {
+            // Mark that user should reconnect; this can be used to show a banner
+            // The actual reconnection is handled via the Tools page
+          }
+        } finally {
+          setLoadingIntervals(false);
+        }
+      };
+    
+      const selectIntervalsActivity = (activity: any) => {
     // Map Intervals.icu activity to form fields
     // Handle activities without distance (e.g. strength training)
     const distanceKm = activity.distance ? activity.distance / 1000 : null;

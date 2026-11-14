@@ -108,20 +108,35 @@ serve(async (req) => {
     console.log('Intervals.icu API response status:', intervalsResponse.status);
 
     if (!intervalsResponse.ok) {
-      const errorText = await intervalsResponse.text();
-      console.error('Intervals.icu API error:', intervalsResponse.status, errorText);
-      return new Response(
-        JSON.stringify({
-          error: 'Intervals.icu API request failed',
-          status: intervalsResponse.status,
-          details: errorText,
-        }),
-        {
-          status: 502,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          const errorText = await intervalsResponse.text();
+          console.error('Intervals.icu API error:', intervalsResponse.status, errorText);
+          // If token is invalid/revoked (401), inform user to reconnect
+          if (intervalsResponse.status === 401) {
+            return new Response(
+              JSON.stringify({
+                error: 'Intervals connection revoked or expired',
+                status: intervalsResponse.status,
+                details: errorText,
+                reconnect: true,
+              }),
+              {
+                status: 502,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+          return new Response(
+            JSON.stringify({
+              error: 'Intervals.icu API request failed',
+              status: intervalsResponse.status,
+              details: errorText,
+            }),
+            {
+              status: 502,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
         }
-      );
-    }
 
     const activities = await intervalsResponse.json();
 

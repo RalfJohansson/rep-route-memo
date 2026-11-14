@@ -68,20 +68,19 @@ serve(async (req) => {
     }
 
     const tokenData = await tokenResponse.json();
-
-    // Expected fields per Intervals.icu docs:
-    // { access_token, token_type, expires_in (0 = long-lived), athlete: { id, firstname, lastname }, scope }
-    const accessToken = tokenData.access_token;
-    const athleteId = tokenData.athlete?.id;
-    const scope = tokenData.scope ?? null;
-    const expiresIn = Number(tokenData.expires_in) ?? 0;
-
-    // Compute expires_at: if expires_in > 0 use it, else far future (10 years)
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    const expiresAt =
-      expiresIn > 0
-        ? nowSeconds + expiresIn
-        : nowSeconds + 86400 * 365 * 10; // ~10 years from now
+    
+        // Expected fields per Intervals.icu docs:
+        // { access_token, token_type, athlete: { id, firstname, lastname }, scope }
+        // Intervals does NOT issue refresh_token and does NOT send expires_in.
+        const accessToken = tokenData.access_token;
+        const athleteId = tokenData.athlete?.id;
+        const scope = tokenData.scope ?? null;
+        const expiresIn = Number(tokenData.expires_in);
+    
+        // Intervals tokens are long-lived (no expiry). Use 0 as "no expiry" sentinel
+        // so the app never falsely marks the connection as expired.
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const expiresAt = expiresIn > 0 ? nowSeconds + expiresIn : 0;
 
     if (!accessToken || athleteId === undefined) {
       throw new Error("Invalid token response from Intervals.icu");
@@ -96,7 +95,7 @@ serve(async (req) => {
               provider: "intervals",
               provider_user_id: athleteId,
               access_token: accessToken,
-              refresh_token: "", // column is NOT NULL; store empty string when none
+              refresh_token: "", // Intervals issues no refresh_token; column is NOT NULL
               scopes: scope,
               expires_at: expiresAt,
               updated_at: new Date().toISOString(),

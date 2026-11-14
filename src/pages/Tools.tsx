@@ -229,14 +229,50 @@ const Tools = () => {
         return;
       }
 
-      const { error } = await supabase
-              .from("user_integrations")
-              .delete()
-              .eq("user_id", user.id)
-              .eq("provider", "intervals");
-      if (error) throw error;
+      // Fetch the Intervals access token before deleting the local connection
+      const { data: connection, error: fetchError } = await supabase
+        .from("user_integrations")
+        .select("access_token")
+        .eq("user_id", user.id)
+        .eq("provider", "intervals")
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      let revokeError: string | null = null;
+
+      if (connection?.access_token) {
+              // Call Intervals.icu disconnect endpoint to revoke the token
+              const revokeResponse = await fetch(
+                "https://intervals.icu/api/v1/disconnect-app",
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${connection.access_token}`,
+                  },
+                }
+              );
+      
+              if (revokeResponse.ok) {
+                // Token revoked successfully
+              } else {
+                // Revocation failed - still allow local disconnect
+                revokeError = `Kunde inte återkalla Intervals-anslutningen: ${revokeResponse.status}`;
+              }
+            }
+
+      // Delete the local connection
+      const { error: deleteError } = await supabase
+        .from("user_integrations")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("provider", "intervals");
+      if (deleteError) throw deleteError;
 
       setIntervalsConnected(false);
+      if (revokeError) {
+        toast.warning(revokeError);
+      }
       toast.success("Frånkopplad från Intervals.icu");
     } catch (error) {
       console.error("Error disconnecting Intervals:", error);
