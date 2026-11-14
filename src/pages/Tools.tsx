@@ -230,9 +230,10 @@ const Tools = () => {
       }
 
       const { error } = await supabase
-        .from("intervals_connections")
-        .delete()
-        .eq("user_id", user.id);
+              .from("user_integrations")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("provider", "intervals");
       if (error) throw error;
 
       setIntervalsConnected(false);
