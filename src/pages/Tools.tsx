@@ -75,11 +75,10 @@ const Tools = () => {
       }
 
       const { data, error } = await supabase
-        .from("user_integrations")
-        .select("provider_user_id, expires_at")
-        .eq("user_id", user.id)
-        .eq("provider", "intervals")
-        .maybeSingle();
+              .from("intervals_connections")
+              .select("athlete_id, expires_at")
+              .eq("user_id", user.id)
+              .maybeSingle();
 
       if (error) {
         console.error("Error fetching Intervals connection:", error);
@@ -241,28 +240,16 @@ const Tools = () => {
         toast.success("Frånkopplad från Intervals.icu");
       }
     } catch (error) {
-      console.error("Error disconnecting Intervals via Edge Function:", error);
-      // Fallback: ensure the local connection is removed even if the Edge Function fails
-      try {
-        const user = (await supabase.auth.getUser()).data.user;
-        if (user) {
-          const { error: deleteError } = await supabase
-            .from("user_integrations")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("provider", "intervals");
-          if (deleteError) throw deleteError;
+          console.error("Error disconnecting Intervals via Edge Function:", error);
+          // Note: No client-side fallback DELETE because intervals_connections
+          // lacks an RLS DELETE policy (only SELECT is defined). The Edge Function
+          // uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS and handles the
+          // deletion server-side.
+          toast.error("Kunde inte koppla från Intervals.icu. Försök igen senare.");
+        } finally {
+          setConnectingIntervals(false);
         }
-        setIntervalsConnected(false);
-        toast.warning("Lokal anslutning borttagen. Kunde inte nå Intervals.icu för återkallning.");
-      } catch (fallbackError) {
-        console.error("Fallback disconnect failed:", fallbackError);
-        toast.error("Kunde inte koppla från Intervals.icu");
-      }
-    } finally {
-      setConnectingIntervals(false);
-    }
-  };
+      };
 
   useEffect(() => {
     const handleIntervalsCallback = async () => {

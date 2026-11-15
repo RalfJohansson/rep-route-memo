@@ -44,14 +44,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Read user's intervals connection from user_integrations table
+    // Read user's intervals connection from intervals_connections table
         const { data: connection, error: connectionError } = await supabase
-          .from("user_integrations")
+          .from("intervals_connections")
           .select("*")
           .eq("user_id", user.id)
-          .eq("provider", "intervals")
           .single();
-    
+   
         if (connectionError || !connection) {
           return new Response(
             JSON.stringify({ error: "Intervals not connected" }),
@@ -61,8 +60,8 @@ Deno.serve(async (req) => {
             }
           );
         }
-    
-        const { access_token, provider_user_id: athlete_id } = connection;
+   
+        const { access_token, athlete_id } = connection;
 
     if (!access_token) {
       return new Response(

@@ -74,7 +74,6 @@ serve(async (req) => {
         // Intervals does NOT issue refresh_token and does NOT send expires_in.
         const accessToken = tokenData.access_token;
         const athleteId = tokenData.athlete?.id;
-        const scope = tokenData.scope ?? null;
         const expiresIn = Number(tokenData.expires_in);
     
         // Intervals tokens are long-lived (no expiry). Use 0 as "no expiry" sentinel
@@ -86,21 +85,20 @@ serve(async (req) => {
       throw new Error("Invalid token response from Intervals.icu");
     }
 
-    // ----- 5. Upsert into public.user_integrations -----
+    // ----- 5. Upsert into public.intervals_connections -----
+        // Intervals issues no refresh_token, so store null (column is nullable).
         const { error: upsertError } = await supabase
-          .from("user_integrations")
+          .from("intervals_connections")
           .upsert(
             {
               user_id: userId,
-              provider: "intervals",
-              provider_user_id: athleteId,
               access_token: accessToken,
-              refresh_token: "", // Intervals issues no refresh_token; column is NOT NULL
-              scopes: scope,
+              refresh_token: null,
               expires_at: expiresAt,
+              athlete_id: String(athleteId),
               updated_at: new Date().toISOString(),
             },
-            { onConflict: "user_id,provider" }
+            { onConflict: "user_id" }
           );
     
         if (upsertError) {

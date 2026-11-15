@@ -31,10 +31,9 @@ Deno.serve(async (req) => {
 
     // Fetch the Intervals access token before deleting the local connection
     const { data: connection, error: fetchError } = await supabase
-      .from("user_integrations")
+      .from("intervals_connections")
       .select("access_token")
       .eq("user_id", user.id)
-      .eq("provider", "intervals")
       .maybeSingle();
 
     if (fetchError) throw fetchError;
@@ -67,10 +66,9 @@ Deno.serve(async (req) => {
 
     // Delete the local connection regardless of revocation result
     const { error: deleteError } = await supabase
-      .from("user_integrations")
+      .from("intervals_connections")
       .delete()
-      .eq("user_id", user.id)
-      .eq("provider", "intervals");
+      .eq("user_id", user.id);
 
     if (deleteError) {
       console.error("Database error:", deleteError);
