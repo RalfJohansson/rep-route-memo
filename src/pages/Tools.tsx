@@ -223,33 +223,36 @@ const Tools = () => {
       }
 
       const response = await supabase.functions.invoke("intervals-disconnect", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.error) throw response.error;
-
-      const result = response.data as { success?: boolean; revoked?: boolean; revokeError?: string };
-
-      setIntervalsConnected(false);
-
-      if (result.revokeError) {
-        toast.warning(`Lokal anslutning borttagen. Återkallning misslyckades: ${result.revokeError}`);
-      } else {
-        toast.success("Frånkopplad från Intervals.icu");
-      }
-    } catch (error) {
-          console.error("Error disconnecting Intervals via Edge Function:", error);
-          // Note: No client-side fallback DELETE because intervals_connections
-          // lacks an RLS DELETE policy (only SELECT is defined). The Edge Function
-          // uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS and handles the
-          // deletion server-side.
-          toast.error("Kunde inte koppla från Intervals.icu. Försök igen senare.");
-        } finally {
-          setConnectingIntervals(false);
-        }
-      };
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+      
+            if (response.error) throw response.error;
+      
+            const result = response.data as { success?: boolean; revoked?: boolean; revokeError?: string; deleteError?: string };
+      
+            if (result.success && result.revoked) {
+              // Both external revocation and local deletion succeeded
+              setIntervalsConnected(false);
+              toast.success("Frånkopplad från Intervals.icu");
+            } else if (result.revokeError) {
+              // External revocation failed - keep connection status as connected
+              toast.error(`Kunde inte återkalla Intervals-anslutningen: ${result.revokeError}`);
+            } else if (result.deleteError) {
+              // Local deletion failed after successful revocation
+              toast.error(`Kunde inte ta bort lokal anslutning: ${result.deleteError}`);
+            } else {
+              // Fallback for unexpected response
+              toast.error("Kunde inte koppla från Intervals.icu");
+            }
+          } catch (error) {
+            console.error("Error disconnecting Intervals via Edge Function:", error);
+            toast.error("Kunde inte koppla från Intervals.icu. Försök igen senare.");
+          } finally {
+            setConnectingIntervals(false);
+          }
+        };
 
   useEffect(() => {
     const handleIntervalsCallback = async () => {

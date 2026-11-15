@@ -37,8 +37,23 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError) throw fetchError;
-
-    let revoked = false;
+    
+        // If no local connection exists, handle it
+        if (!connection) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              revoked: false,
+              revokeError: "Intervals not connected",
+            }),
+            {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            }
+          );
+        }
+    
+        let revoked = false;
     let revokeError: string | null = null;
 
     if (connection?.access_token) {
@@ -64,7 +79,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Delete the local connection regardless of revocation result
+    // If external revocation failed, keep the local connection and return a clear error
+    if (revokeError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          revoked: false,
+          revokeError,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // External revocation succeeded (or no access_token existed) - delete local connection
     const { error: deleteError } = await supabase
       .from("intervals_connections")
       .delete()
@@ -72,14 +102,25 @@ Deno.serve(async (req) => {
 
     if (deleteError) {
       console.error("Database error:", deleteError);
-      throw new Error("Failed to disconnect Intervals");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          revoked: true,
+          revokeError: null,
+          deleteError: deleteError.message,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        revoked,
-        revokeError,
+        revoked: true,
+        revokeError: null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -81,7 +81,12 @@ serve(async (req) => {
         const nowSeconds = Math.floor(Date.now() / 1000);
         const expiresAt = expiresIn > 0 ? nowSeconds + expiresIn : 0;
 
-    if (!accessToken || athleteId === undefined) {
+    if (
+      !accessToken ||
+      athleteId === undefined ||
+      athleteId === null ||
+      athleteId === ""
+    ) {
       throw new Error("Invalid token response from Intervals.icu");
     }
 
