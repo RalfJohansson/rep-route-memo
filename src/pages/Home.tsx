@@ -302,19 +302,19 @@ const Home = () => {
       };
     
       const selectIntervalsActivity = (activity: any) => {
-    // Map Intervals.icu activity to form fields
-    // Handle activities without distance (e.g. strength training)
+    // Map Intervals.icu activity to form fields.
+    // Works for all activity types: running, strength, cycling, swimming, etc.
+    // Distance and pace are optional and only set when present.
     const distanceKm = activity.distance ? activity.distance / 1000 : null;
-    
-    if (activity.moving_time) {
-      setTrainedTime(Math.round(activity.moving_time / 60).toString());
-    }
-    
-    if (distanceKm) {
-      setDistance(distanceKm.toFixed(2));
-    }
-    
-    // Calculate pace only if we have both time and distance
+
+    // Always set time (clear when missing, e.g. some strength sessions)
+    setTrainedTime(activity.moving_time ? Math.round(activity.moving_time / 60).toString() : "");
+
+    // Always set distance (clear when missing, e.g. strength training)
+    setDistance(distanceKm ? distanceKm.toFixed(2) : "");
+
+    // Pace is derived from time + distance; clear it when either is missing.
+    // The trainedTime/distance effect recalculates it automatically.
     if (activity.moving_time && distanceKm && distanceKm > 0) {
       const totalSeconds = activity.moving_time;
       const secondsPerKm = totalSeconds / distanceKm;
@@ -325,14 +325,16 @@ const Home = () => {
         seconds = 0;
       }
       setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    } else {
+      setCalculatedPace("");
     }
-    
+
     // Set notes to indicate source
     setNotes(`Importerat från Intervals.icu: ${activity.name}`);
-    
+
     // Close the activity selector
     setShowIntervalsActivities(false);
-    
+
     toast.success(`Data från Intervals.icu inläst!`);
   };
 
@@ -551,9 +553,11 @@ const Home = () => {
                                             <div className="flex flex-col items-start w-full">
                                               <span className="font-medium">{activity.name}</span>
                                               <span className="text-xs text-muted-foreground">
-                                                {activity.distance ? `${(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km • ` : ''}
-                                                {activity.moving_time ? `${Math.round(activity.moving_time / 60)} min` : ''}
-                                                {activity.type ? ` • ${activity.type}` : ''}
+                                                {[activity.start_date_local ? format(new Date(activity.start_date_local), "d MMM yyyy", { locale: sv }) : null,
+                                                  activity.type || null,
+                                                  activity.distance ? `${(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km` : null,
+                                                  activity.moving_time ? `${Math.round(activity.moving_time / 60)} min` : null,
+                                                ].filter(Boolean).join(' • ')}
                                               </span>
                                             </div>
                                           </Button>
