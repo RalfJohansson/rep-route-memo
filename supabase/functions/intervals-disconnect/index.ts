@@ -52,7 +52,21 @@ Deno.serve(async (req) => {
             }
           );
         }
-    
+
+        if (!connection.access_token) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              revoked: false,
+              revokeError: "Lokal anslutning saknar access_token. Ingen återkallning utfördes.",
+            }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+
         let revoked = false;
     let revokeError: string | null = null;
 
