@@ -69,9 +69,10 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body for date range parameters
-    let oldest: number;
-    let newest: number;
+    // Parse request body for date range parameters.
+    // Intervals.icu /activities expects ISO date strings (YYYY-MM-DD), NOT unix timestamps.
+    let oldest: string | undefined;
+    let newest: string | undefined;
 
     try {
       const body = await req.json();
@@ -84,15 +85,14 @@ serve(async (req) => {
     }
 
     // If not provided, fetch last 30 days
-    const now = Math.floor(Date.now() / 1000);
-    const defaultNewest = now;
-    const defaultOldest = now - 30 * 24 * 60 * 60; // 30 days ago
+    const defaultNewest = new Date().toISOString().slice(0, 10);
+    const defaultOldest = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const searchOldest = oldest ?? defaultOldest;
     const searchNewest = newest ?? defaultNewest;
 
     console.log('Fetching Intervals activities for user:', user.id, 'athlete_id:', athlete_id);
-    console.log('Date range - oldest:', new Date(searchOldest * 1000).toISOString(), 'newest:', new Date(searchNewest * 1000).toISOString());
+    console.log('Date range - oldest:', searchOldest, 'newest:', searchNewest);
 
     // Call Intervals.icu API
         const intervalsResponse = await fetch(

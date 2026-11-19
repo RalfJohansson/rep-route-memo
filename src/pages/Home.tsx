@@ -256,12 +256,15 @@ const Home = () => {
         return;
       }
 
+      // Intervals.icu /activities expects ISO date strings (YYYY-MM-DD).
+      // Use a window around the scheduled date to tolerate timezone differences.
+      const scheduledDate = new Date(selectedWorkout.scheduled_date);
       const response = await supabase.functions.invoke('intervals-fetch-activities', {
-              body: {
-                oldest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) - 86400,
-                newest: Math.floor(new Date(selectedWorkout.scheduled_date).getTime() / 1000) + 86400 * 2,
-              },
-            });
+        body: {
+          oldest: format(addDays(scheduledDate, -3), "yyyy-MM-dd"),
+          newest: format(addDays(scheduledDate, 3), "yyyy-MM-dd"),
+        },
+      });
 
       if (response.error) throw response.error;
 
