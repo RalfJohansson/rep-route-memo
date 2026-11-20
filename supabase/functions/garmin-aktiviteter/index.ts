@@ -102,16 +102,9 @@ Deno.serve(async (req) => {
 
     const activities = JSON.parse(responseText);
 
-    // Filter for running activities only: Run, VirtualRun, TrailRun
-    const runs = activities.filter(
-      (activity: any) =>
-        activity.type === "Run" ||
-        activity.type === "VirtualRun" ||
-        activity.type === "TrailRun"
-    );
-
+    // Return all activity types (running, strength, cycling, swimming, etc.)
     // Map to include the fields needed by Home.tsx
-    const mappedActivities = runs.map((activity: any) => ({
+    const mappedActivities = activities.map((activity: any) => ({
       id: activity.id,
       name: activity.name,
       start_date_local: activity.start_date_local,
