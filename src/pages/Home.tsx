@@ -341,8 +341,21 @@ const Home = () => {
     toast.success(`Data från Intervals.icu inläst!`);
   };
 
+  // Kategorier där pace (min/km) är relevant
+  const runningCategories = [
+    "intervallpass",
+    "distanspass",
+    "långpass",
+    "tävling",
+  ];
+
+  const isRunningCategory = (category: string) =>
+    runningCategories.includes(category.toLowerCase());
+
   const handleSubmitWorkout = async () => {
     if (!selectedWorkout) return;
+
+    const category = selectedWorkout.workout_library.category;
 
     const { error } = await supabase
       .from("scheduled_workouts")
@@ -350,10 +363,13 @@ const Home = () => {
         completed: true,
         trained_time: trainedTime ? parseInt(trainedTime) : null,
         distance: distance ? parseFloat(distance) : null,
-        pace: calculatedPace ? `${calculatedPace} min/km` : null,
+        // Spara pace endast för löpningskategorier
+        pace: isRunningCategory(category) && calculatedPace
+          ? `${calculatedPace} min/km`
+          : null,
         notes: notes || null,
         joy_rating: joyRating,
-        updated_at: new Date().toISOString(), // Uppdatera updated_at
+        updated_at: new Date().toISOString(),
       })
       .eq("id", selectedWorkout.id);
 
@@ -569,35 +585,45 @@ const Home = () => {
                                     )}
 
             {/* Manual input fields */}
-            <div className="space-y-2">
-              <Label htmlFor="trainedTime">Tränad tid (minuter)</Label>
-              <Input
-                id="trainedTime"
-                type="number"
-                value={trainedTime}
-                onChange={(e) => setTrainedTime(e.target.value)}
-                placeholder="45"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="distance">Distans (km)</Label>
-              <Input
-                id="distance"
-                type="number"
-                step="0.1"
-                value={distance}
-                onChange={(e) => setDistance(e.target.value)}
-                placeholder="10.5"
-              />
-            </div>
-            {calculatedPace && (
-              <div className="space-y-2">
-                <Label>Tempo</Label>
-                <div className="px-3 py-2 rounded-md bg-muted text-sm">
-                  {calculatedPace} min/km
-                </div>
-              </div>
-            )}
+                        <div className="space-y-2">
+                          <Label htmlFor="trainedTime">Tränad tid (minuter)</Label>
+                          <Input
+                            id="trainedTime"
+                            type="number"
+                            value={trainedTime}
+                            onChange={(e) => setTrainedTime(e.target.value)}
+                            placeholder="45"
+                          />
+                        </div>
+            
+                        {/* Distans - visa för löpning, cykling, simning */}
+                        {["intervallpass", "distanspass", "långpass", "tävling", "cykling", "simning"].includes(
+                          selectedWorkout?.workout_library.category?.toLowerCase() || ""
+                        ) && (
+                          <div className="space-y-2">
+                            <Label htmlFor="distance">Distans (km)</Label>
+                            <Input
+                              id="distance"
+                              type="number"
+                              step="0.1"
+                              value={distance}
+                              onChange={(e) => setDistance(e.target.value)}
+                              placeholder="10.5"
+                            />
+                          </div>
+                        )}
+            
+                        {/* Tempo - bara för löpningskategorier */}
+                        {isRunningCategory(
+                          selectedWorkout?.workout_library.category || ""
+                        ) && calculatedPace && (
+                          <div className="space-y-2">
+                            <Label>Tempo</Label>
+                            <div className="px-3 py-2 rounded-md bg-muted text-sm">
+                              {calculatedPace} min/km
+                            </div>
+                          </div>
+                        )}
             <div className="space-y-2">
               <Label htmlFor="notes">Anteckningar</Label>
               <Textarea
