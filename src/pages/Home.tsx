@@ -57,11 +57,6 @@ const Home = () => {
     const [showGarminActivities, setShowGarminActivities] = useState(false);
     const [loadingGarmin, setLoadingGarmin] = useState(false);
   
-    // Intervals activity fetching states
-    const [intervalsActivities, setIntervalsActivities] = useState<any[]>([]);
-    const [showIntervalsActivities, setShowIntervalsActivities] = useState(false);
-    const [loadingIntervals, setLoadingIntervals] = useState(false);
-
   // Calculate pace when time or distance changes
   useEffect(() => {
     if (trainedTime && distance) {
@@ -155,8 +150,6 @@ const Home = () => {
       setJoyRating(3);
       setGarminActivities([]);
       setShowGarminActivities(false);
-      setIntervalsActivities([]);
-      setShowIntervalsActivities(false);
     } else {
       // Uncheck - behåll all data, ändra bara completed status
       const { error } = await supabase
@@ -240,105 +233,6 @@ const Home = () => {
     setNotes(`Importerat från Garmin: ${activity.name}`);
     setShowGarminActivities(false);
     toast.success(`Data från Garmin inläst!`);
-  };
-
-  const handleFetchIntervalsActivities = async () => {
-    if (!selectedWorkout) return;
-
-    setIntervalsActivities([]);
-    setShowIntervalsActivities(false);
-    setLoadingIntervals(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Ingen inloggad session hittades");
-        return;
-      }
-
-      // Intervals.icu /activities expects ISO date strings (YYYY-MM-DD).
-      // Use a window around the scheduled date to tolerate timezone differences.
-      const scheduledDate = new Date(selectedWorkout.scheduled_date);
-      const response = await supabase.functions.invoke('intervals-fetch-activities', {
-        body: {
-          oldest: format(addDays(scheduledDate, -3), "yyyy-MM-dd"),
-          newest: format(addDays(scheduledDate, 3), "yyyy-MM-dd"),
-        },
-      });
-
-      if (response.error) throw response.error;
-
-      const activities = Array.isArray(response.data?.activities) ? response.data.activities : [];
-
-      if (activities.length > 0) {
-        setIntervalsActivities(activities);
-        setShowIntervalsActivities(true);
-      } else {
-        toast.info("Inga aktiviteter hittades från Intervals.icu för detta datum");
-      }
-    } catch (error: any) {
-          // Handle revoked/expired Intervals connection
-          // supabase.functions.invoke wraps the function's Response in error.context
-          let errorMessage = error.message || "Kunde inte hämta från Intervals.icu";
-          let shouldReconnect = false;
-    
-          if (error?.context?.json) {
-            try {
-              const body = await error.context.json();
-              if (body?.reconnect === true) {
-                shouldReconnect = true;
-                errorMessage = "Intervals-anslutningen har upphört. Anslut igen via Inställningar.";
-              }
-            } catch (e) {
-              // Ignore JSON parse errors
-            }
-          }
-    
-          toast.error(errorMessage);
-          if (shouldReconnect) {
-            // Mark that user should reconnect; this can be used to show a banner
-            // The actual reconnection is handled via the Tools page
-          }
-        } finally {
-          setLoadingIntervals(false);
-        }
-      };
-    
-      const selectIntervalsActivity = (activity: any) => {
-    // Map Intervals.icu activity to form fields.
-    // Works for all activity types: running, strength, cycling, swimming, etc.
-    // Distance and pace are optional and only set when present.
-    const distanceKm = activity.distance ? activity.distance / 1000 : null;
-
-    // Always set time (clear when missing, e.g. some strength sessions)
-    setTrainedTime(activity.moving_time ? Math.round(activity.moving_time / 60).toString() : "");
-
-    // Always set distance (clear when missing, e.g. strength training)
-    setDistance(distanceKm ? distanceKm.toFixed(2) : "");
-
-    // Pace is derived from time + distance; clear it when either is missing.
-    // The trainedTime/distance effect recalculates it automatically.
-    if (activity.moving_time && distanceKm && distanceKm > 0) {
-      const totalSeconds = activity.moving_time;
-      const secondsPerKm = totalSeconds / distanceKm;
-      let minutes = Math.floor(secondsPerKm / 60);
-      let seconds = Math.floor(secondsPerKm % 60);
-      if (seconds >= 60) {
-        minutes += 1;
-        seconds = 0;
-      }
-      setCalculatedPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-    } else {
-      setCalculatedPace("");
-    }
-
-    // Set notes to indicate source
-    setNotes(`Importerat från Intervals.icu: ${activity.name}`);
-
-    // Close the activity selector
-    setShowIntervalsActivities(false);
-
-    toast.success(`Data från Intervals.icu inläst!`);
   };
 
   // Kategorier där pace (min/km) är relevant
@@ -521,19 +415,6 @@ const Home = () => {
                               <span>Hämta genomfört pass från Garmin</span>
                             )}
                           </Button>
-                          {/* Intervals button */}
-                          <Button
-                            onClick={handleFetchIntervalsActivities}
-                            variant="outline"
-                            className="w-full flex items-center justify-center gap-1 text-purple-600 border-purple-600 hover:bg-purple-50 hover:text-purple-700"
-                            disabled={loadingIntervals}
-                          >
-                            {loadingIntervals ? (
-                              <span>Hämtar från Intervals...</span>
-                            ) : (
-                              <span>Hämta genomfört pass från Intervals.icu</span>
-                            )}
-                          </Button>
                         </div>
             
                         {/* Garmin activities */}
@@ -558,32 +439,6 @@ const Home = () => {
                                       </div>
                                     )}
                         
-                                    {/* Intervals activities */}
-                                    {showIntervalsActivities && intervalsActivities.length > 0 && (
-                                      <div className="space-y-2 border rounded-lg p-3 bg-muted/50">
-                                        <Label>Välj aktivitet från Intervals.icu:</Label>
-                                        {intervalsActivities.map((activity) => (
-                                          <Button
-                                            key={activity.id}
-                                            onClick={() => selectIntervalsActivity(activity)}
-                                            variant="outline"
-                                            className="w-full justify-start text-left h-auto py-2"
-                                          >
-                                            <div className="flex flex-col items-start w-full">
-                                              <span className="font-medium">{activity.name}</span>
-                                              <span className="text-xs text-muted-foreground">
-                                                {[activity.start_date_local ? format(new Date(activity.start_date_local), "d MMM yyyy", { locale: sv }) : null,
-                                                  activity.type || null,
-                                                  activity.distance ? `${(activity.distance / 1000).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km` : null,
-                                                  activity.moving_time ? `${Math.round(activity.moving_time / 60)} min` : null,
-                                                ].filter(Boolean).join(' • ')}
-                                              </span>
-                                            </div>
-                                          </Button>
-                                        ))}
-                                      </div>
-                                    )}
-
             {/* Manual input fields */}
                         <div className="space-y-2">
                           <Label htmlFor="trainedTime">Tränad tid (minuter)</Label>
